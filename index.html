@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dapur Ghania - Hantaran & Hampers</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Tetap dipasang untuk fitur opsional) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -22,7 +22,6 @@
         #toast { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; }
         .hidden { display: none; }
         
-        /* Katalog Grid Ringkas */
         .product-card { 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             border: 1px solid #f3f4f6;
@@ -36,7 +35,6 @@
         ::-webkit-scrollbar-track { background: #fff7ed; }
         ::-webkit-scrollbar-thumb { background: #fb923c; border-radius: 10px; }
 
-        /* Responsive adjustments */
         @media (max-width: 640px) {
             .hero-title { font-size: 2rem; line-height: 1.2; }
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -60,7 +58,7 @@
                     <span id="cart-count" class="absolute top-0 right-0 bg-orange-600 text-white text-[10px] font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center border-2 border-white">0</span>
                 </button>
                 <div id="auth-section">
-                    <button onclick="openAuthModal()" class="bg-orange-600 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-md">Masuk</button>
+                    <!-- Dinamis via JS -->
                 </div>
             </div>
         </div>
@@ -76,7 +74,7 @@
         <div class="absolute -top-24 -left-24 w-64 h-64 bg-orange-100 rounded-full filter blur-3xl opacity-50"></div>
     </section>
 
-    <!-- Filter Kategori Sticky -->
+    <!-- Filter Kategori -->
     <div class="sticky top-[60px] md:top-[72px] z-40 bg-[#FFFAF5]/95 backdrop-blur-sm py-4">
         <div class="container mx-auto px-4 overflow-x-auto no-scrollbar">
             <div class="flex flex-nowrap md:flex-wrap justify-start md:justify-center gap-2 pb-2">
@@ -91,7 +89,7 @@
     <!-- Daftar Produk -->
     <main class="container mx-auto p-4 md:p-6 min-h-screen">
         <div id="product-list" class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-            <!-- Produk akan dimuat via JS -->
+            <!-- Produk via JS -->
         </div>
     </main>
 
@@ -129,7 +127,7 @@
         </div>
     </div>
 
-    <!-- Auth Modal & Cart Modal -->
+    <!-- Auth Modal -->
     <div id="auth-modal" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="flex border-b border-gray-100">
@@ -146,9 +144,9 @@
                     <input type="text" id="reg-name" placeholder="Nama Lengkap" class="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
                     <input type="email" id="reg-email" placeholder="Email" class="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
                     <input type="password" id="reg-password" placeholder="Password" class="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                    <button onclick="handleEmailRegister()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold">Daftar</button>
+                    <button onclick="handleEmailRegister()" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-2xl font-bold">Daftar</button>
                 </div>
-                <button onclick="handleGuestLogin()" class="w-full mt-4 bg-gray-100 text-gray-600 py-3 rounded-2xl text-xs font-bold">Lanjutkan Sebagai Tamu</button>
+                <button onclick="closeAuthModal()" class="w-full mt-4 bg-gray-100 text-gray-600 py-3 rounded-2xl text-xs font-bold italic">Lanjutkan Tanpa Login (Mode Tamu)</button>
             </div>
         </div>
     </div>
@@ -166,79 +164,95 @@
                     <div class="flex justify-between font-bold text-lg mb-4">
                         <span>Total:</span> <span id="cart-total">Rp 0</span>
                     </div>
-                    <button onclick="goToCheckoutView()" id="btn-to-checkout" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold">Checkout</button>
+                    <button onclick="goToCheckoutView()" id="btn-to-checkout" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold">Checkout Sekarang</button>
                 </div>
             </div>
             <div id="cart-view-form" class="flex-1 hidden flex flex-col overflow-hidden">
                 <button onclick="backToCartItems()" class="text-xs text-orange-600 mb-4 font-bold flex items-center gap-2"><i class="fas fa-arrow-left"></i> Kembali</button>
                 <div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4">
-                    <input type="text" id="checkout-name" placeholder="Nama Penerima" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm">
-                    <input type="tel" id="checkout-phone" placeholder="WhatsApp (Aktif)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm">
+                    <input type="text" id="checkout-name" placeholder="Nama Penerima" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm border focus:border-orange-300">
+                    <input type="tel" id="checkout-phone" placeholder="WhatsApp (Aktif)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm border focus:border-orange-300">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="date" id="checkout-date" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-xs">
-                        <input type="time" id="checkout-time" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-xs">
+                        <input type="date" id="checkout-date" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-xs border">
+                        <input type="time" id="checkout-time" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-xs border">
                     </div>
                     <select id="checkout-payment-type" onchange="updatePaymentSummary()" class="w-full p-3 bg-orange-50 rounded-xl outline-none text-sm font-bold">
-                        <option value="Full Payment">Lunas (100%)</option>
-                        <option value="DP 50%">DP 50%</option>
+                        <option value="Full Payment">Bayar Lunas (100%)</option>
+                        <option value="DP 50%">DP Dulu (50%)</option>
                     </select>
-                    <select id="checkout-method" onchange="toggleAddressField()" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm">
-                        <option value="kirim">Kirim (Kurir)</option>
-                        <option value="ambil">Ambil Sendiri</option>
+                    <select id="checkout-method" onchange="toggleAddressField()" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm border">
+                        <option value="kirim">Kirim ke Alamat</option>
+                        <option value="ambil">Ambil di Lokasi</option>
                     </select>
-                    <textarea id="checkout-address" placeholder="Alamat Lengkap..." class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm"></textarea>
-                    <textarea id="checkout-note" placeholder="Ucapan / Catatan..." class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm"></textarea>
+                    <textarea id="checkout-address" placeholder="Alamat Lengkap Pengiriman..." class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm border focus:border-orange-300"></textarea>
+                    <textarea id="checkout-note" placeholder="Catatan Tambahan (Opsional)..." class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm border focus:border-orange-300"></textarea>
+                    
                     <div id="payment-summary" class="bg-orange-900 text-white p-4 rounded-2xl text-sm">
-                        <div class="flex justify-between opacity-70 mb-1"><span>Subtotal:</span><span id="summary-subtotal"></span></div>
-                        <div class="flex justify-between font-bold text-lg pt-2 border-t border-orange-800"><span id="summary-label">Bayar:</span><span id="summary-total"></span></div>
+                        <div class="flex justify-between opacity-70 mb-1"><span>Total Harga:</span><span id="summary-subtotal"></span></div>
+                        <div class="flex justify-between font-bold text-lg pt-2 border-t border-orange-800"><span id="summary-label">Harus Bayar:</span><span id="summary-total"></span></div>
                     </div>
                 </div>
-                <button onclick="confirmCheckout()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold">Konfirmasi WA</button>
+                <button onclick="confirmCheckout()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2">
+                    <i class="fab fa-whatsapp"></i> Kirim Pesanan ke WA
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Loader & Toast -->
+    <!-- UI Elements -->
     <div id="loader" class="fixed inset-0 bg-white/60 backdrop-blur-sm z-[100] flex items-center justify-center">
         <div class="animate-bounce text-orange-600 flex flex-col items-center">
             <i class="fas fa-cookie-bite text-4xl mb-2"></i>
+            <span class="text-xs font-bold">Memproses...</span>
         </div>
     </div>
-    <div id="toast" class="bg-orange-900 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold"></div>
+    <div id="toast" class="bg-orange-950 text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold border border-orange-800"></div>
 
 <script>
     const GSHEET_URL = "https://script.google.com/macros/s/AKfycbxXg5qsCX7joBR8DEB2d1pW4ApqPYKpKYIkN9BhIBNxNNzbzW-LTJzRgC2EgC-YmQ1Z6w/exec";
     
-    // Inisialisasi Firebase
-    const configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+    // Konfigurasi Firebase (Tetap Ada)
+    const firebaseConfig = {
         apiKey: "AIzaSyCgzjHOF5qTfevqRAMNdpLl5oPzrb02onM",
         authDomain: "dapur-ghania.firebaseapp.com",
         projectId: "dapur-ghania",
         appId: "1:745922887760:web:41c5cf27ed90bb403f9155"
     };
 
-    if (!firebase.apps.length) firebase.initializeApp(configToUse);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
+    // Global Variabel
+    let isFirebaseReady = false;
+    let auth, db;
     let cart = [];
     let currentCategory = 'Semua';
 
-    // Data Produk
+    // Inisialisasi Firebase dengan Error Handling (Alternatif Login)
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        isFirebaseReady = true;
+        console.log("Firebase initialized successfully");
+    } catch (e) {
+        console.warn("Firebase failed to initialize. Web will run in Guest Mode only.", e);
+        isFirebaseReady = false;
+    }
+
+    // Data Produk (Contoh)
     const products = [];
     const categories = ["Paket Simple", "Paket Exclusive", "Kue Satuan"];
-    for(let i=1; i<=50; i++) {
+    for(let i=1; i<=20; i++) {
         const cat = categories[i % 3];
         products.push({
             id: i,
             category: cat,
             name: `${cat} Menu ${i}`,
-            price: (i * 10000) + 50000,
-            img: `https://picsum.photos/seed/${i+100}/600/600`,
-            desc: `Deskripsi detail untuk ${cat} nomor ${i}. Produk premium tanpa pengawet.`
+            price: (i * 10000) + 45000,
+            img: `https://picsum.photos/seed/dapur${i}/600/600`,
+            desc: `Produk premium buatan rumah tanpa bahan pengawet. Cocok untuk hadiah.`
         });
     }
 
+    // --- FUNGSI PRODUK & CART ---
     function filterCategory(cat) {
         currentCategory = cat;
         document.querySelectorAll('.category-tab').forEach(btn => {
@@ -252,20 +266,13 @@
     function renderProducts() {
         const container = document.getElementById('product-list');
         const filtered = currentCategory === 'Semua' ? products : products.filter(p => p.category === currentCategory);
-        
         container.innerHTML = filtered.map(p => `
             <div onclick="openDetail(${p.id})" class="product-card bg-white rounded-2xl overflow-hidden flex flex-col">
-                <div class="relative overflow-hidden aspect-square">
-                    <img src="${p.img}" class="w-full h-full object-cover" alt="${p.name}">
-                    <div class="absolute top-2 left-2">
-                        <span class="bg-white/90 text-orange-700 text-[8px] md:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-orange-100">${p.category}</span>
-                    </div>
-                </div>
-                <div class="product-info p-3 md:p-4 flex-1 flex flex-col">
-                    <h3 class="product-name text-xs md:text-sm font-bold text-gray-800 mb-1 line-clamp-1">${p.name}</h3>
-                    <div class="mt-auto flex justify-between items-center">
-                        <span class="text-orange-600 font-bold text-xs md:text-sm">Rp ${p.price.toLocaleString()}</span>
-                    </div>
+                <img src="${p.img}" class="w-full aspect-square object-cover" alt="${p.name}">
+                <div class="p-3 flex-1 flex flex-col">
+                    <span class="text-[8px] text-orange-600 font-bold uppercase mb-1">${p.category}</span>
+                    <h3 class="text-xs font-bold text-gray-800 mb-1 line-clamp-2">${p.name}</h3>
+                    <span class="mt-auto text-orange-600 font-bold text-xs">Rp ${p.price.toLocaleString()}</span>
                 </div>
             </div>
         `).join('');
@@ -302,7 +309,7 @@
             <div class="flex items-center bg-gray-50 p-3 rounded-2xl gap-3 text-xs">
                 <img src="${c.img}" class="w-12 h-12 rounded-lg object-cover">
                 <div class="flex-1">
-                    <div class="font-bold text-gray-800 truncate w-32">${c.name}</div>
+                    <div class="font-bold text-gray-800 truncate">${c.name}</div>
                     <div class="text-orange-600 font-bold">Rp ${(c.price * c.qty).toLocaleString()}</div>
                 </div>
                 <div class="flex items-center gap-1">
@@ -312,8 +319,6 @@
                 </div>
             </div>
         `).join('') : '<p class="text-center py-10 text-gray-400 italic">Keranjang kosong</p>';
-        
-        document.getElementById('btn-to-checkout').disabled = cart.length === 0;
         updatePaymentSummary();
     }
 
@@ -331,45 +336,72 @@
         
         document.getElementById('summary-subtotal').innerText = `Rp ${subtotal.toLocaleString()}`;
         document.getElementById('summary-total').innerText = `Rp ${totalNow.toLocaleString()}`;
-        document.getElementById('summary-label').innerText = payType === 'DP 50%' ? 'DP (50%):' : 'Lunas:';
+        document.getElementById('summary-label').innerText = payType === 'DP 50%' ? 'Harus Bayar DP (50%):' : 'Bayar Lunas:';
+    }
+
+    // --- SISTEM CHECKOUT TANPA LOGIN ---
+    function goToCheckoutView() {
+        // PERUBAHAN UTAMA: Tidak lagi mewajibkan login jika Firebase error
+        // Kita izinkan masuk ke form checkout sebagai "Guest" secara otomatis
+        document.getElementById('cart-view-items').classList.add('hidden');
+        document.getElementById('cart-view-form').classList.remove('hidden');
     }
 
     async function confirmCheckout() {
         const name = document.getElementById('checkout-name').value;
-        const phoneInput = document.getElementById('checkout-phone').value;
-        if(!name || !phoneInput) return showToast("Data belum lengkap!");
+        const phone = document.getElementById('checkout-phone').value;
+        if(!name || !phone) return showToast("Mohon isi Nama dan WhatsApp!");
 
         setLoading(true);
         const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
         const orderSummary = cart.map(c => `${c.name} (x${c.qty})`).join(', ');
+        const payType = document.getElementById('checkout-payment-type').value;
+
+        // Ambil User ID (dari Firebase jika ada, atau buat ID Guest unik)
+        let userId = "Guest_" + Math.random().toString(36).substr(2, 9);
+        if (isFirebaseReady && auth.currentUser) {
+            userId = auth.currentUser.uid;
+        }
 
         try {
+            // Simpan ke Google Sheet
             const formData = new URLSearchParams();
             formData.append('name', name);
             formData.append('items', orderSummary);
             formData.append('total', subtotal);
-            formData.append('user_id', auth.currentUser ? auth.currentUser.uid : "Guest");
+            formData.append('user_id', userId);
+            formData.append('status', payType);
             
             await fetch(GSHEET_URL, { method: 'POST', mode: 'no-cors', body: formData });
 
-            const msg = `*PESANAN BARU - DAPUR GHANIA*\nPenerima: ${name}\nMenu: ${orderSummary}\nTotal: Rp ${subtotal.toLocaleString()}`;
+            // Kirim ke WhatsApp
+            const address = document.getElementById('checkout-address').value || 'Ambil di Toko';
+            const date = document.getElementById('checkout-date').value;
+            const msg = `*PESANAN DAPUR GHANIA*\n\n` +
+                        `👤 Nama: ${name}\n` +
+                        `📞 WA: ${phone}\n` +
+                        `📦 Menu: ${orderSummary}\n` +
+                        `📍 Alamat: ${address}\n` +
+                        `📅 Tanggal: ${date}\n` +
+                        `💰 Total: Rp ${subtotal.toLocaleString()}\n` +
+                        `💳 Pembayaran: ${payType}\n\n` +
+                        `_Mohon tunggu konfirmasi admin._`;
+
             window.open(`https://wa.me/628123456789?text=${encodeURIComponent(msg)}`, '_blank');
             
             cart = [];
             updateUI();
             toggleCart();
             backToCartItems();
-            showToast("Pesanan Berhasil!");
-        } catch(e) { showToast("Gagal menyimpan pesanan"); }
+            showToast("Pesanan Terkirim! Segera cek WhatsApp.");
+        } catch(e) { 
+            showToast("Maaf, terjadi gangguan koneksi. Silakan coba lagi."); 
+        }
         setLoading(false);
     }
 
+    // --- MODAL & AUTH UI ---
     function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
-    function goToCheckoutView() {
-        if(!auth.currentUser) { toggleCart(); openAuthModal(); return; }
-        document.getElementById('cart-view-items').classList.add('hidden');
-        document.getElementById('cart-view-form').classList.remove('hidden');
-    }
     function backToCartItems() {
         document.getElementById('cart-view-items').classList.remove('hidden');
         document.getElementById('cart-view-form').classList.add('hidden');
@@ -378,47 +410,47 @@
         document.getElementById('checkout-address').classList.toggle('hidden', document.getElementById('checkout-method').value === 'ambil');
     }
     function openAuthModal() { document.getElementById('auth-modal').classList.add('active'); }
+    function closeAuthModal() { document.getElementById('auth-modal').classList.remove('active'); }
     function setLoading(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
     function showToast(m) {
         const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 5000);
+        setTimeout(() => t.style.display = 'none', 4000);
     }
     function switchAuthTab(type) {
         const isLogin = type === 'login';
-        document.getElementById('tab-login').classList.toggle('border-orange-600', isLogin);
-        document.getElementById('tab-register').classList.toggle('border-orange-600', !isLogin);
+        document.getElementById('tab-login').className = isLogin ? 'flex-1 py-4 font-bold border-b-4 border-orange-600 text-orange-600' : 'flex-1 py-4 font-bold text-gray-300 border-b-4 border-transparent';
+        document.getElementById('tab-register').className = !isLogin ? 'flex-1 py-4 font-bold border-b-4 border-orange-600 text-orange-600' : 'flex-1 py-4 font-bold text-gray-300 border-b-4 border-transparent';
         document.getElementById('form-login').classList.toggle('hidden', !isLogin);
         document.getElementById('form-register').classList.toggle('hidden', isLogin);
     }
 
-    // AUTH ACTION DENGAN ERROR HANDLING UNTUK GITHUB
-    async function handleGuestLogin() {
+    // Handle Login Real jika Firebase aktif
+    async function handleEmailLogin() {
+        if(!isFirebaseReady) return showToast("Sistem Login sedang bermasalah. Gunakan Mode Tamu.");
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-password').value;
         setLoading(true);
-        try { 
-            await auth.signInAnonymously(); 
-            document.getElementById('auth-modal').classList.remove('active'); 
-            showToast("Masuk sebagai Tamu berhasil!");
-        } catch(error) { 
-            console.error("Login Error:", error.code, error.message);
-            if (error.code === 'auth/operation-not-allowed') {
-                showToast("Error: Anonymous Auth belum diaktifkan di Console Firebase.");
-            } else if (error.code === 'auth/unauthorized-domain') {
-                showToast("Error: Domain ini (GitHub) belum didaftarkan di Firebase.");
-            } else {
-                showToast("Gagal Masuk: " + error.message);
-            }
-        }
+        try {
+            await auth.signInWithEmailAndPassword(email, pass);
+            closeAuthModal();
+            showToast("Selamat datang kembali!");
+        } catch(e) { showToast("Login gagal: " + e.message); }
         setLoading(false);
     }
 
-    auth.onAuthStateChanged(user => {
-        const sec = document.getElementById('auth-section');
-        if(user) {
-            sec.innerHTML = `<button onclick="auth.signOut()" class="text-orange-800 text-xs font-bold border border-orange-200 px-4 py-1.5 rounded-full bg-white">Keluar</button>`;
-        } else {
-            sec.innerHTML = `<button onclick="openAuthModal()" class="bg-orange-600 text-white px-5 py-1.5 rounded-full text-xs font-bold">Masuk</button>`;
-        }
-    });
+    // Listener Login
+    if (isFirebaseReady) {
+        auth.onAuthStateChanged(user => {
+            const sec = document.getElementById('auth-section');
+            if(user) {
+                sec.innerHTML = `<button onclick="auth.signOut()" class="text-orange-800 text-[10px] font-bold border border-orange-200 px-4 py-1 rounded-full">Keluar</button>`;
+            } else {
+                sec.innerHTML = `<button onclick="openAuthModal()" class="bg-orange-600 text-white px-4 py-1 rounded-full text-[10px] font-bold">Masuk</button>`;
+            }
+        });
+    } else {
+        document.getElementById('auth-section').innerHTML = `<span class="text-[10px] text-orange-400 italic">Guest Mode</span>`;
+    }
 
     renderProducts();
 </script>
