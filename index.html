@@ -129,8 +129,7 @@
         </div>
     </div>
 
-    <!-- Auth Modal & Cart Modal (Sama seperti sebelumnya namun disesuaikan responsivitasnya) -->
-    <!-- ... Bagian Auth & Cart tetap dipertahankan dengan minor CSS tweaks ... -->
+    <!-- Auth Modal & Cart Modal -->
     <div id="auth-modal" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="flex border-b border-gray-100">
@@ -225,10 +224,8 @@
     let cart = [];
     let currentCategory = 'Semua';
 
-    // Data Produk (Contoh Struktur untuk 50+ item)
+    // Data Produk
     const products = [];
-    
-    // Generator data dummy untuk demo 50 item
     const categories = ["Paket Simple", "Paket Exclusive", "Kue Satuan"];
     for(let i=1; i<=50; i++) {
         const cat = categories[i % 3];
@@ -238,7 +235,7 @@
             name: `${cat} Menu ${i}`,
             price: (i * 10000) + 50000,
             img: `https://picsum.photos/seed/${i+100}/600/600`,
-            desc: `Deskripsi detail untuk ${cat} nomor ${i}. Produk ini menggunakan bahan premium pilihan, tanpa pengawet, dan dijamin fresh. Sangat cocok untuk kado pernikahan, hantaran lamaran, atau dinikmati bersama keluarga di rumah.`
+            desc: `Deskripsi detail untuk ${cat} nomor ${i}. Produk premium tanpa pengawet.`
         });
     }
 
@@ -268,14 +265,12 @@
                     <h3 class="product-name text-xs md:text-sm font-bold text-gray-800 mb-1 line-clamp-1">${p.name}</h3>
                     <div class="mt-auto flex justify-between items-center">
                         <span class="text-orange-600 font-bold text-xs md:text-sm">Rp ${p.price.toLocaleString()}</span>
-                        <div class="text-[10px] text-gray-400"><i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
             </div>
         `).join('');
     }
 
-    // Detail Product Logic
     function openDetail(id) {
         const p = products.find(x => x.id === id);
         document.getElementById('detail-img').src = p.img;
@@ -289,7 +284,6 @@
 
     function closeDetail() { document.getElementById('detail-modal').classList.remove('active'); }
 
-    // Core Logic (Cart, Auth, Checkout)
     function addToCart(id) {
         const item = products.find(p => p.id === id);
         const existing = cart.find(c => c.id === id);
@@ -350,7 +344,6 @@
         const orderSummary = cart.map(c => `${c.name} (x${c.qty})`).join(', ');
 
         try {
-            // Automation GSheet
             const formData = new URLSearchParams();
             formData.append('name', name);
             formData.append('items', orderSummary);
@@ -359,8 +352,7 @@
             
             await fetch(GSHEET_URL, { method: 'POST', mode: 'no-cors', body: formData });
 
-            // WA Redirect
-            const msg = `*PESANAN BARU - DAPUR GHANIA*\n------------------\nPenerima: ${name}\nMenu: ${orderSummary}\nTotal: Rp ${subtotal.toLocaleString()}\n------------------\nMohon konfirmasi pesanan saya.`;
+            const msg = `*PESANAN BARU - DAPUR GHANIA*\nPenerima: ${name}\nMenu: ${orderSummary}\nTotal: Rp ${subtotal.toLocaleString()}`;
             window.open(`https://wa.me/628123456789?text=${encodeURIComponent(msg)}`, '_blank');
             
             cart = [];
@@ -372,7 +364,6 @@
         setLoading(false);
     }
 
-    // Modal & UI Utils
     function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
     function goToCheckoutView() {
         if(!auth.currentUser) { toggleCart(); openAuthModal(); return; }
@@ -390,7 +381,7 @@
     function setLoading(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
     function showToast(m) {
         const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
+        setTimeout(() => t.style.display = 'none', 5000);
     }
     function switchAuthTab(type) {
         const isLogin = type === 'login';
@@ -400,18 +391,30 @@
         document.getElementById('form-register').classList.toggle('hidden', isLogin);
     }
 
-    // Auth Actions
+    // AUTH ACTION DENGAN ERROR HANDLING UNTUK GITHUB
     async function handleGuestLogin() {
         setLoading(true);
-        try { await auth.signInAnonymously(); document.getElementById('auth-modal').classList.remove('active'); } 
-        catch(e) { showToast("Gagal masuk"); }
+        try { 
+            await auth.signInAnonymously(); 
+            document.getElementById('auth-modal').classList.remove('active'); 
+            showToast("Masuk sebagai Tamu berhasil!");
+        } catch(error) { 
+            console.error("Login Error:", error.code, error.message);
+            if (error.code === 'auth/operation-not-allowed') {
+                showToast("Error: Anonymous Auth belum diaktifkan di Console Firebase.");
+            } else if (error.code === 'auth/unauthorized-domain') {
+                showToast("Error: Domain ini (GitHub) belum didaftarkan di Firebase.");
+            } else {
+                showToast("Gagal Masuk: " + error.message);
+            }
+        }
         setLoading(false);
     }
 
     auth.onAuthStateChanged(user => {
         const sec = document.getElementById('auth-section');
         if(user) {
-            sec.innerHTML = `<button onclick="auth.signOut()" class="text-orange-800 text-xs font-bold border border-orange-200 px-4 py-1.5 rounded-full bg-white"><i class="fas fa-user-circle mr-1"></i> Keluar</button>`;
+            sec.innerHTML = `<button onclick="auth.signOut()" class="text-orange-800 text-xs font-bold border border-orange-200 px-4 py-1.5 rounded-full bg-white">Keluar</button>`;
         } else {
             sec.innerHTML = `<button onclick="openAuthModal()" class="bg-orange-600 text-white px-5 py-1.5 rounded-full text-xs font-bold">Masuk</button>`;
         }
