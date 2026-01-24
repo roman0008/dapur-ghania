@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+/* Variabel Warna Utama Dapur Ghania */
+:root {
+    --primary-brown: #4A3728;
+    --accent-gold: #C5A059;
+    --bg-cream: #FDFBF7;
+    --white: #FFFFFF;
+}
+
+/* Pengaturan Dasar */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-cream);
+    color: var(--primary-brown);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #EAE2D5;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
+/* Animasi Drawer Keranjang */
+.cart-drawer {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Kartu Produk */
+.product-card {
+    transition: all 0.3s ease;
+    border: 1px solid #F2EDE4;
+    border-radius: 32px;
+    background: var(--white);
+    padding: 16px;
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* Tombol */
+.btn-primary {
+    background-color: var(--primary-brown);
+    color: var(--white);
+    border-radius: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+.btn-primary:hover {
+    background-color: #36281d;
+    transform: scale(1.02);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.4);
+}
