@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dapur Ghania - Premium Bakery</title>
+    <title>Dapur Ghania - Belanja Kue Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase SDK (Compatibility Version) -->
@@ -17,6 +17,7 @@
             --primary: #3E2723;
             --accent: #D4AF37;
             --bg-light: #FFFFFF;
+            --soft-bg: #FDFBF7;
         }
 
         body { 
@@ -27,10 +28,16 @@
         }
         
         .font-serif { font-family: 'Playfair Display', serif; }
+        
         .page-content { display: none; animation: fadeIn 0.4s ease-out; }
         .page-content.active { display: block; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #loader { 
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.95); 
+            z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); 
+        }
 
         .product-card { 
             background: white; border-radius: 1.25rem; border: 1px solid #F0F0F0; transition: all 0.2s ease; 
@@ -46,385 +53,420 @@
         }
 
         .btn-primary {
-            @apply bg-[#3E2723] text-white py-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-black/10;
+            @apply bg-[#3E2723] text-white py-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all disabled:opacity-50;
         }
 
-        .btn-outline {
-            @apply border-2 border-[#3E2723] text-[#3E2723] py-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all;
+        .btn-secondary {
+            @apply bg-gray-100 text-[#3E2723] py-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all;
         }
 
         #toast {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: #3E2723; color: white; padding: 14px 28px; border-radius: 99px;
-            font-size: 11px; font-weight: bold; z-index: 10000; display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: auto; min-width: 280px;
+            background: #3E2723; color: white; padding: 12px 24px; border-radius: 99px;
+            font-size: 11px; font-weight: bold; z-index: 1000; display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
         .modal-container {
-            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-            background-color: rgba(62, 39, 35, 0.4); backdrop-filter: blur(8px); z-index: 9999; padding: 1.5rem;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%; display: none;
+            align-items: center; justify-content: center;
+            background-color: rgba(62, 39, 35, 0.5); backdrop-filter: blur(4px);
+            z-index: 9999; padding: 1rem;
         }
-        .modal-container.active { display: flex; }
-        .modal-content {
-            background: white; width: 100%; max-width: 400px; border-radius: 2rem; padding: 2rem;
-            position: relative; max-height: 90vh; overflow-y: auto; animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes modalPop { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .domain-badge {
-            background: #FFF5F5;
-            border: 1px solid #FED7D7;
-            padding: 1.25rem;
-            border-radius: 1.25rem;
-            font-size: 11px;
-            color: #C53030;
-            margin-top: 1.5rem;
-            animation: shake 0.5s ease-in-out;
+        .modal-container.active { display: flex; }
+
+        .modal-content {
+            background: white; width: 100%; max-width: 450px; border-radius: 2.5rem;
+            padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative; max-height: 90vh; overflow-y: auto;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .category-pill {
+            @apply flex flex-col items-center justify-center p-6 bg-white border border-gray-100 rounded-[2rem] transition-all active:scale-95 shadow-sm hover:border-[#D4AF37]/30 hover:shadow-md;
         }
     </style>
 </head>
-<body>
+<body class="bg-white">
+
+<div id="loader" class="flex-col">
+    <div class="w-10 h-10 border-4 border-gray-100 border-t-[#D4AF37] rounded-full animate-spin mb-3"></div>
+    <p class="text-[10px] font-bold tracking-[0.3em] text-gray-400 uppercase">Dapur Ghania</p>
+</div>
 
 <div id="toast"></div>
 
 <!-- Header -->
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-50">
     <div class="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center">
-        <button onclick="navigateTo('home')" class="text-xl font-serif font-bold text-[#3E2723] tracking-tight">Dapur Ghania</button>
-        
         <div class="flex items-center gap-4">
+            <button onclick="navigateTo('home')" class="text-xl font-serif font-bold tracking-tight text-[#3E2723]">Dapur Ghania</button>
+        </div>
+        
+        <div class="flex items-center gap-3">
             <div id="auth-ui">
-                <button id="login-btn" onclick="openAuthModal()" class="text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 bg-[#3E2723] text-white rounded-full hover:opacity-90 transition-all">
+                <button id="login-btn" onclick="openAuthModal()" class="text-[10px] font-bold uppercase tracking-widest px-4 py-2 border border-[#D4AF37] text-[#D4AF37] rounded-full hover:bg-[#D4AF37] hover:text-white transition-all">
                     Login
                 </button>
                 <div id="user-profile" class="hidden flex items-center gap-3 cursor-pointer" onclick="openLogoutModal()">
                     <div class="text-right hidden sm:block">
-                        <p id="user-name-display" class="text-[10px] font-bold text-[#3E2723] uppercase tracking-tighter"></p>
+                        <p id="user-name-display" class="text-[10px] font-bold text-[#3E2723] uppercase tracking-tight"></p>
+                        <p class="text-[8px] text-gray-400 uppercase">Pelanggan</p>
                     </div>
-                    <img id="user-img" class="w-10 h-10 rounded-full border-2 border-[#D4AF37]/30" src="" alt="Profil">
+                    <img id="user-img" class="w-9 h-9 rounded-full border-2 border-[#D4AF37]/20 shadow-sm" src="" alt="User">
                 </div>
             </div>
 
-            <button onclick="toggleCart()" class="relative p-2.5 text-[#3E2723] bg-gray-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                <span id="cart-count" class="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-[9px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white">0</span>
+            <button onclick="toggleCart()" class="relative p-2 text-[#3E2723] bg-gray-50 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white">0</span>
             </button>
         </div>
     </div>
 </header>
 
 <main>
-    <!-- Beranda -->
+    <!-- Home Page -->
     <div id="page-home" class="page-content active">
-        <section class="bg-[#FFFCF8] pt-20 pb-24 px-6 text-center">
+        <!-- Hero Section -->
+        <section class="bg-[#FDFBF7] pt-16 pb-20 px-6 text-center">
             <div class="max-w-xl mx-auto">
-                <h2 class="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D4AF37] mb-5">Tradisi & Rasa Premium</h2>
-                <h1 class="text-5xl font-serif text-[#3E2723] mb-8 leading-[1.15]">Nikmati Kelezatan Bakery Otentik</h1>
-                <div class="flex flex-wrap justify-center gap-4 mt-12">
-                    <button onclick="navigateTo('simple')" class="group flex flex-col items-center p-6 bg-white border border-gray-50 rounded-[2.5rem] w-32 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                        <span class="text-3xl mb-3">📦</span>
-                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#3E2723]">Simple</span>
+                <h2 class="text-[10px] font-bold uppercase tracking-[0.5em] text-[#D4AF37] mb-4">The Art of Premium Baking</h2>
+                <h1 class="text-5xl font-serif text-[#3E2723] mb-6 leading-tight">Lezatnya Kebahagiaan di Setiap Gigitan</h1>
+                <p class="text-sm text-gray-500 font-light leading-relaxed mb-10 px-4">Kami menggunakan bahan-bahan pilihan terbaik untuk menciptakan hidangan penutup yang tidak hanya cantik dipandang, tapi juga memanjakan lidah Anda.</p>
+                
+                <div class="grid grid-cols-3 gap-4">
+                    <button onclick="navigateTo('simple')" class="category-pill">
+                        <div class="w-12 h-12 bg-[#FDFBF7] rounded-2xl flex items-center justify-center text-2xl mb-3">📦</div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-[#3E2723]">Simple Box</span>
                     </button>
-                    <button onclick="navigateTo('exclusive')" class="group flex flex-col items-center p-6 bg-white border border-gray-100 rounded-[2.5rem] w-32 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                        <span class="text-3xl mb-3">💎</span>
-                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#3E2723]">Premium</span>
+                    <button onclick="navigateTo('exclusive')" class="category-pill">
+                        <div class="w-12 h-12 bg-[#FDFBF7] rounded-2xl flex items-center justify-center text-2xl mb-3">💎</div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-[#3E2723]">Premium</span>
                     </button>
-                    <button onclick="navigateTo('satuan')" class="group flex flex-col items-center p-6 bg-white border border-gray-100 rounded-[2.5rem] w-32 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                        <span class="text-3xl mb-3">🥐</span>
-                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#3E2723]">Satuan</span>
+                    <button onclick="navigateTo('satuan')" class="category-pill">
+                        <div class="w-12 h-12 bg-[#FDFBF7] rounded-2xl flex items-center justify-center text-2xl mb-3">🥐</div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-[#3E2723]">Satuan</span>
                     </button>
                 </div>
             </div>
         </section>
+
+        <!-- Why Choose Us -->
+        <section class="py-20 px-6 bg-white">
+            <div class="max-w-4xl mx-auto text-center">
+                <h3 class="text-2xl font-serif mb-12">Mengapa Memilih Dapur Ghania?</h3>
+                <div class="grid md:grid-cols-3 gap-10">
+                    <div class="space-y-4">
+                        <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-xl">🥇</div>
+                        <h4 class="font-bold text-sm tracking-tight">Bahan Premium</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed">Hanya menggunakan mentega, cokelat, dan bahan impor berkualitas tinggi.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-xl">🎨</div>
+                        <h4 class="font-bold text-sm tracking-tight">Artisan Design</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed">Setiap produk dibuat dengan detail artistik untuk momen spesial Anda.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-xl">🏠</div>
+                        <h4 class="font-bold text-sm tracking-tight">Freshly Baked</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed">Kue dibuat berdasarkan pesanan (made-to-order) untuk menjamin kesegaran.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="py-20 px-6 bg-[#FDFBF7]">
+            <div class="max-w-xl mx-auto text-center">
+                <h3 class="text-2xl font-serif mb-12">Kata Mereka</h3>
+                <div class="space-y-6">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-50 relative">
+                        <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 text-2xl">✨</span>
+                        <p class="text-sm italic text-gray-500 mb-6 leading-loose">"Snack box-nya mewah banget, isinya padat dan rasanya nggak main-main. Tamu undangan saya semuanya tanya beli di mana. Sukses terus Dapur Ghania!"</p>
+                        <h5 class="font-bold text-[10px] uppercase tracking-widest">— Ibu Maya, Arisan Regular</h5>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-50 relative">
+                        <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 text-2xl">💖</span>
+                        <p class="text-sm italic text-gray-500 mb-6 leading-loose">"Pudding art-nya cantik sekali, sayang buat dimakan! Tapi pas dicoba rasanya juara, nggak terlalu manis tapi gurih banget susu-nya."</p>
+                        <h5 class="font-bold text-[10px] uppercase tracking-widest">— Kak Sarah, Birthday Gift</h5>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / Contact Info -->
+        <footer class="bg-[#3E2723] text-white py-16 px-6">
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h2 class="text-3xl font-serif">Dapur Ghania</h2>
+                    <p class="text-sm text-gray-400 leading-relaxed">Kami siap melayani kebutuhan konsumsi acara kantor, hajatan, hingga hantaran keluarga dengan standar kualitas bintang lima.</p>
+                    <div class="space-y-4 pt-4">
+                        <div class="flex items-start gap-4">
+                            <span class="text-xl">📍</span>
+                            <div>
+                                <h5 class="font-bold text-xs uppercase tracking-widest mb-1 text-[#D4AF37]">Workshop</h5>
+                                <p class="text-xs text-gray-400 leading-relaxed">Jl. Bunga Melati No. 45, Kebayoran Baru, Jakarta Selatan, 12150</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <span class="text-xl">📱</span>
+                            <div>
+                                <h5 class="font-bold text-xs uppercase tracking-widest mb-1 text-[#D4AF37]">WhatsApp</h5>
+                                <p class="text-xs text-gray-400">+62 895 3340 16084</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Google Maps Embed -->
+                <div class="w-full h-64 rounded-[2rem] overflow-hidden border-4 border-white/5 grayscale hover:grayscale-0 transition-all shadow-2xl">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.282901306132!2d106.80005527586!3d-6.226316260978086!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f14f52e5050d%3A0x6a0c0b396e9622!2sKebayoran%20Baru%2C%20South%20Jakarta%20City%2C%20Jakarta!5e0!3m2!1sen!2sid!4v1705500000000!5m2!1sen!2sid" 
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+            <div class="max-w-4xl mx-auto border-t border-white/10 mt-16 pt-8 text-center">
+                <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500">&copy; 2026 Dapur Ghania Artisan Bakery. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
 
-    <!-- Halaman Katalog -->
-    <div id="page-simple" class="page-content p-6 max-w-7xl mx-auto">
-        <h2 class="text-2xl font-serif font-bold mb-8">Paket Simple Box</h2>
-        <div id="list-simple" class="grid grid-cols-2 md:grid-cols-4 gap-6 pb-20"></div>
+    <!-- Category Pages -->
+    <div id="page-simple" class="page-content p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <button onclick="navigateTo('home')" class="p-2 bg-gray-50 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <h2 class="text-2xl font-serif font-bold text-[#3E2723]">Paket Simple</h2>
+        </div>
+        <div id="list-simple" class="grid grid-cols-2 gap-4 pb-20"></div>
     </div>
-    <div id="page-exclusive" class="page-content p-6 max-w-7xl mx-auto">
-        <h2 class="text-2xl font-serif font-bold mb-8">Exclusive Collection</h2>
-        <div id="list-exclusive" class="grid grid-cols-2 md:grid-cols-4 gap-6 pb-20"></div>
+
+    <div id="page-exclusive" class="page-content p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <button onclick="navigateTo('home')" class="p-2 bg-gray-50 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <h2 class="text-2xl font-serif font-bold text-[#3E2723]">Exclusive Collection</h2>
+        </div>
+        <div id="list-exclusive" class="grid grid-cols-2 gap-4 pb-20"></div>
     </div>
-    <div id="page-satuan" class="page-content p-6 max-w-7xl mx-auto">
-        <h2 class="text-2xl font-serif font-bold mb-8">Menu Satuan</h2>
-        <div id="list-satuan" class="grid grid-cols-2 md:grid-cols-4 gap-6 pb-20"></div>
+
+    <div id="page-satuan" class="page-content p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <button onclick="navigateTo('home')" class="p-2 bg-gray-50 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <h2 class="text-2xl font-serif font-bold text-[#3E2723]">Kue Satuan</h2>
+        </div>
+        <div id="list-satuan" class="grid grid-cols-2 gap-4 pb-20"></div>
     </div>
 </main>
-
-<!-- Modal Auth -->
-<div id="auth-modal" class="modal-container">
-    <div class="modal-content">
-        <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors text-2xl">&times;</button>
-        
-        <div id="auth-header" class="text-center mb-8">
-            <h2 id="auth-title" class="text-2xl font-serif font-bold text-[#3E2723] mb-2">Selamat Datang</h2>
-            <p id="auth-subtitle" class="text-[11px] text-gray-400 uppercase tracking-widest">Akses Menu Dapur Ghania</p>
-        </div>
-        
-        <div class="space-y-4">
-            <div id="reg-name-container" class="hidden">
-                <input type="text" id="auth-name" placeholder="Nama Lengkap" class="input-minimal">
-            </div>
-            <div id="email-pass-fields">
-                <input type="email" id="auth-email" placeholder="Email" class="input-minimal mb-4">
-                <input type="password" id="auth-password" placeholder="Password" class="input-minimal">
-            </div>
-            
-            <button id="auth-main-btn" onclick="submitAuth()" class="btn-primary w-full mt-2">Masuk Sekarang</button>
-            
-            <div class="flex items-center gap-3 my-4">
-                <div class="flex-1 h-[1px] bg-gray-100"></div>
-                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Atau</span>
-                <div class="flex-1 h-[1px] bg-gray-100"></div>
-            </div>
-
-            <button id="guest-btn" onclick="signInGuest()" class="btn-outline w-full">Lanjutkan Sebagai Tamu</button>
-            
-            <p class="text-center text-[11px] text-gray-400 mt-4">
-                <span id="auth-switch-text">Belum punya akun?</span> 
-                <button onclick="toggleAuthMode()" id="auth-switch-btn" class="font-bold text-[#D4AF37] uppercase tracking-wider ml-1 hover:underline">Daftar Di Sini</button>
-            </p>
-        </div>
-
-        <!-- Domain Fixer instructions -->
-        <div id="domain-fixer" class="domain-badge hidden">
-            <div class="flex items-center gap-2 mb-2 font-bold text-red-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                Domain Belum Diizinkan
-            </div>
-            <p class="mb-3 text-red-600 leading-snug">Firebase memblokir domain sandbox baru ini. Anda harus menambahkan domain di bawah ini ke <b>Authorized Domains</b> di Firebase Console Anda.</p>
-            <div class="flex gap-2">
-                <code id="domain-text" class="flex-1 bg-white p-2 rounded border border-red-200 font-mono text-[9px] truncate"></code>
-                <button onclick="copyDomain()" class="px-3 bg-red-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-tight">Salin</button>
-            </div>
-            <p class="mt-3 text-[9px] text-red-500 italic">*Domain ini berubah setiap kali sandbox di-refresh.</p>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Logout -->
-<div id="logout-modal" class="modal-container">
-    <div class="modal-content text-center">
-        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V4" /></svg>
-        </div>
-        <h2 class="text-xl font-bold font-serif mb-2">Keluar Akun?</h2>
-        <p class="text-xs text-gray-400 mb-8 uppercase tracking-widest">Sesi belanja Anda akan berakhir</p>
-        <button onclick="processLogout()" class="btn-primary w-full mb-3">Konfirmasi Keluar</button>
-        <button onclick="closeLogoutModal()" class="w-full py-2 text-[10px] font-bold uppercase text-gray-300 tracking-widest">Batal</button>
-    </div>
-</div>
 
 <!-- Modal Keranjang -->
 <div id="cart-modal" class="modal-container">
     <div class="modal-content">
-        <h2 class="text-2xl font-serif font-bold mb-6">Keranjang</h2>
-        <div id="cart-items" class="space-y-3 mb-8 max-h-[40vh] overflow-y-auto pr-2"></div>
-        <div class="border-t border-gray-100 pt-6">
-            <div class="flex justify-between items-center mb-8">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Estimasi</span>
-                <span id="cart-total" class="text-xl font-bold text-[#D4AF37]">Rp 0</span>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold font-serif">Keranjang</h2>
+            <button onclick="toggleCart()" class="bg-gray-50 p-2 rounded-full text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div id="cart-items" class="overflow-y-auto space-y-4 mb-6 max-h-[40vh] pr-2"></div>
+        <div class="border-t pt-6">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xs font-bold text-gray-400 uppercase">Total Estimasi</span>
+                <span id="cart-total" class="text-2xl font-bold text-[#3E2723]">Rp 0</span>
             </div>
-            <button onclick="checkout()" class="btn-primary w-full">Proses Pesanan</button>
+            <button onclick="openCheckoutForm()" class="btn-primary w-full shadow-lg shadow-[#3E2723]/20">Lanjut ke Checkout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Form Checkout -->
+<div id="checkout-form-modal" class="modal-container">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold font-serif text-[#D4AF37]">Detail Pengiriman</h2>
+            <button onclick="closeCheckoutForm()" class="text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Nama Penerima</label>
+                <input type="text" id="order-name" class="input-minimal" placeholder="Contoh: Ibu Ani">
+            </div>
+            <div>
+                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Nomor WhatsApp</label>
+                <input type="tel" id="order-phone" class="input-minimal" placeholder="6212...">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Tgl Ambil/Kirim</label>
+                    <input type="date" id="order-date" class="input-minimal">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Jam</label>
+                    <input type="time" id="order-time" class="input-minimal">
+                </div>
+            </div>
+            <div>
+                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Metode Pesanan</label>
+                <select id="order-method" class="input-minimal" onchange="toggleAddressInput()">
+                    <option value="Diambil Sendiri">Diambil Sendiri</option>
+                    <option value="Dikirim / Kurir">Dikirim / Kurir</option>
+                </select>
+            </div>
+            <div id="address-container" class="hidden">
+                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Alamat Lengkap</label>
+                <textarea id="order-address" class="input-minimal h-24 pt-4" placeholder="Jl. Mawar No. 123..."></textarea>
+            </div>
+            <div>
+                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-2">Catatan Khusus</label>
+                <input type="text" id="order-note" class="input-minimal" placeholder="Contoh: Tanpa kacang / Kartu ucapan">
+            </div>
+
+            <button onclick="submitOrder()" id="btn-submit-order" class="btn-primary w-full mt-4 flex items-center justify-center gap-3">
+                <span>Konfirmasi Pesanan</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Auth & Logout (Tetap Sama) -->
+<div id="auth-modal" class="modal-container">
+    <div class="modal-content">
+        <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        <div class="flex gap-4 mb-8">
+            <button id="tab-login" onclick="switchAuthTab('login')" class="text-sm font-bold border-b-2 border-[#3E2723] pb-2">Masuk</button>
+            <button id="tab-register" onclick="switchAuthTab('register')" class="text-sm font-bold text-gray-300 border-b-2 border-transparent pb-2">Daftar</button>
+        </div>
+        <div id="form-login" class="space-y-4">
+            <input type="email" id="login-email" placeholder="Email" class="input-minimal">
+            <input type="password" id="login-password" placeholder="Password" class="input-minimal">
+            <button onclick="handleEmailLogin()" class="btn-primary w-full">Masuk</button>
+            <button onclick="handleGoogleLogin()" class="w-full py-4 border border-gray-100 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold hover:bg-gray-50 transition-all">Google Login</button>
+        </div>
+        <div id="form-register" class="space-y-4 hidden">
+            <input type="text" id="reg-name" placeholder="Nama" class="input-minimal">
+            <input type="email" id="reg-email" placeholder="Email" class="input-minimal">
+            <input type="password" id="reg-password" placeholder="Password" class="input-minimal">
+            <button onclick="handleEmailRegister()" class="btn-primary w-full">Daftar</button>
+        </div>
+    </div>
+</div>
+
+<div id="logout-modal" class="modal-container">
+    <div class="modal-content text-center">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-3xl">👋</span>
+        </div>
+        <h2 class="text-xl font-bold font-serif mb-2">Ingin Keluar?</h2>
+        <p class="text-sm text-gray-500 mb-8">Anda akan keluar dari akun Dapur Ghania.</p>
+        <div class="flex flex-col gap-3">
+            <button onclick="processLogout()" class="btn-primary w-full">Ya, Keluar</button>
+            <button onclick="closeLogoutModal()" class="btn-secondary w-full">Batal</button>
         </div>
     </div>
 </div>
 
 <script>
+    // --- KONFIGURASI ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_KG2xz-bDztuIw1gBhcKqfK2LjPZbm_SZbQsUwcvc5X-GDPTCTTSDDlVpPOyZ0K4bKw/exec"; 
+    const ADMIN_WA = "62895334016084"; 
+
     const firebaseConfig = {
         apiKey: "AIzaSyCgzjHOF5qTfevqRAMNdpLl5oPzrb02onM",
         authDomain: "dapur-ghania.firebaseapp.com",
         projectId: "dapur-ghania",
         storageBucket: "dapur-ghania.firebasestorage.app",
         messagingSenderId: "745922887760",
-        appId: "1:745922887760:web:41c5cf27ed90bb403f9155",
-        measurementId: "G-KQ1PX45ZZH"
+        appId: "1:745922887760:web:41c5cf27ed90bb403f9155"
     };
 
-    // Inisialisasi Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
     let cart = [];
-    let isRegisterMode = false;
+    let currentUser = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Refresh domain display
-        updateDomainDisplay();
-        renderProducts();
-    });
+    const products = {
+        simple: [
+            { id: 1, name: "Snack Box Hemat", price: 15000, img: "https://images.unsplash.com/photo-1558326567-98ae2405596b?w=400" },
+            { id: 2, name: "Snack Box Reguler", price: 25000, img: "https://images.unsplash.com/photo-1612203985729-70726954388c?w=400" }
+        ],
+        exclusive: [
+            { id: 10, name: "Pudding Art Premium", price: 175000, img: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400" },
+            { id: 11, name: "Hantaran Exclusive", price: 250000, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400" }
+        ],
+        satuan: [
+            { id: 20, name: "Risol Mayo Mozzarella", price: 6500, img: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=400" },
+            { id: 21, name: "Lemper Ayam Bakar", price: 5500, img: "https://images.unsplash.com/photo-1582234372722-50d7ccc30eb3?w=400" }
+        ]
+    };
 
-    function updateDomainDisplay() {
-        const hostname = window.location.hostname;
-        const domainText = document.getElementById('domain-text');
-        if (domainText) domainText.innerText = hostname;
-    }
-
-    function toggleAuthMode() {
-        isRegisterMode = !isRegisterMode;
-        const title = document.getElementById('auth-title');
-        const mainBtn = document.getElementById('auth-main-btn');
-        const switchText = document.getElementById('auth-switch-text');
-        const switchBtn = document.getElementById('auth-switch-btn');
-        const nameContainer = document.getElementById('reg-name-container');
-
-        if (isRegisterMode) {
-            title.innerText = "Daftar Akun";
-            mainBtn.innerText = "Buat Akun Sekarang";
-            switchText.innerText = "Sudah punya akun?";
-            switchBtn.innerText = "Login Masuk";
-            nameContainer.classList.remove('hidden');
-        } else {
-            title.innerText = "Selamat Datang";
-            mainBtn.innerText = "Masuk Sekarang";
-            switchText.innerText = "Belum punya akun?";
-            switchBtn.innerText = "Daftar Di Sini";
-            nameContainer.classList.add('hidden');
-        }
-    }
-
-    async function submitAuth() {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-password').value;
-        const name = document.getElementById('auth-name').value;
-
-        if (!email || !pass) return showToast("Mohon isi email dan password.");
-
-        try {
-            if (isRegisterMode) {
-                if (!name) return showToast("Mohon isi nama lengkap.");
-                const res = await auth.createUserWithEmailAndPassword(email, pass);
-                await res.user.updateProfile({ displayName: name });
-                showToast("Pendaftaran berhasil!");
-            } else {
-                await auth.signInWithEmailAndPassword(email, pass);
-                showToast("Selamat datang kembali!");
-            }
-            closeAuthModal();
-        } catch(e) { handleAuthError(e); }
-    }
-
-    async function signInGuest() {
-        try {
-            await auth.signInAnonymously();
-            showToast("Masuk sebagai Tamu.");
-            closeAuthModal();
-        } catch(e) { handleAuthError(e); }
-    }
-
-    function handleAuthError(e) {
-        console.error("Firebase Auth Error:", e.code, e.message);
-        
-        // Deteksi spesifik eror domain/referer
-        const isDomainError = e.code === "auth/unauthorized-domain" || 
-                             e.message.toLowerCase().includes("referer") || 
-                             e.message.toLowerCase().includes("blocked");
-
-        if (isDomainError) {
-            showToast("Domain Sandbox Belum Diizinkan!");
-            updateDomainDisplay();
-            document.getElementById('domain-fixer').classList.remove('hidden');
-            // Scroll ke bawah agar instruksi terlihat
-            const modalContent = document.querySelector('.modal-content');
-            modalContent.scrollTo({ top: modalContent.scrollHeight, behavior: 'smooth' });
-        } else if (e.code === "auth/email-already-in-use") {
-            showToast("Email sudah terdaftar.");
-        } else if (e.code === "auth/weak-password") {
-            showToast("Password minimal 6 karakter.");
-        } else if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
-            showToast("Email atau Password salah.");
-        } else {
-            showToast("Gagal: " + e.message);
-        }
-    }
-
-    function copyDomain() {
-        const domain = window.location.hostname;
-        const el = document.createElement('textarea');
-        el.value = domain;
-        document.body.appendChild(el);
-        el.select();
-        try {
-            document.execCommand('copy');
-            showToast("Domain disalin! Tempel di Firebase Console.");
-        } catch (err) {
-            showToast("Gagal menyalin. Silakan salin manual.");
-        }
-        document.body.removeChild(el);
-    }
-
+    // Firebase Auth Listener
     auth.onAuthStateChanged((user) => {
+        currentUser = user;
         const loginBtn = document.getElementById('login-btn');
         const userProfile = document.getElementById('user-profile');
         const userNameDisp = document.getElementById('user-name-display');
         const userImg = document.getElementById('user-img');
 
-        if (user) {
+        if (user && !user.isAnonymous) {
             loginBtn.classList.add('hidden');
             userProfile.classList.remove('hidden');
-            
-            if (user.isAnonymous) {
-                userNameDisp.innerText = "Tamu (Guest)";
-                userImg.src = `https://ui-avatars.com/api/?name=Guest&background=E5E7EB&color=3E2723&rounded=true`;
-            } else {
-                userNameDisp.innerText = user.displayName || user.email.split('@')[0];
-                userImg.src = `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=3E2723&color=fff&rounded=true`;
-            }
+            userNameDisp.innerText = user.displayName || user.email.split('@')[0];
+            userImg.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=3E2723&color=fff`;
+            syncUserData(user);
         } else {
             loginBtn.classList.remove('hidden');
             userProfile.classList.add('hidden');
         }
     });
 
-    async function processLogout() {
-        await auth.signOut();
-        closeLogoutModal();
-        showToast("Anda telah keluar.");
+    async function syncUserData(user) {
+        if (!SCRIPT_URL) return;
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'sync_user',
+                    uid: user.uid,
+                    name: user.displayName || user.email,
+                    email: user.email,
+                    photo: user.photoURL || ""
+                })
+            });
+        } catch (error) {}
     }
 
-    // Data Produk
-    const products = {
-        simple: [
-            { id: 1, name: "Snack Box Hemat (3 Kue)", price: 15000, img: "https://images.unsplash.com/photo-1558326567-98ae2405596b?w=400" },
-            { id: 2, name: "Snack Box Arisan (4 Kue + Air)", price: 25000, img: "https://images.unsplash.com/photo-1612203985729-70726954388c?w=400" },
-            { id: 3, name: "Snack Box Kantoran", price: 35000, img: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=400" }
-        ],
-        exclusive: [
-            { id: 10, name: "Pudding Art Flowers", price: 175000, img: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400" },
-            { id: 11, name: "Hantaran Pernikahan Premium", price: 350000, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400" },
-            { id: 12, name: "Premium Gift Basket", price: 285000, img: "https://images.unsplash.com/photo-1582234372722-50d7ccc30eb3?w=400" }
-        ],
-        satuan: [
-            { id: 20, name: "Risol Mayo Mozzarella", price: 6500, img: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=400" },
-            { id: 21, name: "Lemper Ayam Special", price: 5500, img: "https://images.unsplash.com/photo-1582234372722-50d7ccc30eb3?w=400" },
-            { id: 22, name: "Kue Sus Buah Segar", price: 7500, img: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400" }
-        ]
-    };
+    function navigateTo(pageId) {
+        document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     function renderProducts() {
-        Object.keys(products).forEach(cat => {
-            const el = document.getElementById('list-' + cat);
-            if (el) el.innerHTML = products[cat].map(p => `
-                <div class="product-card group overflow-hidden">
+        Object.keys(products).forEach(category => {
+            const list = document.getElementById('list-' + category);
+            if(!list) return;
+            list.innerHTML = products[category].map(p => `
+                <div class="product-card group">
                     <div class="img-container">
-                        <img src="${p.img}" alt="${p.name}" class="group-hover:scale-110 transition-transform duration-700">
+                        <img src="${p.img}" alt="${p.name}" class="group-hover:scale-110 transition-transform duration-500">
                     </div>
-                    <div class="p-5">
-                        <h4 class="text-[10px] font-bold uppercase mb-2 h-8 line-clamp-2 leading-tight tracking-tight text-gray-700">${p.name}</h4>
+                    <div class="p-4">
+                        <h4 class="text-[10px] font-bold h-8 line-clamp-2 leading-tight uppercase tracking-tighter">${p.name}</h4>
                         <div class="flex justify-between items-center mt-3">
                             <span class="text-xs font-bold text-[#D4AF37]">Rp ${p.price.toLocaleString()}</span>
-                            <button onclick="addToCart(${p.id}, '${p.name}', ${p.price})" class="w-9 h-9 bg-[#3E2723] text-white rounded-2xl shadow-md active:scale-90 transition-all flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
-                            </button>
+                            <button onclick="addToCart(${p.id}, '${p.name}', ${p.price})" class="w-8 h-8 bg-[#3E2723] text-white rounded-xl active:scale-90 transition-all shadow-md">+</button>
                         </div>
                     </div>
                 </div>
@@ -436,68 +478,186 @@
         const item = cart.find(i => i.id === id);
         if(item) item.qty++; else cart.push({ id, name, price, qty: 1 });
         updateUI();
-        showToast("Ditambahkan ke keranjang");
+        showToast("✓ Ditambahkan");
     }
 
     function updateUI() {
         const count = cart.reduce((s, i) => s + i.qty, 0);
         document.getElementById('cart-count').innerText = count;
-        document.getElementById('cart-total').innerText = `Rp ${cart.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString()}`;
-        document.getElementById('cart-items').innerHTML = cart.map(i => `
-            <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+        const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+        document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
+        const itemsList = document.getElementById('cart-items');
+        itemsList.innerHTML = cart.map(item => `
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl text-[11px] border border-gray-100">
                 <div class="flex flex-col">
-                    <span class="text-[10px] font-bold text-[#3E2723] uppercase truncate w-32">${i.name}</span>
-                    <span class="text-[9px] text-gray-400 font-bold">${i.qty} x Rp ${i.price.toLocaleString()}</span>
+                    <span class="font-bold text-[#3E2723]">${item.name}</span>
+                    <span class="text-gray-400">@ Rp ${item.price.toLocaleString()}</span>
                 </div>
                 <div class="flex items-center gap-3">
-                     <span class="font-bold text-[#D4AF37] text-xs">Rp ${(i.price * i.qty).toLocaleString()}</span>
-                     <button onclick="removeFromCart(${i.id})" class="w-7 h-7 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-red-400 text-lg">&times;</button>
+                    <button onclick="updateQty(${item.id}, -1)" class="w-7 h-7 bg-white shadow-sm border border-gray-100 rounded-lg flex items-center justify-center font-bold">-</button>
+                    <span class="font-bold w-4 text-center">${item.qty}</span>
+                    <button onclick="updateQty(${item.id}, 1)" class="w-7 h-7 bg-white shadow-sm border border-gray-100 rounded-lg flex items-center justify-center font-bold">+</button>
                 </div>
             </div>
-        `).join('') || '<div class="text-center py-10 opacity-30 text-[9px] font-bold uppercase tracking-[0.2em]">Keranjang Masih Kosong</div>';
+        `).join('') || '<div class="text-center py-10"><span class="text-4xl block mb-2">🧁</span><p class="text-gray-400 text-[10px] uppercase tracking-widest">Belum ada pesanan</p></div>';
     }
 
-    function removeFromCart(id) {
-        cart = cart.filter(i => i.id !== id);
+    function updateQty(id, delta) {
+        const item = cart.find(i => i.id === id);
+        if(!item) return;
+        item.qty += delta;
+        if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
         updateUI();
     }
 
-    function checkout() {
-        if (cart.length === 0) return showToast("Keranjang Anda kosong!");
-        if (!auth.currentUser) {
-            showToast("Silakan login untuk memesan.");
-            openAuthModal();
-            return;
+    function openCheckoutForm() {
+        if (cart.length === 0) return showToast("Wah, keranjang kosong!");
+        if (currentUser) {
+            document.getElementById('order-name').value = currentUser.displayName || "";
         }
-        showToast("Berhasil! Tim kami akan menghubungi Anda.");
-        cart = []; updateUI(); toggleCart();
+        toggleCart();
+        document.getElementById('checkout-form-modal').classList.add('active');
     }
 
-    function navigateTo(p) {
-        document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-        const target = document.getElementById('page-' + p);
-        if (target) target.classList.add('active');
-        window.scrollTo({top: 0, behavior: 'smooth'});
+    function closeCheckoutForm() { document.getElementById('checkout-form-modal').classList.remove('active'); }
+
+    function toggleAddressInput() {
+        const method = document.getElementById('order-method').value;
+        document.getElementById('address-container').classList.toggle('hidden', method !== 'Dikirim / Kurir');
     }
 
-    window.showToast = (m) => { 
-        const t = document.getElementById('toast'); 
-        t.innerText = m; t.style.display = 'block'; 
-        setTimeout(() => t.style.display = 'none', 4000); 
-    };
-    window.openAuthModal = () => {
-        updateDomainDisplay();
-        document.getElementById('auth-modal').classList.add('active');
-    };
-    window.closeAuthModal = () => { 
-        document.getElementById('auth-modal').classList.remove('active'); 
-        document.getElementById('domain-fixer').classList.add('hidden');
-        isRegisterMode = true; 
-        toggleAuthMode(); 
-    };
-    window.openLogoutModal = () => document.getElementById('logout-modal').classList.add('active');
-    window.closeLogoutModal = () => document.getElementById('logout-modal').classList.remove('active');
-    window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('active');
+    async function submitOrder() {
+        const btn = document.getElementById('btn-submit-order');
+        const name = document.getElementById('order-name').value;
+        const phoneInput = document.getElementById('order-phone').value;
+        const date = document.getElementById('order-date').value;
+        const time = document.getElementById('order-time').value;
+        const method = document.getElementById('order-method').value;
+        const address = document.getElementById('order-address').value;
+        const note = document.getElementById('order-note').value;
+
+        if (!name || !phoneInput || !date || !time) return showToast("Data belum lengkap!");
+        if (method === 'Dikirim / Kurir' && !address) return showToast("Alamat kirim wajib!");
+
+        btn.disabled = true;
+        btn.innerHTML = `<span>Memproses...</span>`;
+        setLoading(true);
+
+        const itemsString = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
+        const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+
+        const orderData = {
+            action: 'save_order',
+            name: name,
+            phone: phoneInput,
+            date: date,
+            time: time,
+            method: method,
+            address: address || "-",
+            items: itemsString,
+            total: total,
+            note: note || "-",
+            user_id: currentUser ? currentUser.uid : "Guest"
+        };
+
+        if (SCRIPT_URL) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+            } catch (e) {}
+        }
+
+        // Generate WA Link
+        let waMsg = `*PESANAN BARU - DAPUR GHANIA*\n`;
+        waMsg += `------------------------------------\n`;
+        waMsg += `*Nama:* ${name}\n`;
+        waMsg += `*WA:* ${phoneInput}\n`;
+        waMsg += `*Jadwal:* ${date} (${time})\n`;
+        waMsg += `*Metode:* ${method}\n`;
+        if(method === 'Dikirim / Kurir') waMsg += `*Alamat:* ${address}\n`;
+        waMsg += `\n*Detail Pesanan:* \n${cart.map(i => `- ${i.name} (${i.qty}x)`).join('\n')}\n`;
+        waMsg += `\n*TOTAL: Rp ${total.toLocaleString()}*\n`;
+        if(note) waMsg += `\n*Catatan:* ${note}`;
+
+        const waUrl = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`;
+        
+        setLoading(false);
+        window.open(waUrl, '_blank');
+        
+        // Reset
+        cart = []; updateUI(); closeCheckoutForm();
+        btn.disabled = false;
+        btn.innerHTML = `<span>Konfirmasi Pesanan</span>`;
+        showToast("Sukses Terkirim!");
+    }
+
+    function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
+    function openAuthModal() { document.getElementById('auth-modal').classList.add('active'); }
+    function closeAuthModal() { document.getElementById('auth-modal').classList.remove('active'); }
+    function openLogoutModal() { document.getElementById('logout-modal').classList.add('active'); }
+    function closeLogoutModal() { document.getElementById('logout-modal').classList.remove('active'); }
+    
+    async function processLogout() {
+        setLoading(true);
+        try { await auth.signOut(); } catch(e) {}
+        closeLogoutModal(); setLoading(false);
+        showToast("Sampai jumpa!");
+    }
+
+    function switchAuthTab(type) {
+        const isLogin = type === 'login';
+        document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+        document.getElementById('form-register').classList.toggle('hidden', isLogin);
+        document.getElementById('tab-login').classList.toggle('text-gray-300', !isLogin);
+        document.getElementById('tab-login').classList.toggle('border-[#3E2723]', isLogin);
+        document.getElementById('tab-register').classList.toggle('text-gray-300', isLogin);
+        document.getElementById('tab-register').classList.toggle('border-[#3E2723]', !isLogin);
+    }
+
+    async function handleEmailRegister() {
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+        if(!name || !email || password.length < 6) return showToast("Lengkapi data!");
+        setLoading(true);
+        try {
+            const res = await auth.createUserWithEmailAndPassword(email, password);
+            await res.user.updateProfile({ displayName: name });
+            closeAuthModal();
+        } catch (e) { showToast("Coba email lain"); }
+        setLoading(false);
+    }
+
+    async function handleEmailLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        setLoading(true);
+        try { 
+            await auth.signInWithEmailAndPassword(email, password); 
+            closeAuthModal();
+        } catch (e) { showToast("Email/Pass salah"); }
+        setLoading(false);
+    }
+
+    async function handleGoogleLogin() {
+        try { 
+            await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); 
+            closeAuthModal();
+        } catch (e) {}
+    }
+
+    function setLoading(val) { document.getElementById('loader').style.display = val ? 'flex' : 'none'; }
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    window.onload = renderProducts;
 </script>
 </body>
 </html>
