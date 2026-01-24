@@ -5,175 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dapur Ghania - Hantaran & Hampers</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-        
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         h1, h2, h3 { font-family: 'Playfair Display', serif; }
-
         .modal { display: none; }
         .modal.active { display: flex; }
         #loader { display: none; }
         #toast { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; }
         .hidden { display: none; }
-        
-        .product-card { 
-            transition: all 0.3s ease; 
-            border: 1px solid #f3f4f6;
-            cursor: pointer;
-        }
+        .product-card { transition: all 0.3s ease; border: 1px solid #f3f4f6; cursor: pointer; }
         .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        
         .category-tab.active { background-color: #ea580c; color: white; border-color: transparent; }
-
         @media (max-width: 640px) {
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .product-card img { height: 140px; }
         }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-[#FFFAF5] text-gray-800">
 
-    <!-- Navbar -->
     <nav class="bg-white/90 backdrop-blur-md border-b border-orange-100 p-3 md:p-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-bold text-orange-800 flex items-center gap-2">
                 <i class="fas fa-gift text-orange-600"></i> Dapur Ghania
             </h1>
-            <div class="flex items-center gap-2 md:gap-6">
-                <button onclick="toggleCart()" class="relative p-2 text-orange-800 hover:bg-orange-50 rounded-full transition">
-                    <i class="fas fa-shopping-bag text-lg md:text-xl"></i>
-                    <span id="cart-count" class="absolute top-0 right-0 bg-orange-600 text-white text-[10px] font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center border-2 border-white">0</span>
-                </button>
-                <div id="auth-section"></div>
-            </div>
+            <button onclick="toggleCart()" class="relative p-2 text-orange-800">
+                <i class="fas fa-shopping-bag text-xl"></i>
+                <span id="cart-count" class="absolute top-0 right-0 bg-orange-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">0</span>
+            </button>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="container mx-auto p-4 md:p-6 min-h-screen">
-        <div class="flex flex-nowrap overflow-x-auto gap-2 mb-8 no-scrollbar pb-2">
-            <button onclick="filterCategory('Semua')" class="category-tab active whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-xs md:text-sm font-semibold transition" data-cat="Semua">Semua</button>
-            <button onclick="filterCategory('Paket Simple')" class="category-tab whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-xs md:text-sm font-semibold transition text-gray-600" data-cat="Paket Simple">Paket Simple</button>
-            <button onclick="filterCategory('Paket Exclusive')" class="category-tab whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-xs md:text-sm font-semibold transition text-gray-600" data-cat="Paket Exclusive">Paket Exclusive</button>
+        <!-- Kategori -->
+        <div class="flex overflow-x-auto gap-2 mb-8 no-scrollbar pb-2">
+            <button onclick="filterCategory('Semua')" class="category-tab active whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-sm font-semibold transition" data-cat="Semua">Semua</button>
+            <button onclick="filterCategory('Paket Simple')" class="category-tab whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-sm font-semibold transition text-gray-600" data-cat="Paket Simple">Paket Simple</button>
+            <button onclick="filterCategory('Paket Exclusive')" class="category-tab whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-sm font-semibold transition text-gray-600" data-cat="Paket Exclusive">Paket Exclusive</button>
+            <button onclick="filterCategory('Kue Satuan')" class="category-tab whitespace-nowrap px-5 py-2 rounded-full border border-orange-200 text-sm font-semibold transition text-gray-600" data-cat="Kue Satuan">Kue Satuan</button>
         </div>
-
+        
+        <!-- Grid Produk -->
         <div id="product-list" class="product-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
     </main>
 
-    <!-- Cart Modal -->
+    <!-- Modal Detail Produk -->
+    <div id="detail-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col md:flex-row relative">
+            <button onclick="closeDetail()" class="absolute top-4 right-4 z-10 bg-white/80 w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="w-full md:w-1/2 h-64 md:h-auto overflow-hidden">
+                <img id="detail-img" src="" class="w-full h-full object-cover">
+            </div>
+            <div class="w-full md:w-1/2 p-6 flex flex-col justify-center">
+                <span id="detail-badge" class="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-md w-fit mb-2 uppercase"></span>
+                <h3 id="detail-name" class="text-2xl font-bold mb-2 text-orange-900 leading-tight"></h3>
+                <p id="detail-desc" class="text-gray-500 text-sm mb-6 leading-relaxed"></p>
+                <div id="detail-price" class="text-2xl font-bold text-orange-600 mb-6"></div>
+                <button id="detail-add-btn" class="bg-orange-600 text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-orange-700 transition">
+                    Tambah ke Keranjang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Keranjang & Checkout -->
     <div id="cart-modal" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] items-center justify-end">
         <div class="bg-white h-full w-full max-w-md p-5 flex flex-col shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-orange-900">Checkout</h3>
-                <button onclick="toggleCart()" class="text-gray-400"><i class="fas fa-times"></i></button>
+                <h3 class="text-xl font-bold text-orange-900">Pesanan Anda</h3>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-times"></i></button>
             </div>
             
             <div id="cart-view-items" class="flex-1 flex flex-col overflow-hidden">
                 <div id="cart-items" class="flex-1 overflow-y-auto space-y-3"></div>
                 <div class="border-t pt-4 mt-4">
                     <div class="flex justify-between font-bold text-lg mb-4">
-                        <span>Total:</span> <span id="cart-total">Rp 0</span>
+                        <span>Total:</span> <span id="cart-total" class="text-orange-600">Rp 0</span>
                     </div>
-                    <button onclick="goToCheckoutView()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold">Isi Data Pengiriman</button>
+                    <button onclick="goToCheckoutView()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-orange-100">Isi Data Pengiriman</button>
                 </div>
             </div>
 
             <div id="cart-view-form" class="flex-1 hidden flex flex-col overflow-hidden">
-                <button onclick="backToCartItems()" class="text-xs text-orange-600 mb-4 font-bold flex items-center gap-2"><i class="fas fa-arrow-left"></i> Kembali</button>
-                <div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Informasi Pemesan</label>
-                    <input type="text" id="checkout-name" placeholder="Nama Lengkap" class="w-full p-3 bg-gray-50 rounded-xl border">
-                    <input type="tel" id="checkout-phone" placeholder="No. WhatsApp (Contoh: 0812...)" class="w-full p-3 bg-gray-50 rounded-xl border">
-                    
-                    <label class="text-[10px] font-bold text-gray-400 uppercase mt-2 block">Jadwal Pengiriman</label>
+                <button onclick="backToCartItems()" class="text-xs text-orange-600 mb-4 font-bold flex items-center gap-1">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Keranjang
+                </button>
+                <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                    <input type="text" id="checkout-name" placeholder="Nama Lengkap" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100 focus:outline-orange-600">
+                    <input type="tel" id="checkout-phone" placeholder="No. WhatsApp (08...)" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100 focus:outline-orange-600">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="date" id="checkout-date" class="w-full p-3 bg-gray-50 rounded-xl border">
-                        <input type="time" id="checkout-time" class="w-full p-3 bg-gray-50 rounded-xl border">
+                        <input type="date" id="checkout-date" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <input type="time" id="checkout-time" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100">
                     </div>
-
-                    <label class="text-[10px] font-bold text-gray-400 uppercase mt-2 block">Metode & Alamat</label>
-                    <select id="checkout-method" onchange="toggleAddressField()" class="w-full p-3 bg-gray-50 rounded-xl border">
+                    <select id="checkout-method" onchange="toggleAddressField()" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <option value="kirim">Kirim (Kurir)</option>
                         <option value="ambil">Ambil Sendiri</option>
                     </select>
-                    <textarea id="checkout-address" placeholder="Alamat Lengkap Pengiriman..." class="w-full p-3 bg-gray-50 rounded-xl border"></textarea>
-                    
-                    <label class="text-[10px] font-bold text-gray-400 uppercase mt-2 block">Pembayaran</label>
-                    <select id="checkout-payment-type" class="w-full p-3 bg-orange-50 rounded-xl font-bold border-orange-200 border">
+                    <textarea id="checkout-address" placeholder="Alamat Pengiriman Lengkap..." class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100 h-24"></textarea>
+                    <select id="checkout-payment-type" class="w-full p-3 bg-orange-50 rounded-xl font-bold border border-orange-200">
                         <option value="Full Payment">Lunas (100%)</option>
                         <option value="DP 50%">DP (50%)</option>
                     </select>
-                    
-                    <textarea id="checkout-note" placeholder="Catatan (Opsional)..." class="w-full p-3 bg-gray-50 rounded-xl border"></textarea>
+                    <textarea id="checkout-note" placeholder="Catatan (Misal: Request kartu ucapan)..." class="w-full p-3 bg-gray-50 rounded-xl border border-gray-100"></textarea>
                 </div>
-                <button onclick="confirmCheckout()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 mt-2">
-                    <i class="fab fa-whatsapp"></i> Konfirmasi & Kirim Pesanan
+                <button id="btn-submit" onclick="confirmCheckout()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold mt-2 shadow-lg flex items-center justify-center gap-2">
+                    <i class="fab fa-whatsapp"></i> Kirim & Buat Invoice
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- UI Elements -->
-    <div id="detail-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col md:flex-row relative">
-            <button onclick="closeDetail()" class="absolute top-4 right-4 z-10 bg-white/80 w-8 h-8 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
-            <div class="w-full md:w-1/2 h-48 md:h-auto overflow-hidden">
-                <img id="detail-img" src="" class="w-full h-full object-cover">
-            </div>
-            <div class="w-full md:w-1/2 p-6 flex flex-col">
-                <h3 id="detail-name" class="text-xl font-bold mb-2"></h3>
-                <p id="detail-desc" class="text-gray-500 text-xs mb-4"></p>
-                <div id="detail-price" class="text-xl font-bold text-orange-600 mb-4"></div>
-                <button id="detail-add-btn" class="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold">Tambah ke Keranjang</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- UI Feedback -->
     <div id="loader" class="fixed inset-0 bg-white/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-        <div class="animate-spin text-orange-600 text-4xl"><i class="fas fa-spinner"></i></div>
+        <div class="text-center">
+            <div class="animate-spin text-orange-600 text-4xl mb-2"><i class="fas fa-spinner"></i></div>
+            <p class="text-xs font-bold text-orange-800 uppercase tracking-widest">Memproses Invoice...</p>
+        </div>
     </div>
     <div id="toast" class="bg-orange-950 text-white px-6 py-3 rounded-full text-sm font-bold shadow-xl"></div>
 
 <script>
-    // URL Google App Script Anda
-    const GSHEET_URL = "https://script.google.com/macros/s/AKfycbxXg5qsCX7joBR8DEB2d1pW4ApqPYKpKYIkN9BhIBNxNNzbzW-LTJzRgC2EgC-YmQ1Z6w/exec";
+    // URL Web App Google Script
+    const GSHEET_URL = "https://script.google.com/macros/s/AKfycbwll8_DKLYnvePmbcFLyOf-IAcRzFoGAnSN17Zun386vse-ZPA8R0ZALkdYrzrLAzGuWw/exec";
     
     let cart = [];
     let currentCategory = 'Semua';
-    let auth;
-    let isFirebaseReady = false;
 
-    // Firebase Init
-    const firebaseConfig = {
-        apiKey: "AIzaSyCgzjHOF5qTfevqRAMNdpLl5oPzrb02onM",
-        authDomain: "dapur-ghania.firebaseapp.com",
-        projectId: "dapur-ghania",
-        appId: "1:745922887760:web:41c5cf27ed90bb403f9155"
-    };
-
-    try {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        isFirebaseReady = true;
-    } catch (e) { console.warn("Firebase offline mode."); }
-
-    // Mock Products
+    // Data Produk (Mencakup kategori Kue Satuan)
     const products = [];
     const categories = ["Paket Simple", "Paket Exclusive", "Kue Satuan"];
-    for(let i=1; i<=12; i++) {
+    for(let i=1; i<=15; i++) {
+        let cat = categories[i % 3];
         products.push({
-            id: i,
-            category: categories[i % 3],
-            name: i % 2 === 0 ? `Hampers Classic ${i}` : `Paket Hantaran ${i}`,
-            price: (i * 15000) + 35000,
+            id: i, 
+            category: cat,
+            name: cat === "Kue Satuan" ? `Kue Lezat ${i}` : (cat === "Paket Exclusive" ? `Hampers Mewah ${i}` : `Paket Hemat ${i}`),
+            price: cat === "Kue Satuan" ? (15000 + (i * 1000)) : ((i * 20000) + 50000), 
             img: `https://picsum.photos/seed/ghania${i}/500/500`,
-            desc: `Produk spesial dari Dapur Ghania. Higienis, enak, dan dikemas cantik.`
+            desc: `Produk terbaik dari Dapur Ghania. Dibuat dengan bahan premium, tanpa pengawet, dan dijamin higienis untuk keluarga Anda.`
         });
     }
 
@@ -182,158 +156,171 @@
         const filtered = currentCategory === 'Semua' ? products : products.filter(p => p.category === currentCategory);
         container.innerHTML = filtered.map(p => `
             <div onclick="openDetail(${p.id})" class="product-card bg-white rounded-2xl overflow-hidden shadow-sm">
-                <img src="${p.img}" class="w-full aspect-square object-cover">
+                <img src="${p.img}" class="w-full aspect-square object-cover" alt="${p.name}">
                 <div class="p-3">
-                    <h3 class="text-[11px] font-bold truncate">${p.name}</h3>
-                    <p class="text-orange-600 font-bold text-[11px] mt-1">Rp ${p.price.toLocaleString()}</p>
+                    <span class="text-[9px] text-gray-400 font-bold uppercase">${p.category}</span>
+                    <h3 class="text-[11px] font-bold truncate text-orange-900">${p.name}</h3>
+                    <p class="text-orange-600 font-bold text-[11px] mt-1">Rp ${p.price.toLocaleString('id-ID')}</p>
                 </div>
             </div>
         `).join('');
+    }
+
+    // Fungsi Detail Produk (Diperbaiki)
+    function openDetail(id) {
+        const p = products.find(x => x.id === id);
+        if(!p) return;
+        
+        document.getElementById('detail-img').src = p.img;
+        document.getElementById('detail-name').innerText = p.name;
+        document.getElementById('detail-desc').innerText = p.desc;
+        document.getElementById('detail-badge').innerText = p.category;
+        document.getElementById('detail-price').innerText = `Rp ${p.price.toLocaleString('id-ID')}`;
+        
+        document.getElementById('detail-add-btn').onclick = () => { 
+            addToCart(p.id); 
+            closeDetail(); 
+        };
+        
+        document.getElementById('detail-modal').classList.add('active');
+    }
+
+    function closeDetail() {
+        document.getElementById('detail-modal').classList.remove('active');
     }
 
     function addToCart(id) {
         const item = products.find(p => p.id === id);
         const existing = cart.find(c => c.id === id);
-        if(existing) existing.qty++; else cart.push({...item, qty: 1});
+        if(existing) {
+            existing.qty++;
+        } else {
+            cart.push({...item, qty: 1});
+        }
         updateUI();
-        showToast("Ditambahkan!");
+        showToast("Masuk Keranjang!");
     }
 
     function updateUI() {
-        document.getElementById('cart-count').innerText = cart.reduce((a, b) => a + b.qty, 0);
-        document.getElementById('cart-total').innerText = `Rp ${cart.reduce((a, b) => a + (b.price * b.qty), 0).toLocaleString()}`;
+        const count = cart.reduce((a, b) => a + b.qty, 0);
+        const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+        
+        document.getElementById('cart-count').innerText = count;
+        document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+        
         const container = document.getElementById('cart-items');
+        if (cart.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">Belum ada pesanan</div>`;
+            return;
+        }
+
         container.innerHTML = cart.map(c => `
-            <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
-                <img src="${c.img}" class="w-10 h-10 rounded object-cover shadow-sm">
-                <div class="flex-1 text-[11px] font-bold">${c.name}</div>
+            <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div class="flex-1">
+                    <div class="text-[11px] font-bold text-gray-800">${c.name}</div>
+                    <div class="text-[10px] text-orange-600 font-semibold">Rp ${c.price.toLocaleString('id-ID')} x ${c.qty}</div>
+                    <div class="text-[10px] text-gray-400 font-bold">Subtotal: Rp ${(c.price * c.qty).toLocaleString('id-ID')}</div>
+                </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="changeQty(${c.id},-1)" class="w-6 h-6 bg-white border rounded">-</button>
-                    <span class="text-xs">${c.qty}</span>
-                    <button onclick="changeQty(${c.id},1)" class="w-6 h-6 bg-white border rounded">+</button>
+                    <button onclick="changeQty(${c.id},-1)" class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm">-</button>
+                    <span class="text-xs font-bold w-4 text-center">${c.qty}</span>
+                    <button onclick="changeQty(${c.id},1)" class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm">+</button>
                 </div>
             </div>
         `).join('');
     }
 
-    function changeQty(id, d) {
-        const i = cart.findIndex(c => c.id === id);
-        cart[i].qty += d;
-        if(cart[i].qty <= 0) cart.splice(i, 1);
+    function changeQty(id, delta) {
+        const index = cart.findIndex(c => c.id === id);
+        cart[index].qty += delta;
+        if(cart[index].qty <= 0) cart.splice(index, 1);
         updateUI();
     }
 
-    function goToCheckoutView() {
-        if(cart.length === 0) return showToast("Pilih produk dulu!");
-        document.getElementById('cart-view-items').classList.add('hidden');
-        document.getElementById('cart-view-form').classList.remove('hidden');
-    }
-
-    function backToCartItems() {
-        document.getElementById('cart-view-items').classList.remove('hidden');
-        document.getElementById('cart-view-form').classList.add('hidden');
-    }
-
-    // --- FUNGSI UTAMA: FIX DATA SESUAI APP SCRIPT ---
     async function confirmCheckout() {
-        // Ambil Value dari Form
         const name = document.getElementById('checkout-name').value;
         const phone = document.getElementById('checkout-phone').value;
         const date = document.getElementById('checkout-date').value;
         const time = document.getElementById('checkout-time').value;
-        const method = document.getElementById('checkout-method').value;
-        const address = document.getElementById('checkout-address').value;
-        const payment_type = document.getElementById('checkout-payment-type').value;
-        const note = document.getElementById('checkout-note').value;
-
-        // Validasi Dasar
-        if(!name || !phone) return showToast("Nama & WhatsApp wajib diisi!");
+        
+        if(!name || !phone || !date || !time) return showToast("Mohon lengkapi data!");
 
         setLoading(true);
 
-        // Data Dinamis
-        const items_summary = cart.map(c => `${c.name} (x${c.qty})`).join(", ");
-        const total_price = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-        const user_id = (isFirebaseReady && auth.currentUser) ? auth.currentUser.uid : "Guest";
-        const email = (isFirebaseReady && auth.currentUser) ? auth.currentUser.email : "";
+        const itemsSummary = cart.map(c => 
+            `${c.name} (Rp ${c.price.toLocaleString('id-ID')} x ${c.qty} = Rp ${(c.price * c.qty).toLocaleString('id-ID')})`
+        ).join(" | ");
 
-        /** * SESUAIKAN DENGAN STRUKTUR doPost(e) di App Script:
-         * data.name, data.phone, data.date, data.time, data.payment_type,
-         * data.address, data.items, data.total, data.note, data.user_id, data.email
-         */
-        const formData = new URLSearchParams();
-        formData.append('name', name);              // Kolom B
-        formData.append('phone', phone);            // Kolom C
-        formData.append('date', date);              // Kolom D
-        formData.append('time', time);              // Kolom E
-        formData.append('payment_type', payment_type); // Kolom F
-        formData.append('address', method === 'ambil' ? 'Ambil di Toko' : address); // Kolom G
-        formData.append('items', items_summary);    // Kolom H
-        formData.append('total', total_price);      // Kolom I
-        formData.append('note', note || "-");       // Kolom J
-        formData.append('user_id', user_id);        // Kolom K
-        formData.append('email', email);            // Kolom L
+        const totalPrice = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+
+        const formBody = new URLSearchParams();
+        formBody.append('name', name);
+        formBody.append('phone', phone);
+        formBody.append('date', date);
+        formBody.append('time', time);
+        formBody.append('address', document.getElementById('checkout-address').value || "Ambil di Toko");
+        formBody.append('payment_type', document.getElementById('checkout-payment-type').value);
+        formBody.append('items', itemsSummary);
+        formBody.append('total', totalPrice);
+        formBody.append('note', document.getElementById('checkout-note').value || "-");
+        formBody.append('generate_pdf', 'true');
 
         try {
-            // 1. Kirim ke Google Sheets (Database)
-            // Menggunakan mode 'no-cors' agar request tidak diblokir browser
             await fetch(GSHEET_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
-                body: formData 
+                body: formBody 
             });
 
-            // 2. Siapkan Pesan WhatsApp (Konfirmasi ke Admin)
-            const waAdminMsg = `*PESANAN BARU - DAPUR GHANIA*\n` +
-                               `-------------------------\n` +
-                               `Nama: ${name}\n` +
-                               `WA: ${phone}\n` +
-                               `Item: ${items_summary}\n` +
-                               `Total: Rp ${total_price.toLocaleString()}\n` +
-                               `Metode: ${method}\n` +
-                               `Alamat: ${address || 'Ambil Sendiri'}\n` +
-                               `Jadwal: ${date}, ${time}`;
-
-            // 3. Redirect ke WhatsApp
-            window.open(`https://wa.me/62895334016084?text=${encodeURIComponent(waAdminMsg)}`, '_blank');
-            
-            // 4. Reset Aplikasi
-            cart = [];
-            updateUI();
-            toggleCart();
-            backToCartItems();
-            showToast("Sukses! Membuka WhatsApp...");
-        } catch (e) {
-            console.error(e);
-            showToast("Gagal terhubung ke database. Coba lagi.");
+            setTimeout(() => {
+                const waMsg = `Halo Dapur Ghania, saya ${name}. Pesanan saya sudah masuk. Mohon cek invoice PDF sistem.`;
+                window.open(`https://wa.me/62895334016084?text=${encodeURIComponent(waMsg)}`, '_blank');
+                
+                cart = []; 
+                updateUI(); 
+                toggleCart(); 
+                setLoading(false);
+                showToast("Berhasil!");
+            }, 3500);
+        } catch (e) { 
+            setLoading(false); 
+            showToast("Gagal!"); 
         }
-        setLoading(false);
     }
 
-    // Modal Helpers
     function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
-    function openDetail(id) {
-        const p = products.find(x => x.id === id);
-        document.getElementById('detail-img').src = p.img;
-        document.getElementById('detail-name').innerText = p.name;
-        document.getElementById('detail-desc').innerText = p.desc;
-        document.getElementById('detail-price').innerText = `Rp ${p.price.toLocaleString()}`;
-        document.getElementById('detail-add-btn').onclick = () => { addToCart(p.id); closeDetail(); };
-        document.getElementById('detail-modal').classList.add('active');
+    function goToCheckoutView() { 
+        if(cart.length === 0) return showToast("Keranjang kosong!");
+        document.getElementById('cart-view-items').classList.add('hidden'); 
+        document.getElementById('cart-view-form').classList.remove('hidden'); 
     }
-    function closeDetail() { document.getElementById('detail-modal').classList.remove('active'); }
-    function filterCategory(cat) {
-        currentCategory = cat;
-        document.querySelectorAll('.category-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
-        renderProducts();
+    function backToCartItems() { 
+        document.getElementById('cart-view-items').classList.remove('hidden'); 
+        document.getElementById('cart-view-form').classList.add('hidden'); 
     }
     function setLoading(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
-    function showToast(m) {
-        const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
+    function showToast(m) { 
+        const t = document.getElementById('toast'); 
+        t.innerText = m; 
+        t.style.display = 'block'; 
+        setTimeout(() => t.style.display = 'none', 3000); 
     }
-    function toggleAddressField() {
-        document.getElementById('checkout-address').classList.toggle('hidden', document.getElementById('checkout-method').value === 'ambil');
+    function toggleAddressField() { 
+        document.getElementById('checkout-address').classList.toggle('hidden', document.getElementById('checkout-method').value === 'ambil'); 
+    }
+    function filterCategory(cat) { 
+        currentCategory = cat;
+        document.querySelectorAll('.category-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.cat === cat);
+            if(btn.dataset.cat === cat) {
+                btn.classList.add('text-white');
+                btn.classList.remove('text-gray-600');
+            } else {
+                btn.classList.remove('text-white');
+                btn.classList.add('text-gray-600');
+            }
+        });
+        renderProducts(); 
     }
 
     renderProducts();
