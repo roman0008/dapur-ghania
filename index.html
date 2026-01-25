@@ -13,6 +13,7 @@
         .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
         .hide-scroll::-webkit-scrollbar { display: none; }
         input[type="date"], input[type="time"] { min-height: 3rem; }
+        .nav-active { color: #ea580c; border-bottom: 3px solid #ea580c; }
     </style>
 </head>
 <body class="bg-[#FFFAF5] text-gray-800">
@@ -72,10 +73,16 @@
                 </button>
             </div>
         </div>
+        <!-- Sub Nav (Tabs) -->
+        <nav id="main-nav" class="max-w-4xl mx-auto mt-4 flex gap-6 border-t pt-2 hidden">
+            <button onclick="showPage('home')" id="nav-home" class="text-[10px] font-black uppercase tracking-widest py-2 nav-active">Home</button>
+            <button onclick="showPage('history')" id="nav-history" class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">Riwayat</button>
+            <button onclick="showPage('admin')" id="nav-admin" class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-red-500">Admin Panel</button>
+        </nav>
     </header>
 
-    <!-- Content -->
-    <main class="max-w-4xl mx-auto p-4 pb-32">
+    <!-- Page: HOME -->
+    <main id="page-home" class="page-content max-w-4xl mx-auto p-4 pb-32">
         <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2.5rem] p-8 text-white mb-8 relative overflow-hidden shadow-xl">
             <div class="relative z-10">
                 <h2 class="text-2xl font-black mb-1 uppercase tracking-tight">Katering Terpercaya</h2>
@@ -90,6 +97,40 @@
         </div>
 
         <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </main>
+
+    <!-- Page: HISTORY -->
+    <main id="page-history" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+        <h2 class="font-black text-xl mb-6">Riwayat Pesanan</h2>
+        <div id="history-list" class="space-y-4">
+            <!-- Riwayat items go here -->
+        </div>
+    </main>
+
+    <!-- Page: ADMIN -->
+    <main id="page-admin" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-black text-xl text-red-600">Admin Dashboard</h2>
+            <button onclick="fetchAdminOrders()" class="p-2 bg-gray-100 rounded-lg text-xs font-bold uppercase">Refresh Data</button>
+        </div>
+        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden card-shadow">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50 text-gray-400 uppercase font-black">
+                        <tr>
+                            <th class="p-4">Invoice</th>
+                            <th class="p-4">Nama / WA</th>
+                            <th class="p-4">Total</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-table" class="divide-y divide-gray-50">
+                        <!-- Admin data goes here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 
     <!-- Modal Keranjang -->
@@ -178,7 +219,8 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfGZpGdQ44v_xHcNT1KPoOyJhO7NlAEZk8PupRJKqUkuygnlyoiZU4ROb2N2U_VLCDjw/exec";
-    
+    const ADMIN_WA = "62895334016084"; // Sinkronkan dengan Backend
+
     const PRODUCTS = [
         { id: 301, name: "Nasi Campur Spesial", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
         { id: 302, name: "Ayam Bakar Madu", price: 22000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
@@ -195,21 +237,45 @@
         renderProducts();
     };
 
+    function showPage(pageId) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`page-${pageId}`).classList.remove('hidden');
+        
+        // Update Nav Styles
+        document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('nav-active', 'text-orange-600'));
+        document.querySelectorAll('#main-nav button').forEach(b => b.classList.add('text-gray-400'));
+        document.getElementById(`nav-${pageId}`).classList.add('nav-active', 'text-orange-600');
+        document.getElementById(`nav-${pageId}`).classList.remove('text-gray-400');
+
+        if(pageId === 'history') fetchUserHistory();
+        if(pageId === 'admin') fetchAdminOrders();
+    }
+
     function updateUIAuth() {
         const btnLogin = document.getElementById('btn-login-trigger');
         const btnProfile = document.getElementById('btn-profile-trigger');
         const welcomeText = document.getElementById('welcome-user');
+        const nav = document.getElementById('main-nav');
+        const adminBtn = document.getElementById('nav-admin');
 
         if(currentUser) {
             btnLogin.classList.add('hidden');
             btnProfile.classList.remove('hidden');
+            nav.classList.remove('hidden');
             document.getElementById('display-name').innerText = currentUser.name.split(' ')[0];
             welcomeText.innerText = `Halo, ${currentUser.name}`;
+            
+            // Check Admin Status
+            if(currentUser.phone === ADMIN_WA) {
+                adminBtn.classList.remove('hidden');
+            }
+
             document.getElementById('f-nama').value = currentUser.name;
             document.getElementById('f-wa').value = currentUser.phone;
         } else {
             btnLogin.classList.remove('hidden');
             btnProfile.classList.add('hidden');
+            nav.classList.add('hidden');
             welcomeText.innerText = `Pesan Katering Mudah`;
         }
     }
@@ -232,7 +298,8 @@
 
         showLoader(true, "Proses Autentikasi...");
         try {
-            const url = `${SCRIPT_URL}?action=${authMode}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`;
+            const action = (phone === ADMIN_WA && authMode === 'login') ? 'loginAdmin' : authMode;
+            const url = `${SCRIPT_URL}?action=${action}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`;
             const script = document.createElement('script');
             script.src = url;
             document.body.appendChild(script);
@@ -242,9 +309,13 @@
     window.authCallback = (res) => {
         showLoader(false);
         if(res.success) {
-            currentUser = { phone: document.getElementById('auth-phone').value, name: res.name || document.getElementById('auth-name').value };
+            currentUser = { 
+                phone: document.getElementById('auth-phone').value, 
+                name: res.name || (document.getElementById('auth-phone').value === ADMIN_WA ? "Admin Dapur Ghania" : document.getElementById('auth-name').value) 
+            };
             localStorage.setItem('ghania_user', JSON.stringify(currentUser));
             updateUIAuth(); closeAuth(); showToast("Berhasil Masuk!");
+            if(currentUser.phone === ADMIN_WA) showPage('admin');
         } else alert(res.message);
     };
 
@@ -263,6 +334,92 @@
         `).join('');
     }
 
+    // --- DATA FETCHING (RIWAYAT & ADMIN) ---
+    async function fetchUserHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = `<p class="text-center text-xs py-10 animate-pulse">Mengambil data...</p>`;
+        
+        const url = `${SCRIPT_URL}?action=getOrders&phone=${currentUser.phone}&callback=historyCb`;
+        const script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+    }
+
+    window.historyCb = (res) => {
+        const list = document.getElementById('history-list');
+        if(!res.data || res.data.length === 0) {
+            list.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center"><p class="text-gray-400 text-xs">Belum ada pesanan.</p></div>`;
+            return;
+        }
+        list.innerHTML = res.data.map(o => `
+            <div class="bg-white p-5 rounded-3xl border border-gray-50 shadow-sm">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="text-[10px] font-black text-orange-600 uppercase mb-1">${o.invoice}</p>
+                        <p class="text-xs font-bold text-gray-400">${o.date}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${o.status_bayar === 'Lunas' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${o.status_bayar}</span>
+                </div>
+                <p class="text-xs font-semibold mb-3 border-b pb-3 text-gray-600">${o.items}</p>
+                <div class="flex justify-between items-center">
+                    <p class="font-black text-sm">Rp ${parseInt(o.total).toLocaleString()}</p>
+                    ${o.pdf !== '-' ? `<a href="${o.pdf}" target="_blank" class="text-[10px] font-black text-blue-600 underline uppercase">Lihat Invoice PDF</a>` : ''}
+                </div>
+            </div>
+        `).join('');
+    };
+
+    async function fetchAdminOrders() {
+        const tbody = document.getElementById('admin-orders-table');
+        tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center animate-pulse">Loading Admin Data...</td></tr>`;
+        
+        const url = `${SCRIPT_URL}?action=getAllOrders&callback=adminCb`;
+        const script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+    }
+
+    window.adminCb = (res) => {
+        const tbody = document.getElementById('admin-orders-table');
+        if(!res.data) return;
+        tbody.innerHTML = res.data.map(o => `
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
+                <td class="p-4">
+                    <p class="font-bold">${o.name}</p>
+                    <p class="text-[10px] text-gray-400">${o.phone}</p>
+                </td>
+                <td class="p-4 font-black">Rp ${parseInt(o.total).toLocaleString()}</td>
+                <td class="p-4">
+                    <select onchange="updateStatus(${o.rowId}, this.value)" class="bg-gray-100 p-2 rounded-lg font-bold text-[10px]">
+                        <option value="Belum Bayar" ${o.status_bayar === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
+                        <option value="Lunas" ${o.status_bayar === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
+                    </select>
+                </td>
+                <td class="p-4">
+                    ${o.pdf !== '-' ? `<a href="${o.pdf}" target="_blank" class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-file-pdf"></i></a>` : '-'}
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    async function updateStatus(rowId, newStatus) {
+        showLoader(true, "Memperbarui Status...");
+        const url = `${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${newStatus}&callback=updateCb`;
+        const script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+    }
+
+    window.updateCb = (res) => {
+        showLoader(false);
+        if(res.success) {
+            showToast("Status Diperbarui!");
+            fetchAdminOrders();
+        }
+    };
+
+    // --- LOGIKA KERANJANG & CHECKOUT ---
     function addToCart(id) {
         const p = PRODUCTS.find(x => x.id === id);
         const exists = cart.find(i => i.id === id);
@@ -342,8 +499,9 @@
             localStorage.setItem('ghania_has_ordered', 'true');
             showLoader(false);
             const waMsg = `Halo Dapur Ghania, saya *${payload.name}* memesan:\n${payload.items.replace(/ \| /g, '\n')}\nTotal: *Rp ${parseInt(payload.total).toLocaleString()}*\nAlamat: ${payload.address}`;
-            window.open(`https://wa.me/62895334016084?text=${encodeURIComponent(waMsg)}`, '_blank');
-            alert("Berhasil!"); location.reload();
+            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`, '_blank');
+            alert("Pesanan Terkirim! Silakan cek menu Riwayat."); 
+            location.reload();
         } catch (e) { showLoader(false); alert("Error teknis"); }
     }
 
