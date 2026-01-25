@@ -1,679 +1,1049 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ShoppingBasket, 
-  UserCircle, 
-  UserCheck, 
-  X, 
-  Plus, 
-  Minus, 
-  History, 
-  Home, 
-  ShieldCheck, 
-  ArrowLeft, 
-  Utensils,
-  Clock,
-  MapPin,
-  MessageCircle,
-  Sparkles,
-  Loader2,
-  Trash2
-} from 'lucide-react';
+<!DOCTYPE html>
 
-// --- Constants & Config ---
-// URL dari Apps Script yang Anda deploy
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEPas8ooQvo9h23axzh-dr9lUMUIjavVUinh2zCu-4f44PgOeIqSY35pBPNqvXajSLpA/exec";
+<html lang="id">
 
-/** * PERBAIKAN: ADMIN_WA harus sama persis dengan ADMIN_LOGIN_ID di Apps Script (62895...) 
- * karena Apps Script membandingkan string mentah untuk loginAdmin.
- */
-const ADMIN_WA = "62895334016084"; 
-const apiKey = ""; // Managed by environment
+<head>
 
-const PRODUCTS = [
-  { id: 301, name: "Nasi Campur Spesial", price: 25000, category: "Nasi", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
-  { id: 302, name: "Ayam Bakar Madu", price: 22000, category: "Ayam", img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
-  { id: 303, name: "Snack Box Arisan", price: 12500, category: "Snack", img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
-  { id: 304, name: "Tumpeng Mini", price: 35000, category: "Nasi", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" },
-  { id: 305, name: "Kue Hantaran Exclusive", price: 150000, category: "Hantaran", img: "https://images.unsplash.com/photo-1535141192574-5d4897c12636?w=400" },
-  { id: 306, name: "Hampers Lebaran", price: 250000, category: "Hampers", img: "https://images.unsplash.com/photo-1544487079-158e8585bdca?w=400" }
-];
+    <meta charset="UTF-8">
 
-// --- Utilities ---
-const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-/** * Utility untuk memastikan input nomor HP dari user dikonversi ke format 62 
- * agar cocok dengan ADMIN_LOGIN_ID di backend.
- */
-const normalizePhone = (num) => {
-  let clean = num.toString().replace(/\D/g, '');
-  if (clean.startsWith('0')) clean = '62' + clean.substring(1);
-  if (clean.startsWith('8')) clean = '62' + clean;
-  if (!clean.startsWith('62')) clean = '62' + clean;
-  return clean;
-};
+    <title>Dapur Ghania - Paket Kue Hantaran & Hampers Exlussive</title>
 
-export default function App() {
-  // State
-  const [currentPage, setCurrentPage] = useState('home');
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('ghania_user')) || null);
-  const [cart, setCart] = useState([]);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loaderText, setLoaderText] = useState('Memproses...');
-  const [toast, setToast] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [adminOrders, setAdminOrders] = useState([]);
-  const [aiRecommendation, setAiRecommendation] = useState("");
-  const [isAiLoading, setIsAiLoading] = useState(false);
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  // Form States
-  const [authData, setAuthData] = useState({ phone: '', pin: '', name: '', mode: 'login' });
-  const [checkoutData, setCheckoutData] = useState({ 
-    tgl: '', jam: '', bayar: 'Transfer Bank', alamat: '', catatan: '' 
-  });
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-  // Effects
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('ghania_user', JSON.stringify(user));
-      if (currentPage === 'history') fetchUserHistory();
-      if (currentPage === 'admin' && user.phone === ADMIN_WA) fetchAdminOrders();
-    } else {
-      localStorage.removeItem('ghania_user');
-    }
-  }, [user, currentPage]);
+    <style>
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-  // --- Gemini AI Integration ---
-  const getAiRecommendation = async () => {
-    setIsAiLoading(true);
-    const prompt = `Anda adalah asisten kuliner Dapur Ghania. Berikan 1 kalimat rekomendasi singkat dan menarik untuk menu hari ini yang terdiri dari: ${PRODUCTS.map(p => p.name).join(', ')}. Gunakan nada yang ramah dan menggugah selera (Bahasa Indonesia).`;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        .modal-blur { backdrop-filter: blur(12px); background: rgba(0,0,0,0.5); }
+
+        .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+
+        input[type="date"], input[type="time"] { min-height: 3rem; }
+
+        .nav-active { color: #ea580c; border-bottom: 3px solid #ea580c; }
+
+    </style>
+
+</head>
+
+<body class="bg-[#FFFAF5] text-gray-800">
+
+
+
+    <!-- Loader -->
+
+    <div id="loader" class="fixed inset-0 z-[999] hidden items-center justify-center modal-blur">
+
+        <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
+
+            <div class="animate-spin text-orange-600 text-3xl mb-4"><i class="fas fa-circle-notch"></i></div>
+
+            <p id="loader-text" class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Memproses...</p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Auth Modal -->
+
+    <div id="auth-screen" class="fixed inset-0 z-[200] hidden items-center justify-center p-6 modal-blur">
+
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative">
+
+            <button onclick="closeAuth()" class="absolute top-6 right-6 text-gray-400"><i class="fas fa-times"></i></button>
+
+            <div class="text-center mb-8">
+
+                <h1 class="font-black text-orange-800 text-3xl tracking-tighter">DAPUR GHANIA</h1>
+
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Akses Akun Pelanggan</p>
+
+            </div>
+
+            <div class="flex bg-gray-100 p-1 rounded-2xl mb-6">
+
+                <button id="tab-login" onclick="switchAuth('login')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-orange-600">LOGIN</button>
+
+                <button id="tab-register" onclick="switchAuth('register')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all text-gray-500">DAFTAR</button>
+
+            </div>
+
+            <div id="auth-form" class="space-y-4">
+
+                <input type="tel" id="auth-phone" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nomor WhatsApp">
+
+                <div id="reg-name-wrapper" class="hidden">
+
+                    <input type="text" id="auth-name" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nama Lengkap">
+
+                </div>
+
+                <input type="password" id="auth-pin" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="PIN (6 Digit)">
+
+                <button onclick="handleAuth()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all mt-4">KONFIRMASI</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Header -->
+
+    <header class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 p-4">
+
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+
+            <div>
+
+                <h1 class="font-black text-orange-800 tracking-tighter text-xl">DAPUR GHANIA</h1>
+
+                <p id="welcome-user" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pesan Katering Mudah</p>
+
+            </div>
+
+            <div class="flex items-center gap-2">
+
+                <div id="user-nav-container">
+
+                    <button id="btn-login-trigger" onclick="openAuth()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+
+                        <i class="fas fa-user-circle text-lg"></i>
+
+                        <span>Login</span>
+
+                    </button>
+
+                    <button id="btn-profile-trigger" onclick="handleUserAction()" class="hidden flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+
+                        <i class="fas fa-user-check text-lg"></i>
+
+                        <span id="display-name">User</span>
+
+                    </button>
+
+                </div>
+
+                <button onclick="openCart()" class="relative p-2.5 bg-orange-600 rounded-xl shadow-lg">
+
+                    <i class="fas fa-shopping-basket text-lg text-white"></i>
+
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">0</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Sub Nav (Tabs) -->
+
+        <nav id="main-nav" class="max-w-4xl mx-auto mt-4 flex gap-6 border-t pt-2 hidden">
+
+            <button onclick="showPage('home')" id="nav-home" class="text-[10px] font-black uppercase tracking-widest py-2 nav-active">Home</button>
+
+            <button onclick="showPage('history')" id="nav-history" class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">Riwayat</button>
+
+            <button onclick="showPage('admin')" id="nav-admin" class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-red-500">Admin Panel</button>
+
+        </nav>
+
+    </header>
+
+
+
+    <!-- Page: HOME -->
+
+    <main id="page-home" class="page-content max-w-4xl mx-auto p-4 pb-32">
+
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2.5rem] p-8 text-white mb-8 relative overflow-hidden shadow-xl">
+
+            <div class="relative z-10">
+
+                <h2 class="text-2xl font-black mb-1 uppercase tracking-tight">Aneka Kue, Snack Box, Hantaran, Hampersa</h2>
+
+                <p class="text-orange-100 text-sm opacity-90">Gratis subsidi ongkir s/d 10rb!</p>
+
+            </div>
+
+            <i class="fas fa-utensils absolute -right-6 -bottom-6 text-[10rem] opacity-10 rotate-12"></i>
+
+        </div>
+
+
+
+        <div class="flex items-center justify-between mb-6 px-2">
+
+            <h3 class="font-black text-gray-900 uppercase tracking-widest text-xs">Menu Rekomendasi</h3>
+
+            <span class="h-px flex-1 bg-gray-100 mx-4"></span>
+
+        </div>
+
+
+
+        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+
+    </main>
+
+
+
+    <!-- Page: HISTORY -->
+
+    <main id="page-history" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+
+        <h2 class="font-black text-xl mb-6">Riwayat Pesanan</h2>
+
+        <div id="history-list" class="space-y-4">
+
+            <!-- Riwayat items go here -->
+
+        </div>
+
+    </main>
+
+
+
+    <!-- Page: ADMIN -->
+
+    <main id="page-admin" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+
+        <div class="flex justify-between items-center mb-6">
+
+            <h2 class="font-black text-xl text-red-600">Admin Dashboard</h2>
+
+            <button onclick="fetchAdminOrders()" class="p-2 bg-gray-100 rounded-lg text-xs font-bold uppercase">Refresh Data</button>
+
+        </div>
+
+        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden card-shadow">
+
+            <div class="overflow-x-auto">
+
+                <table class="w-full text-left text-xs">
+
+                    <thead class="bg-gray-50 text-gray-400 uppercase font-black">
+
+                        <tr>
+
+                            <th class="p-4">Invoice</th>
+
+                            <th class="p-4">Nama / WA</th>
+
+                            <th class="p-4">Total</th>
+
+                            <th class="p-4">Status</th>
+
+                            <th class="p-4">PDF</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="admin-orders-table" class="divide-y divide-gray-50">
+
+                        <!-- Admin data goes here -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+
+    <!-- Modal Keranjang -->
+
+    <div id="modal-cart" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-blur">
+
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div class="p-6 border-b flex justify-between items-center bg-orange-50">
+
+                <h2 class="text-xl font-black text-gray-900">Pesanan Saya</h2>
+
+                <button onclick="closeCart()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+
+            </div>
+
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50"></div>
+
+            <div class="p-6 bg-white border-t space-y-3">
+
+                <div class="flex justify-between text-sm font-semibold text-gray-500">
+
+                    <span>Subtotal</span>
+
+                    <span id="subtotal-val">Rp 0</span>
+
+                </div>
+
+                <div class="flex justify-between text-sm font-bold text-green-600">
+
+                    <span>Potongan Ongkir</span>
+
+                    <span id="subsidi-val">- Rp 0</span>
+
+                </div>
+
+                <div id="diskon-row" class="hidden flex justify-between text-sm font-bold text-blue-600">
+
+                    <span>Diskon Member (5%)</span>
+
+                    <span id="diskon-val">- Rp 0</span>
+
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-orange-100">
+
+                    <span class="font-black text-gray-900">Total Akhir</span>
+
+                    <span id="total-val" class="text-2xl font-black text-orange-600">Rp 0</span>
+
+                </div>
+
+                <button onclick="handleCheckoutProcess()" id="btn-to-checkout" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg disabled:opacity-50 transition-all">CHECKOUT SEKARANG</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Modal Checkout -->
+
+    <div id="modal-checkout" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 modal-blur">
+
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+
+            <div class="p-6 border-b flex items-center gap-4 bg-orange-50">
+
+                <button onclick="closeCheckout()" class="text-orange-800"><i class="fas fa-arrow-left"></i></button>
+
+                <h2 class="text-lg font-black text-orange-900 uppercase tracking-tighter">Form Konfirmasi</h2>
+
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 space-y-5">
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div class="space-y-1">
+
+                        <label class="text-[10px] font-black uppercase text-gray-400">Nama</label>
+
+                        <input type="text" id="f-nama" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" readonly>
+
+                    </div>
+
+                    <div class="space-y-1">
+
+                        <label class="text-[10px] font-black uppercase text-gray-400">No WA</label>
+
+                        <input type="tel" id="f-wa" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" readonly>
+
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div class="space-y-1">
+
+                        <label class="text-[10px] font-black uppercase text-gray-400">Tgl Kirim</label>
+
+                        <input type="date" id="f-tgl" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+
+                    </div>
+
+                    <div class="space-y-1">
+
+                        <label class="text-[10px] font-black uppercase text-gray-400">Jam</label>
+
+                        <input type="time" id="f-jam" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+
+                    </div>
+
+                </div>
+
+                <div class="space-y-1">
+
+                    <label class="text-[10px] font-black uppercase text-gray-400">Pembayaran</label>
+
+                    <select id="f-bayar" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+
+                        <option value="Transfer Bank">Transfer Bank</option>
+
+                        <option value="DP 50%">DP 50%</option>
+
+                        <option value="Full Payment">Full Payment</option>
+
+                    </select>
+
+                </div>
+
+                <div class="space-y-1">
+
+                    <label class="text-[10px] font-black uppercase text-gray-400">Alamat Lengkap</label>
+
+                    <textarea id="f-alamat" rows="2" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" placeholder="Sebutkan patokan rumah..."></textarea>
+
+                </div>
+
+                <div class="space-y-1">
+
+                    <label class="text-[10px] font-black uppercase text-gray-400">Catatan Pesanan</label>
+
+                    <input type="text" id="f-catatan" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" placeholder="Contoh: Kurangi pedas">
+
+                </div>
+
+            </div>
+
+            <div class="p-6 bg-white border-t">
+
+                <button onclick="submitOrder()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all">
+
+                    <i class="fab fa-whatsapp text-xl"></i>
+
+                    ORDER SEKARANG
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+<script>
+
+
     
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      });
-      const result = await response.json();
-      setAiRecommendation(result.candidates?.[0]?.content?.parts?.[0]?.text || "Menu spesial menanti Anda hari ini!");
-    } catch (err) {
-      setAiRecommendation("Nasi Campur Spesial kami sedang jadi favorit pelanggan!");
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEPas8ooQvo9h23axzh-dr9lUMUIjavVUinh2zCu-4f44PgOeIqSY35pBPNqvXajSLpA/exec";
 
-  useEffect(() => {
-    getAiRecommendation();
-  }, []);
+    const ADMIN_WA = "0895334016084"; // Sinkronkan dengan Backend
 
-  // --- Auth Logic ---
-  const handleAuth = async () => {
-    if (!authData.phone || !authData.pin || (authData.mode === 'register' && !authData.name)) {
-      alert("Mohon lengkapi semua field.");
-      return;
-    }
 
-    setIsLoading(true);
-    setLoaderText("Autentikasi...");
 
-    const cleanPhone = normalizePhone(authData.phone);
+    const PRODUCTS = [
 
-    try {
-      // PERBAIKAN: Logic pemilihan action agar sesuai dengan variabel di backend
-      let action = authData.mode; // 'login' atau 'register'
-      if (authData.mode === 'login' && cleanPhone === ADMIN_WA) {
-        action = 'loginAdmin';
-      }
+        { id: 301, name: "Nasi Campur Spesial", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
 
-      // Gunakan JSONP pattern karena Apps Script menggunakan callback parameter di backend Anda
-      const callbackName = 'ghania_callback_' + Math.round(Math.random() * 1000000);
-      
-      const script = document.createElement('script');
-      script.src = `${SCRIPT_URL}?action=${action}&phone=${cleanPhone}&pin=${authData.pin}&name=${encodeURIComponent(authData.name)}&callback=${callbackName}`;
-      
-      window[callbackName] = (res) => {
-        if (res.success) {
-          setUser({ phone: cleanPhone, name: res.name || authData.name || "Administrator" });
-          setIsAuthOpen(false);
-          showToast(`Selamat datang, ${res.name || authData.name || "Admin"}!`);
-        } else {
-          alert(res.message || "Gagal Autentikasi");
-        }
-        delete window[callbackName];
-        document.body.removeChild(script);
-        setIsLoading(false);
-      };
+        { id: 302, name: "Ayam Bakar Madu", price: 22000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
 
-      document.body.appendChild(script);
+        { id: 303, name: "Snack Box Arisan", price: 12500, img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
 
-    } catch (e) {
-      setIsLoading(false);
-      alert("Koneksi gagal. Pastikan Backend aktif.");
-    }
-  };
+        { id: 304, name: "Tumpeng Mini", price: 35000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" }
 
-  // --- Cart & Order Logic ---
-  const addToCart = (product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
-      return [...prev, { ...product, qty: 1 }];
-    });
-    showToast(`${product.name} ditambahkan!`);
-  };
+    ];
 
-  const adjustQty = (id, delta) => {
-    setCart(prev => prev.map(item => item.id === id ? { ...item, qty: Math.max(0, item.qty + delta) } : item).filter(item => item.qty > 0));
-  };
 
-  const subtotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.qty), 0), [cart]);
-  const shippingDiscount = subtotal >= 50000 ? 10000 : 0;
-  const memberDiscount = localStorage.getItem('ghania_has_ordered') === 'true' ? Math.floor(subtotal * 0.05) : 0;
-  const total = subtotal - shippingDiscount - memberDiscount;
 
-  const submitOrder = async () => {
-    if (!checkoutData.tgl || !checkoutData.alamat) return alert("Lengkapi tanggal kirim dan alamat!");
-    
-    setIsLoading(true);
-    setLoaderText("Mengirim Pesanan...");
+    let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
 
-    const payload = {
-      name: user.name,
-      phone: user.phone,
-      date: checkoutData.tgl,
-      time: checkoutData.jam,
-      payment_type: checkoutData.bayar,
-      address: checkoutData.alamat,
-      note: checkoutData.catatan,
-      total: total,
-      items: cart.map(i => `${i.name} (${i.qty}x)`).join(" | ") // Gunakan separator sesuai backend
+    let authMode = 'login';
+
+    let cart = [];
+
+
+
+    window.onload = () => {
+
+        updateUIAuth();
+
+        renderProducts();
+
     };
 
-    try {
-      const formData = new URLSearchParams();
-      Object.keys(payload).forEach(key => formData.append(key, payload[key]));
 
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
 
-      localStorage.setItem('ghania_has_ordered', 'true');
-      const waMsg = `Halo Dapur Ghania, saya *${payload.name}* memesan:\n${cart.map(i => `- ${i.name} x${i.qty}`).join('\n')}\n\nTotal: *${formatIDR(total)}*\nAlamat: ${payload.address}`;
-      window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`, '_blank');
-      
-      setCart([]);
-      setIsCheckoutOpen(false);
-      showToast("Pesanan berhasil dikirim!");
-      setCurrentPage('history');
-    } catch (e) {
-      alert("Terjadi kesalahan saat mengirim pesanan.");
-    } finally {
-      setIsLoading(false);
+    function showPage(pageId) {
+
+        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+
+        document.getElementById(`page-${pageId}`).classList.remove('hidden');
+
+        
+
+        // Update Nav Styles
+
+        document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('nav-active', 'text-orange-600'));
+
+        document.querySelectorAll('#main-nav button').forEach(b => b.classList.add('text-gray-400'));
+
+        document.getElementById(`nav-${pageId}`).classList.add('nav-active', 'text-orange-600');
+
+        document.getElementById(`nav-${pageId}`).classList.remove('text-gray-400');
+
+
+
+        if(pageId === 'history') fetchUserHistory();
+
+        if(pageId === 'admin') fetchAdminOrders();
+
     }
-  };
 
-  // --- Fetchers (Updated with JSONP for compatibility) ---
-  const fetchData = (params) => {
-    return new Promise((resolve) => {
-      const callbackName = 'ghania_fetch_' + Math.round(Math.random() * 1000000);
-      const script = document.createElement('script');
-      script.src = `${SCRIPT_URL}?${params}&callback=${callbackName}`;
-      window[callbackName] = (res) => {
-        resolve(res);
-        delete window[callbackName];
-        document.body.removeChild(script);
-      };
-      document.body.appendChild(script);
-    });
-  };
 
-  const fetchUserHistory = async () => {
-    const res = await fetchData(`action=getOrders&phone=${user.phone}`);
-    if (res.success) setHistory(res.data || []);
-  };
 
-  const fetchAdminOrders = async () => {
-    const res = await fetchData(`action=getAllOrders`);
-    if (res.success) setAdminOrders(res.data || []);
-  };
+    function updateUIAuth() {
 
-  return (
-    <div className="min-h-screen bg-[#FFFAF5] text-slate-800 font-sans selection:bg-orange-100">
-      
-      {/* --- Loader Overlay --- */}
-      {isLoading && (
-        <div className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 text-orange-600 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{loaderText}</p>
-          </div>
-        </div>
-      )}
+        const btnLogin = document.getElementById('btn-login-trigger');
 
-      {/* --- Toast --- */}
-      {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[800] bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-xl animate-bounce">
-          {toast}
-        </div>
-      )}
+        const btnProfile = document.getElementById('btn-profile-trigger');
 
-      {/* --- Header --- */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-orange-100 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-black text-orange-800 tracking-tighter leading-none">DAPUR GHANIA</h1>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-              {user ? `Halo, ${user.name.split(' ')[0]}` : 'Premium Catering Service'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {!user ? (
-              <button onClick={() => setIsAuthOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
-                <UserCircle size={18} className="text-slate-600" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">Login</span>
-              </button>
-            ) : (
-              <button 
-                onClick={() => { if(window.confirm('Keluar akun?')) setUser(null); }}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-50 hover:bg-orange-100 rounded-xl transition-all"
-              >
-                <UserCheck size={18} className="text-orange-600" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-orange-600">Logout</span>
-              </button>
-            )}
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-90"
-            >
-              <ShoppingBasket size={20} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-[9px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                  {cart.reduce((a, b) => a + b.qty, 0)}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
+        const welcomeText = document.getElementById('welcome-user');
 
-        {/* --- Navigation Tabs --- */}
-        {user && (
-          <nav className="max-w-4xl mx-auto flex gap-6 mt-4 border-t border-slate-50 pt-2 overflow-x-auto scrollbar-hide">
-            {[
-              { id: 'home', icon: Home, label: 'Home' },
-              { id: 'history', icon: History, label: 'Riwayat' },
-              ...(user.phone === ADMIN_WA ? [{ id: 'admin', icon: ShieldCheck, label: 'Admin' }] : [])
-            ].map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setCurrentPage(tab.id)}
-                className={`flex items-center gap-1.5 py-2 px-1 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 ${
-                  currentPage === tab.id ? 'text-orange-600 border-orange-600' : 'text-slate-400 border-transparent'
-                }`}
-              >
-                <tab.icon size={14} />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        )}
-      </header>
+        const nav = document.getElementById('main-nav');
 
-      {/* --- Main Content --- */}
-      <main className="max-w-4xl mx-auto p-4 pb-32">
-        {currentPage === 'home' && (
-          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Hero Card */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-100 mb-8">
-              <div className="relative z-10 max-w-sm">
-                <h2 className="text-3xl font-black leading-tight tracking-tighter uppercase mb-2">Hantaran & Hampers Exclusive</h2>
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md w-fit px-3 py-1 rounded-full text-[10px] font-bold">
-                  <Sparkles size={12} />
-                  DISKON MEMBER 5%
-                </div>
-              </div>
-              <Utensils className="absolute -right-8 -bottom-8 w-48 h-48 text-white/10 rotate-12" />
-            </div>
+        const adminBtn = document.getElementById('nav-admin');
 
-            {/* AI Recommendation Box */}
-            <div className="bg-white border-2 border-orange-100 rounded-3xl p-5 mb-8 flex items-start gap-4 shadow-sm">
-              <div className="bg-orange-100 p-3 rounded-2xl text-orange-600">
-                <Sparkles size={24} />
-              </div>
-              <div>
-                <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">AI Suggestion</h4>
-                {isAiLoading ? (
-                  <div className="flex gap-2 items-center"><Loader2 size={12} className="animate-spin" /> <span className="text-xs text-slate-400">Thinking...</span></div>
-                ) : (
-                  <p className="text-sm font-bold italic text-slate-700 leading-relaxed">"{aiRecommendation}"</p>
-                )}
-              </div>
-            </div>
 
-            {/* Product Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {PRODUCTS.map(product => (
-                <div key={product.id} className="group bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
-                  <div className="relative h-40 overflow-hidden">
-                    <img src={product.img} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                    <div className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[8px] font-black uppercase tracking-tighter text-slate-500">
-                      {product.category}
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-xs text-slate-800 h-8 line-clamp-2">{product.name}</h3>
-                    <p className="text-orange-600 font-black text-sm mt-1">{formatIDR(product.price)}</p>
-                    <button 
-                      onClick={() => addToCart(product)}
-                      className="w-full mt-4 py-2.5 bg-orange-50 hover:bg-orange-600 text-orange-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                    >
-                      Beli Sekarang
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
-        {currentPage === 'history' && (
-          <section className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-            <h2 className="text-2xl font-black tracking-tighter uppercase mb-6">Riwayat Pesanan</h2>
-            {history.length === 0 ? (
-              <div className="bg-white rounded-[2.5rem] p-12 text-center border-2 border-dashed border-slate-100">
-                <History className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold text-sm">Belum ada pesanan.</p>
-              </div>
-            ) : (
-              history.map((order, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-black text-orange-600 uppercase">{order.invoice}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${order.status_bayar === 'Lunas' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        {order.status_bayar}
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-slate-400 mb-2">{order.date}</p>
-                    <p className="text-xs text-slate-600 font-medium line-clamp-1">{order.items}</p>
-                  </div>
-                  <div className="flex items-center justify-between md:flex-col md:items-end gap-2">
-                    <p className="text-lg font-black text-slate-800">{formatIDR(parseInt(order.total))}</p>
-                    {order.pdf !== '-' && (
-                      <a href={order.pdf} target="_blank" className="text-[9px] font-black text-blue-600 uppercase flex items-center gap-1 hover:underline">
-                        Download Invoice <Plus size={10} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </section>
-        )}
+        if(currentUser) {
 
-        {currentPage === 'admin' && (
-          <section className="animate-in slide-in-from-left-4 duration-500">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black tracking-tighter text-red-600 uppercase">Admin Dashboard</h2>
-              <button onClick={fetchAdminOrders} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-bold uppercase">Refresh Data</button>
-            </div>
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-100">
-                    <tr>
-                      <th className="p-4 font-black uppercase tracking-widest text-slate-400 text-[9px]">Invoice</th>
-                      <th className="p-4 font-black uppercase tracking-widest text-slate-400 text-[9px]">Customer</th>
-                      <th className="p-4 font-black uppercase tracking-widest text-slate-400 text-[9px]">Total</th>
-                      <th className="p-4 font-black uppercase tracking-widest text-slate-400 text-[9px]">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {adminOrders.map((order, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 font-bold text-orange-600">{order.invoice}</td>
-                        <td className="p-4">
-                          <p className="font-bold text-slate-800">{order.name}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">{order.phone}</p>
-                        </td>
-                        <td className="p-4 font-black">{formatIDR(parseInt(order.total))}</td>
-                        <td className="p-4">
-                          <select 
-                            className="bg-slate-100 p-2 rounded-xl font-bold text-[10px] border-none outline-none focus:ring-2 focus:ring-orange-500"
-                            defaultValue={order.status_bayar}
-                            onChange={async (e) => {
-                              setIsLoading(true);
-                              await fetchData(`action=updateStatus&rowId=${order.rowId}&status=${e.target.value}`);
-                              setIsLoading(false);
-                              showToast("Status diperbarui");
-                            }}
-                          >
-                            <option value="Belum Bayar">❌ Belum</option>
-                            <option value="Lunas">✅ Lunas</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
+            btnLogin.classList.add('hidden');
 
-      {/* --- Auth Modal --- */}
-      {isAuthOpen && (
-        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl relative animate-in zoom-in duration-300">
-            <button onClick={() => setIsAuthOpen(false)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-600 transition-colors">
-              <X size={24} />
-            </button>
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-black text-orange-800 tracking-tighter uppercase">Dapur Ghania</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Akses Member Exclusive</p>
-            </div>
+            btnProfile.classList.remove('hidden');
+
+            nav.classList.remove('hidden');
+
+            document.getElementById('display-name').innerText = currentUser.name.split(' ')[0];
+
+            welcomeText.innerText = `Halo, ${currentUser.name}`;
+
             
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6">
-              {['login', 'register'].map(m => (
-                <button 
-                  key={m}
-                  onClick={() => setAuthData({...authData, mode: m})}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${
-                    authData.mode === m ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500'
-                  }`}
-                >
-                  {m === 'login' ? 'Masuk' : 'Daftar'}
-                </button>
-              ))}
+
+            // Check Admin Status
+
+            if(currentUser.phone === ADMIN_WA) {
+
+                adminBtn.classList.remove('hidden');
+
+            }
+
+
+
+            document.getElementById('f-nama').value = currentUser.name;
+
+            document.getElementById('f-wa').value = currentUser.phone;
+
+        } else {
+
+            btnLogin.classList.remove('hidden');
+
+            btnProfile.classList.add('hidden');
+
+            nav.classList.add('hidden');
+
+            welcomeText.innerText = `Pesan Katering Mudah`;
+
+        }
+
+    }
+
+
+
+    function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
+
+    function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
+
+
+
+    function switchAuth(mode) {
+
+        authMode = mode;
+
+        document.getElementById('reg-name-wrapper').classList.toggle('hidden', mode === 'login');
+
+        document.getElementById('tab-login').className = mode === 'login' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
+
+        document.getElementById('tab-register').className = mode === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
+
+    }
+
+
+
+    async function handleAuth() {
+
+        const phone = document.getElementById('auth-phone').value;
+
+        const pin = document.getElementById('auth-pin').value;
+
+        const name = document.getElementById('auth-name').value;
+
+        if(!phone || !pin || (authMode === 'register' && !name)) return alert("Harap isi semua kolom!");
+
+
+
+        showLoader(true, "Proses Autentikasi...");
+
+        try {
+
+            const action = (phone === ADMIN_WA && authMode === 'login') ? 'loginAdmin' : authMode;
+
+            const url = `${SCRIPT_URL}?action=${action}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`;
+
+            const script = document.createElement('script');
+
+            script.src = url;
+
+            document.body.appendChild(script);
+
+        } catch(e) { showLoader(false); alert("Error Server"); }
+
+    }
+
+
+
+    window.authCallback = (res) => {
+
+        showLoader(false);
+
+        if(res.success) {
+
+            currentUser = { 
+
+                phone: document.getElementById('auth-phone').value, 
+
+                name: res.name || (document.getElementById('auth-phone').value === ADMIN_WA ? "Admin Dapur Ghania" : document.getElementById('auth-name').value) 
+
+            };
+
+            localStorage.setItem('ghania_user', JSON.stringify(currentUser));
+
+            updateUIAuth(); closeAuth(); showToast("Berhasil Masuk!");
+
+            if(currentUser.phone === ADMIN_WA) showPage('admin');
+
+        } else alert(res.message);
+
+    };
+
+
+
+    function handleUserAction() { if(confirm("Keluar dari akun?")) { localStorage.removeItem('ghania_user'); location.reload(); } }
+
+
+
+    function renderProducts() {
+
+        document.getElementById('product-list').innerHTML = PRODUCTS.map(p => `
+
+            <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow">
+
+                <img src="${p.img}" class="w-full h-36 object-cover">
+
+                <div class="p-4">
+
+                    <h3 class="font-bold text-xs h-8 overflow-hidden">${p.name}</h3>
+
+                    <p class="text-orange-600 font-black text-sm my-2">Rp ${p.price.toLocaleString()}</p>
+
+                    <button onclick="addToCart(${p.id})" class="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase">Tambah</button>
+
+                </div>
+
             </div>
 
-            <div className="space-y-3">
-              {authData.mode === 'register' && (
-                <input 
-                  type="text" 
-                  placeholder="Nama Lengkap" 
-                  className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                  value={authData.name}
-                  onChange={e => setAuthData({...authData, name: e.target.value})}
-                />
-              )}
-              <input 
-                type="tel" 
-                placeholder="Nomor WhatsApp" 
-                className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                value={authData.phone}
-                onChange={e => setAuthData({...authData, phone: e.target.value})}
-              />
-              <input 
-                type="password" 
-                placeholder="PIN Keamanan (6 Digit)" 
-                className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                value={authData.pin}
-                onChange={e => setAuthData({...authData, pin: e.target.value})}
-              />
-              <button 
-                onClick={handleAuth}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-orange-100 transition-all active:scale-95 mt-4"
-              >
-                KONFIRMASI AKUN
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        `).join('');
 
-      {/* --- Cart Modal --- */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-t-[3rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-10">
-            <div className="p-6 border-b border-orange-50 bg-orange-50 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-black text-orange-900 tracking-tighter">KERANJANG SAYA</h3>
-                <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Siap untuk dipesan</p>
-              </div>
-              <button onClick={() => setIsCartOpen(false)} className="text-orange-900 bg-white/50 p-2 rounded-full hover:bg-white transition-all"><X size={20} /></button>
+    }
+
+
+
+    // --- DATA FETCHING (RIWAYAT & ADMIN) ---
+
+    async function fetchUserHistory() {
+
+        const list = document.getElementById('history-list');
+
+        list.innerHTML = `<p class="text-center text-xs py-10 animate-pulse">Mengambil data...</p>`;
+
+        
+
+        const url = `${SCRIPT_URL}?action=getOrders&phone=${currentUser.phone}&callback=historyCb`;
+
+        const script = document.createElement('script');
+
+        script.src = url;
+
+        document.body.appendChild(script);
+
+    }
+
+
+
+    window.historyCb = (res) => {
+
+        const list = document.getElementById('history-list');
+
+        if(!res.data || res.data.length === 0) {
+
+            list.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center"><p class="text-gray-400 text-xs">Belum ada pesanan.</p></div>`;
+
+            return;
+
+        }
+
+        list.innerHTML = res.data.map(o => `
+
+            <div class="bg-white p-5 rounded-3xl border border-gray-50 shadow-sm">
+
+                <div class="flex justify-between items-start mb-3">
+
+                    <div>
+
+                        <p class="text-[10px] font-black text-orange-600 uppercase mb-1">${o.invoice}</p>
+
+                        <p class="text-xs font-bold text-gray-400">${o.date}</p>
+
+                    </div>
+
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${o.status_bayar === 'Lunas' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${o.status_bayar}</span>
+
+                </div>
+
+                <p class="text-xs font-semibold mb-3 border-b pb-3 text-gray-600">${o.items}</p>
+
+                <div class="flex justify-between items-center">
+
+                    <p class="font-black text-sm">Rp ${parseInt(o.total).toLocaleString()}</p>
+
+                    ${o.pdf !== '-' ? `<a href="${o.pdf}" target="_blank" class="text-[10px] font-black text-blue-600 underline uppercase">Lihat Invoice PDF</a>` : ''}
+
+                </div>
+
             </div>
+
+        `).join('');
+
+    };
+
+
+
+    async function fetchAdminOrders() {
+
+        const tbody = document.getElementById('admin-orders-table');
+
+        tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center animate-pulse">Loading Admin Data...</td></tr>`;
+
+        
+
+        const url = `${SCRIPT_URL}?action=getAllOrders&callback=adminCb`;
+
+        const script = document.createElement('script');
+
+        script.src = url;
+
+        document.body.appendChild(script);
+
+    }
+
+
+
+    window.adminCb = (res) => {
+
+        const tbody = document.getElementById('admin-orders-table');
+
+        if(!res.data) return;
+
+        tbody.innerHTML = res.data.map(o => `
+
+            <tr class="hover:bg-gray-50">
+
+                <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
+
+                <td class="p-4">
+
+                    <p class="font-bold">${o.name}</p>
+
+                    <p class="text-[10px] text-gray-400">${o.phone}</p>
+
+                </td>
+
+                <td class="p-4 font-black">Rp ${parseInt(o.total).toLocaleString()}</td>
+
+                <td class="p-4">
+
+                    <select onchange="updateStatus(${o.rowId}, this.value)" class="bg-gray-100 p-2 rounded-lg font-bold text-[10px]">
+
+                        <option value="Belum Bayar" ${o.status_bayar === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
+
+                        <option value="Lunas" ${o.status_bayar === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
+
+                    </select>
+
+                </td>
+
+                <td class="p-4">
+
+                    ${o.pdf !== '-' ? `<a href="${o.pdf}" target="_blank" class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-file-pdf"></i></a>` : '-'}
+
+                </td>
+
+            </tr>
+
+        `).join('');
+
+    };
+
+
+
+    async function updateStatus(rowId, newStatus) {
+
+        showLoader(true, "Memperbarui Status...");
+
+        const url = `${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${newStatus}&callback=updateCb`;
+
+        const script = document.createElement('script');
+
+        script.src = url;
+
+        document.body.appendChild(script);
+
+    }
+
+
+
+    window.updateCb = (res) => {
+
+        showLoader(false);
+
+        if(res.success) {
+
+            showToast("Status Diperbarui!");
+
+            fetchAdminOrders();
+
+        }
+
+    };
+
+
+
+    // --- LOGIKA KERANJANG & CHECKOUT ---
+
+    function addToCart(id) {
+
+        const p = PRODUCTS.find(x => x.id === id);
+
+        const exists = cart.find(i => i.id === id);
+
+        if(exists) exists.qty++; else cart.push({...p, qty: 1});
+
+        updateCartBadge(); showToast("Item Ditambahkan!");
+
+    }
+
+
+
+    function updateCartBadge() { document.getElementById('cart-badge').innerText = cart.reduce((a, b) => a + b.qty, 0); }
+
+    function openCart() { document.getElementById('modal-cart').classList.remove('hidden'); renderCartItems(); }
+
+    function closeCart() { document.getElementById('modal-cart').classList.add('hidden'); }
+
+
+
+    function renderCartItems() {
+
+        const container = document.getElementById('cart-items');
+
+        if(cart.length === 0) container.innerHTML = `<p class="text-center text-gray-400 text-xs py-10">KOSONG</p>`;
+
+        else container.innerHTML = cart.map(i => `
+
+            <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100">
+
+                <div class="flex-1">
+
+                    <p class="font-bold text-xs">${i.name}</p>
+
+                    <p class="text-[10px] text-orange-600">Rp ${i.price.toLocaleString()} x ${i.qty}</p>
+
+                </div>
+
+                <div class="flex items-center gap-2">
+
+                    <button onclick="adj(${i.id}, -1)" class="w-7 h-7 bg-gray-50 rounded-full">-</button>
+
+                    <span class="text-xs font-bold">${i.qty}</span>
+
+                    <button onclick="adj(${i.id}, 1)" class="w-7 h-7 bg-gray-50 rounded-full">+</button>
+
+                </div>
+
+            </div>
+
+        `).join('');
+
+        calculateTotal();
+
+    }
+
+
+
+    function adj(id, d) {
+
+        const i = cart.find(x => x.id === id);
+
+        if(i) { i.qty += d; if(i.qty <= 0) cart = cart.filter(x => x.id !== id); }
+
+        renderCartItems(); updateCartBadge();
+
+    }
+
+
+
+    function calculateTotal() {
+
+        const sub = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+
+        const subOngkir = (sub >= 50000) ? 10000 : 0;
+
+        const diskon = (localStorage.getItem('ghania_has_ordered') === 'true') ? Math.floor(sub * 0.05) : 0;
+
+        document.getElementById('subtotal-val').innerText = `Rp ${sub.toLocaleString()}`;
+
+        document.getElementById('subsidi-val').innerText = `- Rp ${subOngkir.toLocaleString()}`;
+
+        document.getElementById('diskon-row').classList.toggle('hidden', diskon === 0);
+
+        document.getElementById('diskon-val').innerText = `- Rp ${diskon.toLocaleString()}`;
+
+        document.getElementById('total-val').innerText = `Rp ${(sub - subOngkir - diskon).toLocaleString()}`;
+
+        document.getElementById('btn-to-checkout').disabled = cart.length === 0;
+
+    }
+
+
+
+    function handleCheckoutProcess() {
+
+        if(!currentUser) { closeCart(); openAuth(); showToast("Login Dahulu"); }
+
+        else { closeCart(); document.getElementById('modal-checkout').classList.remove('hidden'); }
+
+    }
+
+
+
+    function closeCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+
+
+
+    async function submitOrder() {
+
+        const payload = {
+
+            name: document.getElementById('f-nama').value,
+
+            phone: document.getElementById('f-wa').value,
+
+            date: document.getElementById('f-tgl').value,
+
+            time: document.getElementById('f-jam').value,
+
+            payment_type: document.getElementById('f-bayar').value,
+
+            address: document.getElementById('f-alamat').value,
+
+            note: document.getElementById('f-catatan').value,
+
+            total: document.getElementById('total-val').innerText.replace(/\D/g, ''),
+
+            items: cart.map(i => `${i.name} (Rp ${i.price.toLocaleString()} x ${i.qty} = Rp ${(i.price*i.qty).toLocaleString()})`).join(" | ")
+
+        };
+
+
+
+        if(!payload.date || !payload.address) return alert("Lengkapi data!");
+
+
+
+        showLoader(true, "Mengirim Pesanan...");
+
+        try {
+
+            const formData = new URLSearchParams();
+
+            for(let key in payload) formData.append(key, payload[key]);
+
+            await fetch(SCRIPT_URL, { method: 'POST', body: formData, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {cart.length === 0 ? (
-                <div className="py-20 text-center opacity-30 flex flex-col items-center">
-                  <ShoppingBasket size={48} className="mb-2" />
-                  <p className="text-sm font-black uppercase">Kosong</p>
-                </div>
-              ) : (
-                cart.map(item => (
-                  <div key={item.id} className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-[1.5rem] border border-slate-50 hover:border-orange-100 transition-all">
-                    <img src={item.img} className="w-16 h-16 rounded-xl object-cover shadow-sm" alt={item.name} />
-                    <div className="flex-1">
-                      <h4 className="font-bold text-xs text-slate-800 leading-tight">{item.name}</h4>
-                      <p className="text-[10px] font-black text-orange-600 mt-1">{formatIDR(item.price)}</p>
-                    </div>
-                    <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
-                      <button onClick={() => adjustQty(item.id, -1)} className="text-slate-400 hover:text-orange-600"><Minus size={14} /></button>
-                      <span className="text-xs font-black w-4 text-center">{item.qty}</span>
-                      <button onClick={() => adjustQty(item.id, 1)} className="text-slate-400 hover:text-orange-600"><Plus size={14} /></button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
 
-            <div className="p-8 bg-white border-t border-slate-100 space-y-3">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <span>Subtotal</span>
-                  <span>{formatIDR(subtotal)}</span>
-                </div>
-                {shippingDiscount > 0 && (
-                  <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-wider">
-                    <span>Subsidi Ongkir</span>
-                    <span>-{formatIDR(shippingDiscount)}</span>
-                  </div>
-                )}
-                {memberDiscount > 0 && (
-                  <div className="flex justify-between text-[10px] font-black text-blue-600 uppercase tracking-wider">
-                    <span>Loyalty Discount (5%)</span>
-                    <span>-{formatIDR(memberDiscount)}</span>
-                  </div>
-                )}
-              </div>
-              <div className="pt-3 border-t border-slate-50 flex justify-between items-center mb-6">
-                <span className="font-black text-slate-800 tracking-tighter uppercase">Total Akhir</span>
-                <span className="text-2xl font-black text-orange-600 tracking-tighter">{formatIDR(total)}</span>
-              </div>
-              <button 
-                disabled={cart.length === 0}
-                onClick={() => {
-                  if(!user) { setIsCartOpen(false); setIsAuthOpen(true); showToast("Harap login dahulu!"); }
-                  else { setIsCartOpen(false); setIsCheckoutOpen(true); }
-                }}
-                className="w-full bg-slate-900 disabled:bg-slate-200 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl active:scale-95 transition-all"
-              >
-                PROSES CHECKOUT
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            localStorage.setItem('ghania_has_ordered', 'true');
 
-      {/* --- Checkout Form Modal --- */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-[1001] bg-white flex flex-col md:inset-auto md:fixed md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-xl md:h-[90vh] md:rounded-[3rem] md:shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-          <div className="p-6 border-b flex items-center gap-4 bg-orange-50">
-            <button onClick={() => setIsCheckoutOpen(false)} className="bg-white p-2 rounded-full text-orange-800 shadow-sm"><ArrowLeft size={20} /></button>
-            <div>
-              <h2 className="text-lg font-black text-orange-900 tracking-tighter uppercase leading-none">KONFIRMASI PENGIRIMAN</h2>
-              <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Detail Pesanan Dapur Ghania</p>
-            </div>
-          </div>
+            showLoader(false);
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1"><Clock size={10} /> Tanggal & Waktu Kirim</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input type="date" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-orange-500" value={checkoutData.tgl} onChange={e => setCheckoutData({...checkoutData, tgl: e.target.value})} />
-                  <input type="time" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-orange-500" value={checkoutData.jam} onChange={e => setCheckoutData({...checkoutData, jam: e.target.value})} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1"><ShieldCheck size={10} /> Metode Bayar</label>
-                <select className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-orange-500" value={checkoutData.bayar} onChange={e => setCheckoutData({...checkoutData, bayar: e.target.value})}>
-                  <option value="Transfer Bank">Transfer Bank</option>
-                  <option value="DP 50%">DP 50% (Sisa COD)</option>
-                  <option value="Full Payment">Lunas (Full Payment)</option>
-                </select>
-              </div>
-            </div>
+            const waMsg = `Halo Dapur Ghania, saya *${payload.name}* memesan:\n${payload.items.replace(/ \| /g, '\n')}\nTotal: *Rp ${parseInt(payload.total).toLocaleString()}*\nAlamat: ${payload.address}`;
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1"><MapPin size={10} /> Alamat Lengkap Pengiriman</label>
-              <textarea rows="3" placeholder="Sebutkan patokan rumah / gedung..." className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-orange-500" value={checkoutData.alamat} onChange={e => setCheckoutData({...checkoutData, alamat: e.target.value})}></textarea>
-            </div>
+            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`, '_blank');
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1"><MessageCircle size={10} /> Catatan Tambahan (Opsional)</label>
-              <input type="text" placeholder="Contoh: Kurangi pedas / Tanpa MSG" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-orange-500" value={checkoutData.catatan} onChange={e => setCheckoutData({...checkoutData, catatan: e.target.value})} />
-            </div>
+            alert("Pesanan Terkirim! Silakan cek menu Riwayat."); 
 
-            <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
-              <h4 className="text-[10px] font-black text-orange-900 uppercase tracking-widest mb-4">Ringkasan Pesanan</h4>
-              <div className="space-y-2 mb-4">
-                {cart.map(i => (
-                  <div key={i.id} className="flex justify-between text-xs font-bold text-slate-600">
-                    <span>{i.name} x{i.qty}</span>
-                    <span>{formatIDR(i.price * i.qty)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between items-center pt-3 border-t border-orange-200">
-                <span className="font-black text-orange-900 uppercase text-[10px]">Grand Total</span>
-                <span className="text-xl font-black text-orange-600">{formatIDR(total)}</span>
-              </div>
-            </div>
-          </div>
+            location.reload();
 
-          <div className="p-8 bg-white border-t border-slate-100">
-            <button 
-              onClick={submitOrder}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-5 rounded-[2rem] font-black text-sm shadow-xl shadow-green-100 flex items-center justify-center gap-3 transition-all active:scale-95"
-            >
-              <MessageCircle size={20} />
-              KIRIM PESANAN KE WHATSAPP
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        } catch (e) { showLoader(false); alert("Error teknis"); }
+
+    }
+
+
+
+    function showLoader(v, t) {
+
+        const l = document.getElementById('loader');
+
+        l.classList.toggle('hidden', !v); l.classList.toggle('flex', v);
+
+        document.getElementById('loader-text').innerText = t;
+
+    }
+
+
+
+    function showToast(m) {
+
+        const t = document.createElement('div');
+
+        t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-2xl text-[10px] font-black z-[300]";
+
+        t.innerText = m; document.body.appendChild(t);
+
+        setTimeout(() => t.remove(), 2500);
+
+    }
+
+</script>
+
+</body>
+
+</html>
