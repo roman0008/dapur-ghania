@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dapur Ghania - Catering & Snack</title>
+    <title>Dapur Ghania - Katering & Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .nav-active { color: #ea580c !important; }
-        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
-        .modal-blur { backdrop-filter: blur(8px); background: rgba(0,0,0,0.4); }
-        .tab-btn.active { border-bottom: 2px solid #ea580c; color: #ea580c; }
+        .modal-blur { backdrop-filter: blur(12px); background: rgba(0,0,0,0.5); }
+        .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        input[type="date"], input[type="time"] { min-height: 3rem; }
     </style>
 </head>
 <body class="bg-[#FFFAF5] text-gray-800">
@@ -21,392 +21,344 @@
     <div id="loader" class="fixed inset-0 z-[999] hidden items-center justify-center modal-blur">
         <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
             <div class="animate-spin text-orange-600 text-3xl mb-4"><i class="fas fa-circle-notch"></i></div>
-            <p id="loader-text" class="text-xs font-bold text-gray-600 uppercase tracking-widest">Memproses...</p>
+            <p id="loader-text" class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Memproses...</p>
         </div>
     </div>
 
-    <!-- Header / Navbar -->
+    <!-- Auth Modal -->
+    <div id="auth-screen" class="fixed inset-0 z-[200] hidden items-center justify-center p-6 modal-blur">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative">
+            <button onclick="closeAuth()" class="absolute top-6 right-6 text-gray-400"><i class="fas fa-times"></i></button>
+            <div class="text-center mb-8">
+                <h1 class="font-black text-orange-800 text-3xl tracking-tighter">DAPUR GHANIA</h1>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Akses Akun Pelanggan</p>
+            </div>
+            <div class="flex bg-gray-100 p-1 rounded-2xl mb-6">
+                <button id="tab-login" onclick="switchAuth('login')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-orange-600">LOGIN</button>
+                <button id="tab-register" onclick="switchAuth('register')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all text-gray-500">DAFTAR</button>
+            </div>
+            <div id="auth-form" class="space-y-4">
+                <input type="tel" id="auth-phone" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nomor WhatsApp">
+                <div id="reg-name-wrapper" class="hidden">
+                    <input type="text" id="auth-name" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nama Lengkap">
+                </div>
+                <input type="password" id="auth-pin" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="PIN (6 Digit)">
+                <button onclick="handleAuth()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all mt-4">KONFIRMASI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 p-4">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="font-black text-orange-800 tracking-tighter text-xl">DAPUR GHANIA</h1>
-            
-            <div class="flex items-center gap-3">
-                <button onclick="toggleCartModal()" class="relative p-2 text-gray-600">
-                    <i class="fas fa-shopping-basket text-xl"></i>
-                    <span id="cart-count" class="absolute top-0 right-0 bg-orange-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">0</span>
-                </button>
-
-                <div id="auth-controls">
-                    <button onclick="openLoginModal()" class="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:bg-orange-700 transition-all">
-                        <i class="fas fa-user-circle text-base"></i>
-                        <span>MASUK</span>
+            <div>
+                <h1 class="font-black text-orange-800 tracking-tighter text-xl">DAPUR GHANIA</h1>
+                <p id="welcome-user" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pesan Katering Mudah</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div id="user-nav-container">
+                    <button id="btn-login-trigger" onclick="openAuth()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span>Login</span>
+                    </button>
+                    <button id="btn-profile-trigger" onclick="handleUserAction()" class="hidden flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                        <i class="fas fa-user-check text-lg"></i>
+                        <span id="display-name">User</span>
                     </button>
                 </div>
+                <button onclick="openCart()" class="relative p-2.5 bg-orange-600 rounded-xl shadow-lg">
+                    <i class="fas fa-shopping-basket text-lg text-white"></i>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">0</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Modal Login -->
-    <div id="login-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-blur">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 id="auth-title" class="text-xl font-black text-gray-900">Member Area</h2>
-                    <button onclick="closeLoginModal()" class="text-gray-300 hover:text-gray-600"><i class="fas fa-times"></i></button>
-                </div>
-
-                <div id="login-form" class="space-y-4">
-                    <input type="tel" id="login-phone" placeholder="No. WhatsApp" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:outline-orange-500 font-bold">
-                    <input type="password" id="login-pin" placeholder="PIN 6 Digit" maxlength="6" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:outline-orange-500 text-center tracking-[0.5em] font-bold">
-                    <button onclick="handleLogin()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">Masuk Sekarang</button>
-                    <div class="flex justify-between px-2">
-                        <button onclick="toggleAuthType('register')" class="text-orange-600 text-[10px] font-bold uppercase">Daftar Baru</button>
-                        <button onclick="toggleAuthType('admin')" class="text-gray-400 text-[10px] font-bold uppercase">Admin Login</button>
-                    </div>
-                </div>
-
-                <div id="register-form" class="hidden space-y-4">
-                    <input type="text" id="reg-name" placeholder="Nama Lengkap" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:outline-orange-500 font-bold">
-                    <input type="tel" id="reg-phone" placeholder="No. WhatsApp" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:outline-orange-500 font-bold">
-                    <input type="password" id="reg-pin" placeholder="PIN 6 Digit" maxlength="6" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:outline-orange-500 text-center tracking-[0.5em] font-bold">
-                    <button onclick="handleRegister()" class="w-full bg-orange-950 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">Daftar Akun</button>
-                    <button onclick="toggleAuthType('login')" class="w-full text-gray-400 text-[10px] font-bold uppercase">Kembali Masuk</button>
-                </div>
+    <!-- Content -->
+    <main class="max-w-4xl mx-auto p-4 pb-32">
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2.5rem] p-8 text-white mb-8 relative overflow-hidden shadow-xl">
+            <div class="relative z-10">
+                <h2 class="text-2xl font-black mb-1 uppercase tracking-tight">Katering Terpercaya</h2>
+                <p class="text-orange-100 text-sm opacity-90">Gratis subsidi ongkir s/d 10rb!</p>
             </div>
+            <i class="fas fa-utensils absolute -right-6 -bottom-6 text-[10rem] opacity-10 rotate-12"></i>
         </div>
-    </div>
 
-    <!-- Modal Keranjang -->
-    <div id="cart-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-blur">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h2 class="text-xl font-black text-gray-900">Keranjang Belanja</h2>
-                <button onclick="toggleCartModal()" class="text-gray-300 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4">
-                <!-- Items will load here -->
-            </div>
-            <div class="p-6 border-t bg-gray-50">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="font-bold text-gray-500 uppercase text-xs">Total Estimasi</span>
-                    <span id="cart-total-price" class="font-black text-orange-600 text-xl">Rp 0</span>
-                </div>
-                <button id="btn-checkout" onclick="handleCheckout()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform disabled:bg-gray-300">Pesan Sekarang</button>
-            </div>
+        <div class="flex items-center justify-between mb-6 px-2">
+            <h3 class="font-black text-gray-900 uppercase tracking-widest text-xs">Menu Rekomendasi</h3>
+            <span class="h-px flex-1 bg-gray-100 mx-4"></span>
         </div>
-    </div>
 
-    <!-- Content Area -->
-    <main class="max-w-4xl mx-auto pb-24">
-        <section id="page-shop" class="page-content p-4 space-y-6">
-            <div class="bg-orange-600 rounded-[2.5rem] p-8 text-white card-shadow relative overflow-hidden">
-                <div class="relative z-10">
-                    <h2 class="text-3xl font-black leading-tight mb-4">Makan Enak<br>Tanpa Ribet!</h2>
-                    <p class="text-orange-100 text-sm mb-6 max-w-[200px]">Catering tradisional & snack box premium pilihan keluarga.</p>
-                </div>
-                <i class="fas fa-cookie-bite absolute -right-4 -bottom-4 text-9xl opacity-10"></i>
-            </div>
-            <div class="grid grid-cols-2 gap-4" id="product-list"></div>
-        </section>
-
-        <section id="page-history" class="page-content hidden p-4">
-            <div id="history-header" class="mb-6">
-                <h2 class="text-xl font-black text-orange-950">Pesanan Saya</h2>
-                <div class="flex mt-4 bg-white rounded-2xl p-1 shadow-sm border border-gray-100">
-                    <button onclick="switchHistoryTab('unpaid')" id="tab-unpaid" class="tab-btn active flex-1 py-3 text-[10px] font-black uppercase">Belum Bayar</button>
-                    <button onclick="switchHistoryTab('paid')" id="tab-paid" class="tab-btn flex-1 py-3 text-[10px] font-black text-gray-400 uppercase">Riwayat Lunas</button>
-                </div>
-            </div>
-            <div id="order-container" class="space-y-4"></div>
-        </section>
-
-        <section id="page-admin" class="page-content hidden p-4">
-            <h2 class="text-xl font-black text-red-700 mb-6 text-center">Admin Panel</h2>
-            <div id="admin-container" class="space-y-4"></div>
-        </section>
+        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </main>
 
-    <!-- Bottom Navigation -->
-    <nav id="bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t p-3 flex justify-around items-center z-50">
-        <button onclick="showPage('shop')" id="nav-shop" class="flex flex-col items-center gap-1 nav-active transition-all">
-            <i class="fas fa-home text-xl"></i>
-            <span class="text-[9px] font-bold uppercase">Beranda</span>
-        </button>
-        <button onclick="showPage('history')" id="nav-history" class="flex flex-col items-center gap-1 text-gray-300 transition-all">
-            <i class="fas fa-receipt text-xl"></i>
-            <span class="text-[9px] font-bold uppercase">Pesanan</span>
-        </button>
-        <button onclick="showPage('admin')" id="nav-admin" class="hidden flex flex-col items-center gap-1 text-gray-300 transition-all">
-            <i class="fas fa-shield-alt text-xl"></i>
-            <span class="text-[9px] font-bold uppercase">Admin</span>
-        </button>
-    </nav>
+    <!-- Modal Keranjang -->
+    <div id="modal-cart" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-blur">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b flex justify-between items-center bg-orange-50">
+                <h2 class="text-xl font-black text-gray-900">Pesanan Saya</h2>
+                <button onclick="closeCart()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50"></div>
+            <div class="p-6 bg-white border-t space-y-3">
+                <div class="flex justify-between text-sm font-semibold text-gray-500">
+                    <span>Subtotal</span>
+                    <span id="subtotal-val">Rp 0</span>
+                </div>
+                <div class="flex justify-between text-sm font-bold text-green-600">
+                    <span>Potongan Ongkir</span>
+                    <span id="subsidi-val">- Rp 0</span>
+                </div>
+                <div id="diskon-row" class="hidden flex justify-between text-sm font-bold text-blue-600">
+                    <span>Diskon Member (5%)</span>
+                    <span id="diskon-val">- Rp 0</span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-orange-100">
+                    <span class="font-black text-gray-900">Total Akhir</span>
+                    <span id="total-val" class="text-2xl font-black text-orange-600">Rp 0</span>
+                </div>
+                <button onclick="handleCheckoutProcess()" id="btn-to-checkout" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg disabled:opacity-50 transition-all">CHECKOUT SEKARANG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Checkout -->
+    <div id="modal-checkout" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 modal-blur">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="p-6 border-b flex items-center gap-4 bg-orange-50">
+                <button onclick="closeCheckout()" class="text-orange-800"><i class="fas fa-arrow-left"></i></button>
+                <h2 class="text-lg font-black text-orange-900 uppercase tracking-tighter">Form Konfirmasi</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase text-gray-400">Nama</label>
+                        <input type="text" id="f-nama" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" readonly>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase text-gray-400">No WA</label>
+                        <input type="tel" id="f-wa" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" readonly>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase text-gray-400">Tgl Kirim</label>
+                        <input type="date" id="f-tgl" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase text-gray-400">Jam</label>
+                        <input type="time" id="f-jam" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase text-gray-400">Pembayaran</label>
+                    <select id="f-bayar" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm">
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="DP 50%">DP 50%</option>
+                        <option value="Full Payment">Full Payment</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase text-gray-400">Alamat Lengkap</label>
+                    <textarea id="f-alamat" rows="2" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" placeholder="Sebutkan patokan rumah..."></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase text-gray-400">Catatan Pesanan</label>
+                    <input type="text" id="f-catatan" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" placeholder="Contoh: Kurangi pedas">
+                </div>
+            </div>
+            <div class="p-6 bg-white border-t">
+                <button onclick="submitOrder()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <i class="fab fa-whatsapp text-xl"></i>
+                    ORDER SEKARANG
+                </button>
+            </div>
+        </div>
+    </div>
 
 <script>
-    const GSHEET_URL = "https://script.google.com/macros/s/AKfycbxxh84nTLVhDokvfosJ9VGm7_dY_HY26ixIsn0D0VJ7LKrqqvNUP5KpAbS9geKetiknXQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfGZpGdQ44v_xHcNT1KPoOyJhO7NlAEZk8PupRJKqUkuygnlyoiZU4ROb2N2U_VLCDjw/exec";
     
-    let currentUser = JSON.parse(localStorage.getItem('ghania_session'));
-    let isAdmin = localStorage.getItem('ghania_role') === 'admin';
-    let currentHistoryTab = 'unpaid';
-    let cart = [];
-
     const PRODUCTS = [
-        { id: 1, name: "Nasi Box Ayam Bakar", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400", desc: "Ayam bakar bumbu rempah spesial, nasi putih, sambal, lalapan, dan tahu tempe." },
-        { id: 2, name: "Snack Box Premium", price: 15000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400", desc: "Isi 3 macam kue (asin & manis) + air mineral." },
-        { id: 3, name: "Nasi Tumpeng Mini", price: 35000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400", desc: "Tumpeng kuning mini dengan 5 macam lauk pauk lengkap." },
-        { id: 4, name: "Kue Tampah Sedang", price: 150000, img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400", desc: "Aneka jajanan pasar pilihan, isi 50-60 pcs dalam tampah bambu." }
+        { id: 301, name: "Nasi Campur Spesial", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
+        { id: 302, name: "Ayam Bakar Madu", price: 22000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
+        { id: 303, name: "Snack Box Arisan", price: 12500, img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
+        { id: 304, name: "Tumpeng Mini", price: 35000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" }
     ];
 
-    // -- CART LOGIC --
-    function addToCart(productId) {
-        const product = PRODUCTS.find(p => p.id === productId);
-        const existing = cart.find(item => item.id === productId);
-        if (existing) {
-            existing.qty++;
+    let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
+    let authMode = 'login';
+    let cart = [];
+
+    window.onload = () => {
+        updateUIAuth();
+        renderProducts();
+    };
+
+    function updateUIAuth() {
+        const btnLogin = document.getElementById('btn-login-trigger');
+        const btnProfile = document.getElementById('btn-profile-trigger');
+        const welcomeText = document.getElementById('welcome-user');
+
+        if(currentUser) {
+            btnLogin.classList.add('hidden');
+            btnProfile.classList.remove('hidden');
+            document.getElementById('display-name').innerText = currentUser.name.split(' ')[0];
+            welcomeText.innerText = `Halo, ${currentUser.name}`;
+            document.getElementById('f-nama').value = currentUser.name;
+            document.getElementById('f-wa').value = currentUser.phone;
         } else {
-            cart.push({ ...product, qty: 1 });
-        }
-        updateCartUI();
-        showToast(`Berhasil menambah ${product.name}`);
-    }
-
-    function updateCartQty(productId, delta) {
-        const index = cart.findIndex(item => item.id === productId);
-        if (index !== -1) {
-            cart[index].qty += delta;
-            if (cart[index].qty <= 0) cart.splice(index, 1);
-        }
-        updateCartUI();
-    }
-
-    function updateCartUI() {
-        const count = cart.reduce((acc, item) => acc + item.qty, 0);
-        const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        
-        document.getElementById('cart-count').innerText = count;
-        document.getElementById('cart-total-price').innerText = `Rp ${total.toLocaleString()}`;
-        document.getElementById('btn-checkout').disabled = count === 0;
-
-        const container = document.getElementById('cart-items_container') || document.getElementById('cart-items-container');
-        if (cart.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-bold uppercase tracking-widest">Keranjang Kosong</div>`;
-        } else {
-            container.innerHTML = cart.map(item => `
-                <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
-                    <img src="${item.img}" class="w-12 h-12 rounded-xl object-cover">
-                    <div class="flex-1">
-                        <h4 class="text-xs font-bold">${item.name}</h4>
-                        <p class="text-[10px] text-orange-600 font-black">Rp ${(item.price * item.qty).toLocaleString()}</p>
-                    </div>
-                    <div class="flex items-center gap-3 bg-white px-3 py-1 rounded-full shadow-sm border">
-                        <button onclick="updateCartQty(${item.id}, -1)" class="text-orange-600 text-xs"><i class="fas fa-minus"></i></button>
-                        <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
-                        <button onclick="updateCartQty(${item.id}, 1)" class="text-orange-600 text-xs"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-            `).join('');
+            btnLogin.classList.remove('hidden');
+            btnProfile.classList.add('hidden');
+            welcomeText.innerText = `Pesan Katering Mudah`;
         }
     }
 
-    function toggleCartModal() {
-        document.getElementById('cart-modal').classList.toggle('hidden');
+    function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
+    function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
+
+    function switchAuth(mode) {
+        authMode = mode;
+        document.getElementById('reg-name-wrapper').classList.toggle('hidden', mode === 'login');
+        document.getElementById('tab-login').className = mode === 'login' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
+        document.getElementById('tab-register').className = mode === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
     }
 
-    async function handleCheckout() {
-        if (!currentUser) {
-            alert("Harap masuk/login terlebih dahulu untuk memesan.");
-            toggleCartModal();
-            openLoginModal();
-            return;
-        }
+    async function handleAuth() {
+        const phone = document.getElementById('auth-phone').value;
+        const pin = document.getElementById('auth-pin').value;
+        const name = document.getElementById('auth-name').value;
+        if(!phone || !pin || (authMode === 'register' && !name)) return alert("Harap isi semua kolom!");
 
-        const itemsString = cart.map(i => `${i.name} (Rp ${i.price.toLocaleString()} x ${i.qty} = Rp ${(i.price * i.qty).toLocaleString()})`).join(" | ");
-        const totalAmount = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-        
-        const note = prompt("Catatan Pesanan (Alamat Lengkap & Waktu Pengiriman):");
-        if (!note) return;
-
-        showLoader(true, "Mengirim Pesanan...");
-        
-        // Menggunakan fetch POST untuk doPost di Apps Script
+        showLoader(true, "Proses Autentikasi...");
         try {
-            const formData = new URLSearchParams();
-            formData.append('name', currentUser.name);
-            formData.append('phone', currentUser.phone);
-            formData.append('items', itemsString);
-            formData.append('total', totalAmount);
-            formData.append('note', note);
-            formData.append('address', note); // Simple fallback
-            formData.append('payment_type', 'Transfer Bank');
-
-            const response = await fetch(GSHEET_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
-            });
-
-            showLoader(false);
-            alert("Pesanan berhasil dikirim! Tim kami akan menghubungi via WhatsApp.");
-            cart = [];
-            updateCartUI();
-            toggleCartModal();
-            showPage('history');
-        } catch (e) {
-            showLoader(false);
-            alert("Gagal mengirim pesanan. Silakan coba lagi.");
-        }
+            const url = `${SCRIPT_URL}?action=${authMode}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`;
+            const script = document.createElement('script');
+            script.src = url;
+            document.body.appendChild(script);
+        } catch(e) { showLoader(false); alert("Error Server"); }
     }
 
-    // -- AUTH & NAVIGATION --
-    function openLoginModal() {
-        if(currentUser) {
-            if(confirm("Halo " + currentUser.name + ", ingin keluar akun?")) handleLogout();
-            return;
-        }
-        document.getElementById('login-modal').classList.remove('hidden');
-    }
+    window.authCallback = (res) => {
+        showLoader(false);
+        if(res.success) {
+            currentUser = { phone: document.getElementById('auth-phone').value, name: res.name || document.getElementById('auth-name').value };
+            localStorage.setItem('ghania_user', JSON.stringify(currentUser));
+            updateUIAuth(); closeAuth(); showToast("Berhasil Masuk!");
+        } else alert(res.message);
+    };
 
-    function closeLoginModal() {
-        document.getElementById('login-modal').classList.add('hidden');
-    }
-
-    function toggleAuthType(type) {
-        document.getElementById('login-form').classList.toggle('hidden', type !== 'login');
-        document.getElementById('register-form').classList.toggle('hidden', type !== 'register');
-        document.getElementById('auth-title').innerText = type === 'register' ? 'Daftar Member' : 'Member Area';
-    }
-
-    function showPage(pageId) {
-        if((pageId === 'history' || pageId === 'admin') && !currentUser) {
-            alert("Harap login terlebih dahulu.");
-            openLoginModal();
-            return;
-        }
-        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-        document.getElementById(`page-${pageId}`).classList.remove('hidden');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
-        document.getElementById(`nav-${pageId}`)?.classList.add('nav-active');
-
-        if(pageId === 'history') loadMemberOrders();
-        if(pageId === 'admin') loadAdminOrders();
-    }
-
-    function handleLogin() {
-        const phone = formatPhone(document.getElementById('login-phone').value);
-        const pin = document.getElementById('login-pin').value;
-        if(!phone || !pin) return alert("Nomor HP dan PIN wajib diisi!");
-        
-        showLoader(true, "Verifikasi Member...");
-        requestJSONP(`${GSHEET_URL}?action=login&phone=${phone}&pin=${pin}`, (res) => {
-            showLoader(false);
-            if(res && res.success) {
-                currentUser = { phone, name: res.name };
-                localStorage.setItem('ghania_session', JSON.stringify(currentUser));
-                localStorage.setItem('ghania_role', 'member');
-                closeLoginModal();
-                updateUI();
-                showPage('shop');
-            } else { 
-                alert(res ? res.message : "Gagal terhubung ke server."); 
-            }
-        });
-    }
-
-    function handleRegister() {
-        const name = document.getElementById('reg-name').value;
-        const phone = formatPhone(document.getElementById('reg-phone').value);
-        const pin = document.getElementById('reg-pin').value;
-        
-        if(!name || !phone || !pin) return alert("Harap lengkapi semua data pendaftaran!");
-        if(pin.length !== 6) return alert("PIN harus 6 digit angka!");
-
-        showLoader(true, "Mendaftarkan Akun...");
-        requestJSONP(`${GSHEET_URL}?action=register&name=${encodeURIComponent(name)}&phone=${phone}&pin=${pin}`, (res) => {
-            showLoader(false);
-            if(res && res.success) {
-                alert("Pendaftaran Berhasil! Silakan Login.");
-                toggleAuthType('login');
-            } else { alert(res ? res.message : "Gagal mendaftarkan akun."); }
-        });
-    }
-
-    function handleLogout() {
-        localStorage.clear();
-        location.reload();
-    }
-
-    function updateUI() {
-        const authBtn = document.querySelector('#auth-controls button');
-        const bottomNav = document.getElementById('bottom-nav');
-        const navAdmin = document.getElementById('nav-admin');
-
-        if(currentUser) {
-            authBtn.innerHTML = `<i class="fas fa-user-check"></i> <span>${currentUser.name.split(' ')[0]}</span>`;
-            authBtn.className = "flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-xs font-bold";
-            bottomNav.classList.remove('hidden');
-            if(isAdmin) navAdmin.classList.remove('hidden');
-        }
-    }
+    function handleUserAction() { if(confirm("Keluar dari akun?")) { localStorage.removeItem('ghania_user'); location.reload(); } }
 
     function renderProducts() {
-        const container = document.getElementById('product-list');
-        container.innerHTML = PRODUCTS.map(p => `
-            <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-50 flex flex-col card-shadow group">
-                <div class="relative overflow-hidden">
-                    <img src="${p.img}" class="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                         <button onclick="alert('${p.desc}')" class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-4 py-2 rounded-full border border-white/30">INFO DETAIL</button>
-                    </div>
-                </div>
-                <div class="p-4 flex-1 flex flex-col">
-                    <h4 class="font-bold text-sm mb-1">${p.name}</h4>
-                    <p class="text-orange-600 font-black text-sm mb-4">Rp ${p.price.toLocaleString()}</p>
-                    <button onclick="addToCart(${p.id})" class="mt-auto w-full bg-orange-50 text-orange-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-sm">Tambah</button>
+        document.getElementById('product-list').innerHTML = PRODUCTS.map(p => `
+            <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow">
+                <img src="${p.img}" class="w-full h-36 object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-xs h-8 overflow-hidden">${p.name}</h3>
+                    <p class="text-orange-600 font-black text-sm my-2">Rp ${p.price.toLocaleString()}</p>
+                    <button onclick="addToCart(${p.id})" class="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase">Tambah</button>
                 </div>
             </div>
         `).join('');
     }
 
-    // -- UTILS --
+    function addToCart(id) {
+        const p = PRODUCTS.find(x => x.id === id);
+        const exists = cart.find(i => i.id === id);
+        if(exists) exists.qty++; else cart.push({...p, qty: 1});
+        updateCartBadge(); showToast("Item Ditambahkan!");
+    }
+
+    function updateCartBadge() { document.getElementById('cart-badge').innerText = cart.reduce((a, b) => a + b.qty, 0); }
+    function openCart() { document.getElementById('modal-cart').classList.remove('hidden'); renderCartItems(); }
+    function closeCart() { document.getElementById('modal-cart').classList.add('hidden'); }
+
+    function renderCartItems() {
+        const container = document.getElementById('cart-items');
+        if(cart.length === 0) container.innerHTML = `<p class="text-center text-gray-400 text-xs py-10">KOSONG</p>`;
+        else container.innerHTML = cart.map(i => `
+            <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100">
+                <div class="flex-1">
+                    <p class="font-bold text-xs">${i.name}</p>
+                    <p class="text-[10px] text-orange-600">Rp ${i.price.toLocaleString()} x ${i.qty}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="adj(${i.id}, -1)" class="w-7 h-7 bg-gray-50 rounded-full">-</button>
+                    <span class="text-xs font-bold">${i.qty}</span>
+                    <button onclick="adj(${i.id}, 1)" class="w-7 h-7 bg-gray-50 rounded-full">+</button>
+                </div>
+            </div>
+        `).join('');
+        calculateTotal();
+    }
+
+    function adj(id, d) {
+        const i = cart.find(x => x.id === id);
+        if(i) { i.qty += d; if(i.qty <= 0) cart = cart.filter(x => x.id !== id); }
+        renderCartItems(); updateCartBadge();
+    }
+
+    function calculateTotal() {
+        const sub = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+        const subOngkir = (sub >= 50000) ? 10000 : 0;
+        const diskon = (localStorage.getItem('ghania_has_ordered') === 'true') ? Math.floor(sub * 0.05) : 0;
+        document.getElementById('subtotal-val').innerText = `Rp ${sub.toLocaleString()}`;
+        document.getElementById('subsidi-val').innerText = `- Rp ${subOngkir.toLocaleString()}`;
+        document.getElementById('diskon-row').classList.toggle('hidden', diskon === 0);
+        document.getElementById('diskon-val').innerText = `- Rp ${diskon.toLocaleString()}`;
+        document.getElementById('total-val').innerText = `Rp ${(sub - subOngkir - diskon).toLocaleString()}`;
+        document.getElementById('btn-to-checkout').disabled = cart.length === 0;
+    }
+
+    function handleCheckoutProcess() {
+        if(!currentUser) { closeCart(); openAuth(); showToast("Login Dahulu"); }
+        else { closeCart(); document.getElementById('modal-checkout').classList.remove('hidden'); }
+    }
+
+    function closeCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+
+    async function submitOrder() {
+        const payload = {
+            name: document.getElementById('f-nama').value,
+            phone: document.getElementById('f-wa').value,
+            date: document.getElementById('f-tgl').value,
+            time: document.getElementById('f-jam').value,
+            payment_type: document.getElementById('f-bayar').value,
+            address: document.getElementById('f-alamat').value,
+            note: document.getElementById('f-catatan').value,
+            total: document.getElementById('total-val').innerText.replace(/\D/g, ''),
+            items: cart.map(i => `${i.name} (Rp ${i.price.toLocaleString()} x ${i.qty} = Rp ${(i.price*i.qty).toLocaleString()})`).join(" | ")
+        };
+
+        if(!payload.date || !payload.address) return alert("Lengkapi data!");
+
+        showLoader(true, "Mengirim Pesanan...");
+        try {
+            const formData = new URLSearchParams();
+            for(let key in payload) formData.append(key, payload[key]);
+            await fetch(SCRIPT_URL, { method: 'POST', body: formData, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+            
+            localStorage.setItem('ghania_has_ordered', 'true');
+            showLoader(false);
+            const waMsg = `Halo Dapur Ghania, saya *${payload.name}* memesan:\n${payload.items.replace(/ \| /g, '\n')}\nTotal: *Rp ${parseInt(payload.total).toLocaleString()}*\nAlamat: ${payload.address}`;
+            window.open(`https://wa.me/62895334016084?text=${encodeURIComponent(waMsg)}`, '_blank');
+            alert("Berhasil!"); location.reload();
+        } catch (e) { showLoader(false); alert("Error teknis"); }
+    }
+
     function showLoader(v, t) {
         const l = document.getElementById('loader');
-        const lt = document.getElementById('loader-text');
-        l.classList.toggle('hidden', !v);
-        l.classList.toggle('flex', v);
-        lt.innerText = t;
+        l.classList.toggle('hidden', !v); l.classList.toggle('flex', v);
+        document.getElementById('loader-text').innerText = t;
     }
 
-    function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur text-white px-6 py-3 rounded-full text-xs font-bold z-[200] animate-bounce shadow-2xl border border-white/10";
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
+    function showToast(m) {
+        const t = document.createElement('div');
+        t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-2xl text-[10px] font-black z-[300]";
+        t.innerText = m; document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
     }
-
-    function requestJSONP(url, callback) {
-        const cbName = 'ghania_cb_' + Math.round(Math.random() * 1000000);
-        window[cbName] = (res) => { callback(res); document.getElementById(cbName)?.remove(); delete window[cbName]; };
-        const s = document.createElement('script'); 
-        s.id = cbName; 
-        s.src = `${url}${url.includes('?') ? '&' : '?'}callback=${cbName}`;
-        document.body.appendChild(s);
-    }
-
-    function formatPhone(num) {
-        if(!num) return "";
-        let clean = num.toString().replace(/\D/g, '');
-        if (clean.startsWith('0')) clean = '62' + clean.substring(1);
-        if (clean.startsWith('8')) clean = '62' + clean;
-        return clean;
-    }
-
-    window.onload = () => {
-        renderProducts();
-        updateUI();
-        updateCartUI();
-    };
 </script>
 </body>
 </html>
