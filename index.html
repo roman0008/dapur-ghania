@@ -13,6 +13,15 @@
         .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
         .nav-active { color: #ea580c; border-bottom: 3px solid #ea580c; }
         input[type="date"], input[type="time"] { min-height: 3rem; }
+        .cat-btn{
+    padding:8px 14px;
+    font-size:10px;
+    font-weight:800;
+    border-radius:9999px;
+    background:#f3f4f6;
+    white-space:nowrap;
+  }
+        
     </style>
 </head>
 <body class="bg-[#FFFAF5] text-gray-800">
@@ -87,7 +96,16 @@
                 <p class="text-orange-100 text-sm opacity-90">Satu pesanan, beribu kenangan manis.</p>
             </div>
         </div>
-        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        <!-- Kategori -->
+<div class="flex gap-2 mb-4 overflow-x-auto">
+  <button onclick="setCategory('all')" class="cat-btn nav-active">Semua</button>
+  <button onclick="setCategory('simple')" class="cat-btn">Paket Simple</button>
+  <button onclick="setCategory('exclusive')" class="cat-btn">Paket Exclusive</button>
+  <button onclick="setCategory('satuan')" class="cat-btn">Kue Satuan</button>
+</div>
+
+<div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+
     </main>
 
     <main id="page-history" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
