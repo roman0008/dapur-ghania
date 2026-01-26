@@ -6,17 +6,13 @@
     <title>Dapur Ghania - Paket Kue Hantaran & Hampers Exclusive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         .modal-blur { backdrop-filter: blur(12px); background: rgba(0,0,0,0.5); }
         .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
         .nav-active { color: #ea580c; border-bottom: 3px solid #ea580c; }
-        .filter-active { background-color: #ea580c; color: white; }
         input[type="date"], input[type="time"] { min-height: 3rem; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#FFFAF5] text-gray-800">
@@ -31,7 +27,7 @@
 
     <!-- Auth Modal -->
     <div id="auth-screen" class="fixed inset-0 z-[200] hidden items-center justify-center p-6 modal-blur">
-        <div class="bg-white w-full max-sm rounded-[2.5rem] p-8 shadow-2xl relative">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative">
             <button onclick="closeAuth()" class="absolute top-6 right-6 text-gray-400"><i class="fas fa-times"></i></button>
             <div class="text-center mb-8">
                 <h1 class="font-black text-orange-800 text-3xl tracking-tighter">DAPUR GHANIA</h1>
@@ -91,15 +87,7 @@
                 <p class="text-orange-100 text-sm opacity-90">Satu pesanan, beribu kenangan manis.</p>
             </div>
         </div>
-
-        <div class="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
-            <button onclick="filterCategory('All')" id="cat-All" class="filter-active px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all whitespace-nowrap">Semua</button>
-            <button onclick="filterCategory('Paket Simple')" id="cat-Simple" class="bg-white text-gray-500 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all whitespace-nowrap border border-gray-100">Paket Simple</button>
-            <button onclick="filterCategory('Paket Exclusive')" id="cat-Exclusive" class="bg-white text-gray-500 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all whitespace-nowrap border border-gray-100">Paket Exclusive</button>
-            <button onclick="filterCategory('Kue Satuan')" id="cat-Satuan" class="bg-white text-gray-500 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all whitespace-nowrap border border-gray-100">Kue Satuan</button>
-        </div>
-
-        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </main>
 
     <main id="page-history" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
@@ -130,7 +118,7 @@
         </div>
     </main>
 
-    <!-- Modal Cart & Checkout -->
+    <!-- Modals -->
     <div id="modal-cart" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-blur">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-6 border-b flex justify-between items-center bg-orange-50">
@@ -186,7 +174,7 @@
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-black uppercase text-gray-400">Alamat Lengkap</label>
-                    <textarea id="f-alamat" rows="2" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" placeholder="Contoh: Jl. Merdeka No. 123..."></textarea>
+                    <textarea id="f-alamat" rows="2" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm"></textarea>
                 </div>
             </div>
             <div class="p-6 bg-white border-t">
@@ -199,69 +187,87 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEPas8ooQvo9h23axzh-dr9lUMUIjavVUinh2zCu-4f44PgOeIqSY35pBPNqvXajSLpA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-Ejxk-TR_tpG8xf06BinzSbRRJ60yhrWb568Js-KbAxRIXKvrEMcOPdcYpZy8FMN4/exec";
     const ADMIN_WA = "62895334016084";
 
     const PRODUCTS = [
-        { id: 101, category: "Paket Exclusive", name: "Hampers Sultan A", price: 250000, desc: "Isi: 4 Toples Kue Kering Premium, Kartu Ucapan, Box Kayu Mewah.", img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400" },
-        { id: 102, category: "Paket Exclusive", name: "Hantaran Lamaran Luxe", price: 450000, desc: "Paket Lengkap: Lapis Legit, Bolu Gulung, & 3 Macam Jajanan Pasar.", img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400" },
-        { id: 201, category: "Paket Simple", name: "Snack Box Arisan", price: 15000, desc: "Isi: Risol Mayo, Lemper Ayam, Sus Buah, & Air Mineral Gelas.", img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
-        { id: 303, category: "Kue Satuan", name: "Bolu Gulung Keju", price: 65000, desc: "Bolu lembut dengan parutan keju melimpah (Ukuran 20cm).", img: "https://images.unsplash.com/photo-1600613233345-0d4569b3f301?w=400" }
+        { id: 301, name: "Nasi Campur Spesial", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
+        { id: 302, name: "Ayam Bakar Madu", price: 22000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
+        { id: 303, name: "Snack Box Arisan", price: 12500, img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
+        { id: 304, name: "Tumpeng Mini", price: 35000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" }
     ];
 
     let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
     let cart = [];
-    let currentFilter = 'All';
 
     window.onload = () => { updateUIAuth(); renderProducts(); };
 
     function renderProducts() {
-        const container = document.getElementById('product-list');
-        const filtered = currentFilter === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === currentFilter);
-        container.innerHTML = filtered.map(p => `
-            <div class="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 card-shadow transition-transform hover:scale-[1.02]">
-                <div class="relative"><img src="${p.img}" class="w-full h-48 object-cover"></div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-black text-sm text-gray-800">${p.name}</h3>
-                        <p class="text-orange-600 font-black text-xs">Rp ${p.price.toLocaleString()}</p>
-                    </div>
-                    <button onclick="addToCart(${p.id})" class="w-full py-4 bg-orange-50 text-orange-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all active:scale-95">
-                        Tambah Ke Keranjang
-                    </button>
+        document.getElementById('product-list').innerHTML = PRODUCTS.map(p => `
+            <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow">
+                <img src="${p.img}" class="w-full h-32 object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-xs mb-1">${p.name}</h3>
+                    <p class="text-orange-600 font-black text-sm mb-3">Rp ${p.price.toLocaleString()}</p>
+                    <button onclick="addToCart(${p.id})" class="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase">Tambah</button>
                 </div>
-            </div>`).join('');
+            </div>
+        `).join('');
     }
 
-    function filterCategory(cat) { currentFilter = cat; renderProducts(); }
-    function addToCart(id) { 
+    function addToCart(id) {
         const p = PRODUCTS.find(x => x.id === id);
         const exists = cart.find(i => i.id === id);
         if(exists) exists.qty++; else cart.push({...p, qty: 1});
-        updateCartBadge(); showToast(`${p.name} ditambahkan`);
+        updateCartBadge(); showToast("Item ditambahkan");
     }
+
     function updateCartBadge() { document.getElementById('cart-badge').innerText = cart.reduce((a, b) => a + b.qty, 0); }
     function openCart() { document.getElementById('modal-cart').classList.remove('hidden'); renderCartItems(); }
     function closeCart() { document.getElementById('modal-cart').classList.add('hidden'); }
+
+    function renderCartItems() {
+        const container = document.getElementById('cart-items');
+        if(cart.length === 0) container.innerHTML = `<p class="text-center text-gray-400 text-xs py-10">Keranjang Kosong</p>`;
+        else container.innerHTML = cart.map(i => `
+            <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100">
+                <div class="flex-1 text-xs">
+                    <p class="font-bold">${i.name}</p>
+                    <p class="text-orange-600 font-black">Rp ${(i.price * i.qty).toLocaleString()}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="adj(${i.id}, -1)" class="w-8 h-8 bg-gray-50 rounded-full font-black">-</button>
+                    <span class="text-xs font-bold">${i.qty}</span>
+                    <button onclick="adj(${i.id}, 1)" class="w-8 h-8 bg-gray-50 rounded-full font-black">+</button>
+                </div>
+            </div>
+        `).join('');
+        calculateTotal();
+    }
+
     function adj(id, d) {
         const i = cart.find(x => x.id === id);
         if(i) { i.qty += d; if(i.qty <= 0) cart = cart.filter(x => x.id !== id); }
         renderCartItems(); updateCartBadge();
     }
-    function renderCartItems() {
-        const container = document.getElementById('cart-items');
-        container.innerHTML = cart.map(i => `<div class="flex justify-between bg-white p-4 rounded-3xl border"><div>${i.name}</div><div class="flex gap-2"><button onclick="adj(${i.id},-1)">-</button>${i.qty}<button onclick="adj(${i.id},1)">+</button></div></div>`).join('');
-        calculateTotal();
-    }
+
     function calculateTotal() {
         const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
         document.getElementById('total-val').innerText = `Rp ${total.toLocaleString()}`;
         document.getElementById('dp-amount-label').innerText = Math.floor(total/2).toLocaleString();
         document.getElementById('re-amount-label').innerText = (total - Math.floor(total/2)).toLocaleString();
+        document.getElementById('btn-to-checkout').disabled = cart.length === 0;
     }
 
-    function updatePaymentUI() { document.getElementById('dp-info-container').classList.toggle('hidden', document.getElementById('f-bayar').value !== 'DP 50%'); }
-    function handleCheckoutProcess() { if(!currentUser) { closeCart(); openAuth(); } else { closeCart(); document.getElementById('modal-checkout').classList.remove('hidden'); } }
+    function updatePaymentUI() {
+        document.getElementById('dp-info-container').classList.toggle('hidden', document.getElementById('f-bayar').value !== 'DP 50%');
+    }
+
+    function handleCheckoutProcess() {
+        if(!currentUser) { closeCart(); openAuth(); }
+        else { closeCart(); document.getElementById('modal-checkout').classList.remove('hidden'); updatePaymentUI(); }
+    }
+
     function closeCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
 
     async function submitOrder() {
@@ -269,105 +275,158 @@
         const total = parseInt(document.getElementById('total-val').innerText.replace(/\D/g, ''));
         const date = document.getElementById('f-tgl').value;
         const addr = document.getElementById('f-alamat').value;
-        if(!date || !addr) return alert("Isi Tanggal & Alamat!");
 
-        showLoader(true, "Memproses...");
-        const invoiceID = `INV/${new Date().toISOString().slice(0,10).replace(/-/g,'')}/${Math.floor(Math.random()*999)}`;
+        if(!date || !addr) return alert("Harap isi Tanggal & Alamat!");
+
+        showLoader(true, "Memproses Data...");
+
+        // Generate Invoice Items
         const itemText = cart.map(i => `${i.name} (x${i.qty})`).join(", ");
-
-        const orderData = {
-            action: "addOrder",
-            invoice: invoiceID,
-            name: currentUser.name,
-            phone: currentUser.phone,
-            total: total,
-            payment_type: paymentType, // INI KUNCINYA: Pastikan nama field sama dengan di GSheet
-            address: addr,
-            date: date,
-            items: itemText
-        };
-
-        const fd = new URLSearchParams();
-        for(let k in orderData) fd.append(k, orderData[k]);
         
+        let ordersToSubmit = [];
+        let waMsg = `*PESANAN BARU - DAPUR GHANIA*\n----------------------------\n`;
+        waMsg += `Nama: ${currentUser.name}\nMetode: *${paymentType}*\n\n*Item:* ${itemText}\nTotal: Rp ${total.toLocaleString()}\n----------------------------\n\n`;
+
+        if(paymentType === 'DP 50%') {
+            const dp = Math.floor(total / 2);
+            const re = total - dp;
+
+            // Baris 1: DP
+            ordersToSubmit.push({
+                name: currentUser.name, phone: currentUser.phone, total: dp,
+                payment_type: "DP 50% (Termin 1)", address: addr, date: date,
+                items: `[INVOICE DP] ${itemText}`
+            });
+            // Baris 2: Pelunasan
+            ordersToSubmit.push({
+                name: currentUser.name, phone: currentUser.phone, total: re,
+                payment_type: "Pelunasan (Termin 2)", address: addr, date: date,
+                items: `[INVOICE PELUNASAN] ${itemText}`
+            });
+
+            waMsg += `🧾 *INVOICE 1 (DP 50%): Rp ${dp.toLocaleString()}*\n_Harus bayar sekarang_\n\n`;
+            waMsg += `🧾 *INVOICE 2 (PELUNASAN): Rp ${re.toLocaleString()}*\n_Bayar saat barang tiba_\n\n`;
+        } else {
+            ordersToSubmit.push({
+                name: currentUser.name, phone: currentUser.phone, total: total,
+                payment_type: "Full Payment", address: addr, date: date,
+                items: itemText
+            });
+            waMsg += `🧾 *TAGIHAN LUNAS: Rp ${total.toLocaleString()}*\n\n`;
+        }
+
+        waMsg += `📍 Alamat: ${addr}\n🗓️ Kirim: ${date}`;
+
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: fd, mode: 'no-cors' });
+            // Loop kirim ke Google Sheets satu per satu
+            for(let data of ordersToSubmit) {
+                const fd = new URLSearchParams();
+                for(let k in data) fd.append(k, data[k]);
+                await fetch(SCRIPT_URL, { method: 'POST', body: fd, headers: {'Content-Type': 'application/x-www-form-urlencoded'} });
+            }
+            
             showLoader(false);
-            const msg = `*ORDER BARU*\nInv: ${invoiceID}\nMetode: ${paymentType}\nTotal: Rp ${total.toLocaleString()}\nAlamat: ${addr}`;
-            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(msg)}`, '_blank');
+            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`, '_blank');
+            alert("Pesanan berhasil! Sheet & Riwayat telah terinput 2 baris untuk DP.");
             location.reload();
-        } catch(e) { showLoader(false); alert("Gagal kirim."); }
+        } catch(e) { 
+            showLoader(false); 
+            alert("Error koneksi. Silakan hubungi admin."); 
+        }
     }
 
     function showPage(pageId) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
         document.getElementById(`page-${pageId}`).classList.remove('hidden');
+        document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('nav-active', 'text-orange-600'));
+        document.getElementById(`nav-${pageId}`).classList.add('nav-active', 'text-orange-600');
         if(pageId === 'history') fetchUserHistory();
         if(pageId === 'admin') fetchAdminOrders();
     }
 
-    // --- PERBAIKAN DI BAGIAN ADMIN & HISTORY (Fix N/A) ---
-    function fetchAdminOrders() {
-        document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="5" class="p-4 text-center">Loading...</td></tr>`;
-        injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminCb`);
-    }
-
-    window.adminCb = (res) => {
-        if(!res || !res.data) return;
-        document.getElementById('admin-orders-table').innerHTML = res.data.map(o => {
-            // Kita coba ambil dari berbagai kemungkinan nama properti agar tidak N/A
-            const paymentInfo = o.payment_type || o.paymentType || o.metode || "Full Payment";
-            return `
-            <tr class="hover:bg-gray-50 border-b">
-                <td class="p-4 font-bold text-orange-600 text-[10px]">${o.invoice || 'INV'}</td>
-                <td class="p-4 text-[10px] font-bold">${o.name || '-'}</td>
-                <td class="p-4">
-                    <p class="font-black">Rp ${parseInt(o.total || 0).toLocaleString()}</p>
-                    <p class="text-[9px] text-gray-400 font-bold uppercase">${paymentInfo}</p>
-                </td>
-                <td class="p-4">
-                    <span class="px-2 py-1 rounded-lg bg-gray-100 text-[9px] font-bold uppercase">${o.status || 'PROSES'}</span>
-                </td>
-                <td class="p-4"><button onclick="window.open('https://wa.me/${o.phone}')"><i class="fab fa-whatsapp text-green-500"></i></button></td>
-            </tr>`;
-        }).join('');
-    };
-
     function fetchUserHistory() {
-        document.getElementById('history-list').innerHTML = `<p class="text-center text-xs py-10">Memuat...</p>`;
+        document.getElementById('history-list').innerHTML = `<p class="text-center text-xs py-10">Memuat riwayat...</p>`;
         injectScript(`${SCRIPT_URL}?action=getOrders&phone=${currentUser.phone}&callback=historyCb`);
     }
 
     window.historyCb = (res) => {
         const list = document.getElementById('history-list');
-        if(!res || !res.data || res.data.length === 0) { list.innerHTML = `<p class="text-center py-10">Belum ada pesanan.</p>`; return; }
+        if(!res.data || res.data.length === 0) {
+            list.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center"><p class="text-gray-400 text-xs">Belum ada pesanan.</p></div>`;
+            return;
+        }
         list.innerHTML = res.data.map(o => `
-            <div class="bg-white p-6 rounded-3xl border mb-3">
-                <div class="flex justify-between mb-2">
-                    <span class="text-[9px] font-black text-gray-400">${o.invoice}</span>
-                    <span class="text-[9px] font-black text-orange-600 uppercase">${o.payment_type || o.paymentType || 'Full Payment'}</span>
+            <div class="bg-white p-5 rounded-3xl border shadow-sm ${o.payment_type.includes('Termin') ? 'border-orange-200 bg-orange-50/30' : 'border-gray-50'}">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${o.invoice}</p>
+                        <p class="text-[10px] font-bold text-orange-600">${o.payment_type}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${o.status_bayar === 'Lunas' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${o.status_bayar}</span>
                 </div>
-                <p class="text-xs font-bold">${o.items}</p>
-                <p class="mt-2 font-black text-orange-600">Rp ${parseInt(o.total).toLocaleString()}</p>
-            </div>`).join('');
+                <p class="text-xs font-semibold text-gray-700 mb-3">${o.items}</p>
+                <div class="flex justify-between items-end border-t pt-3">
+                    <p class="text-xs font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
+                    <p class="text-[9px] font-bold text-gray-400">${o.date}</p>
+                </div>
+            </div>
+        `).join('');
     };
 
-    // Auth & Utils
+    function fetchAdminOrders() {
+        document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="5" class="p-10 text-center">Memuat...</td></tr>`;
+        injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminCb`);
+    }
+
+    window.adminCb = (res) => {
+        if(!res.data) return;
+        document.getElementById('admin-orders-table').innerHTML = res.data.map(o => `
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
+                <td class="p-4 text-[10px] font-bold">${o.name}</td>
+                <td class="p-4">
+                    <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
+                    <p class="text-[9px] text-gray-400">${o.payment_type}</p>
+                </td>
+                <td class="p-4">
+                    <select onchange="updateStatus(${o.rowId}, this.value)" class="text-[10px] font-black p-1 bg-gray-100 rounded">
+                        <option value="Belum Bayar" ${o.status_bayar === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
+                        <option value="Lunas" ${o.status_bayar === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
+                    </select>
+                </td>
+                <td class="p-4"><button onclick="window.open('https://wa.me/${o.phone}')"><i class="fab fa-whatsapp text-green-500"></i></button></td>
+            </tr>
+        `).join('');
+    };
+
+    async function updateStatus(rowId, status) {
+        showLoader(true, "Updating...");
+        injectScript(`${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${status}&callback=updateCb`);
+    }
+    window.updateCb = (res) => { showLoader(false); if(res.success) fetchAdminOrders(); };
+
+    // --- Auth Logic ---
     function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
     function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
-    function switchAuth(m) { authMode = m; document.getElementById('reg-name-wrapper').classList.toggle('hidden', m==='login'); }
     let authMode = 'login';
+    function switchAuth(m) {
+        authMode = m;
+        document.getElementById('reg-name-wrapper').classList.toggle('hidden', m === 'login');
+        document.getElementById('tab-login').className = m === 'login' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
+        document.getElementById('tab-register').className = m === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
+    }
     async function handleAuth() {
-        const p = document.getElementById('auth-phone').value, pin = document.getElementById('auth-pin').value, n = document.getElementById('auth-name').value;
-        showLoader(true, "Auth...");
-        injectScript(`${SCRIPT_URL}?action=${p===ADMIN_WA?'loginAdmin':authMode}&phone=${p}&pin=${pin}&name=${n}&callback=authCallback`);
+        const phone = document.getElementById('auth-phone').value, pin = document.getElementById('auth-pin').value, name = document.getElementById('auth-name').value;
+        if(!phone || !pin) return;
+        showLoader(true, "Authenticating...");
+        injectScript(`${SCRIPT_URL}?action=${phone===ADMIN_WA?'loginAdmin':authMode}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`);
     }
     window.authCallback = (res) => {
         showLoader(false);
         if(res.success) {
             currentUser = { phone: document.getElementById('auth-phone').value, name: res.name || document.getElementById('auth-name').value };
             localStorage.setItem('ghania_user', JSON.stringify(currentUser));
-            location.reload();
+            updateUIAuth(); closeAuth();
         } else alert(res.message);
     };
     function updateUIAuth() {
@@ -381,9 +440,9 @@
         }
     }
     function handleUserAction() { if(confirm("Logout?")) { localStorage.clear(); location.reload(); } }
-    function injectScript(url) { const s = document.createElement('script'); s.src = url; document.body.appendChild(s); setTimeout(()=>s.remove(),2000); }
+    function injectScript(url) { const s = document.createElement('script'); s.src = url; document.body.appendChild(s); }
     function showLoader(v, t) { document.getElementById('loader').classList.toggle('hidden', !v); document.getElementById('loader').classList.toggle('flex', v); document.getElementById('loader-text').innerText = t; }
-    function showToast(m) { const t = document.createElement('div'); t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full text-[10px] font-black z-[300]"; t.innerText = m; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
+    function showToast(m) { const t = document.createElement('div'); t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-2 rounded-full text-[10px] font-black z-[300]"; t.innerText = m; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
 </script>
 </body>
 </html>
