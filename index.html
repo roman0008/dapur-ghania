@@ -217,7 +217,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxkk1ymWmZ8tOEhNC3BwjIQf1hsn21UM3WGXHC_m8YuAkQYPrtICeqsjetQHVArlwreg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_g1lP4kDVf-ODqQSMrI1XL0JW6SfShq2ofENhTX7MPVSQPH-QIfF02I3SH3pOhRsrwg/exec";
     const ADMIN_WA = "62895334016084";
 
     const PRODUCTS = [
@@ -525,9 +525,11 @@ function setCategory(cat){
   </td>
 
   <td class="p-4">
-    <button onclick="window.open('https://wa.me/${o.phone}')">
-      <i class="fab fa-whatsapp text-green-500"></i>
-    </button>
+    <button 
+  onclick="kirimInvoiceWA(<?=row.rowId?>)" 
+  class="bg-green-600 text-white px-3 py-1 rounded">
+  Kirim WA
+</button>
   </td>
 </tr>
       `).join('');
@@ -551,6 +553,31 @@ window.ongkirCb = (res) => {
   showLoader(false);
   if(res.success) fetchAdminOrders();
 };
+
+function kirimInvoiceWA(rowId) {
+  if (!confirm("Kirim invoice via WhatsApp?")) return;
+
+  const cb = "cbSendWA_" + Date.now();
+
+  window[cb] = function(res) {
+    if (res.success) {
+      alert("✅ Invoice berhasil dikirim via WhatsApp");
+    } else {
+      alert("❌ Gagal: " + res.message);
+    }
+    delete window[cb];
+  };
+
+  const s = document.createElement("script");
+  s.src =
+    SCRIPT_URL +
+    "?action=sendInvoiceWA" +
+    "&rowId=" + rowId +
+    "&callback=" + cb;
+
+  s.onerror = () => alert("❌ Gagal memanggil server");
+  document.body.appendChild(s);
+}
 
     // --- Auth Logic ---
     function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
