@@ -96,6 +96,17 @@
                 <p class="text-orange-100 text-sm opacity-90">Satu pesanan, beribu kenangan manis.</p>
             </div>
         </div>
+        <!-- Search Produk -->
+<div class="mb-4">
+  <input 
+    id="search-input"
+    oninput="handleSearch(this.value)"
+    type="text"
+    placeholder="Cari produk kue / paket..."
+    class="w-full p-4 rounded-2xl border border-gray-100 text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none"
+  >
+</div>
+
         <!-- Kategori -->
 <div class="flex gap-2 mb-4 overflow-x-auto">
   <button onclick="setCategory('all')" class="cat-btn nav-active">Semua</button>
@@ -209,29 +220,113 @@
     const ADMIN_WA = "62895334016084";
 
     const PRODUCTS = [
-        { id: 301, name: "Nasi Campur Spesial", price: 25000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400" },
-        { id: 302, name: "Ayam Bakar Madu", price: 22000, img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
-        { id: 303, name: "Snack Box Arisan", price: 12500, img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400" },
-        { id: 304, name: "Tumpeng Mini", price: 35000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" }
-    ];
+  {
+    id: 1,
+    name: "Paket Simple A",
+    category: "simple",
+    price: 75000,
+    img: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400",
+    desc: "Isi 3 kue + snack, cocok untuk hantaran sederhana."
+  },
+  {
+    id: 2,
+    name: "Paket Simple B",
+    category: "simple",
+    price: 95000,
+    img: "https://images.unsplash.com/photo-1604909053191-6b45c5a1c9b2?w=400",
+    desc: "Isi 4 kue premium, kemasan rapi."
+  },
+  {
+    id: 3,
+    name: "Paket Exclusive Gold",
+    category: "exclusive",
+    price: 175000,
+    img: "https://images.unsplash.com/photo-1601972599720-36938d4ecd31?w=400",
+    desc: "Isi lengkap, box exclusive + kartu ucapan."
+  },
+  {
+    id: 4,
+    name: "Paket Exclusive Platinum",
+    category: "exclusive",
+    price: 250000,
+    img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400",
+    desc: "Hampers premium, cocok acara besar."
+  },
+  {
+    id: 5,
+    name: "Brownies Coklat",
+    category: "satuan",
+    price: 25000,
+    img: "https://images.unsplash.com/photo-1599785209798-6c9f7d39f52d?w=400",
+    desc: "Brownies lembut coklat premium."
+  },
+  {
+    id: 6,
+    name: "Cupcake Vanilla",
+    category: "satuan",
+    price: 12000,
+    img: "https://images.unsplash.com/photo-1519869325930-281384150729?w=400",
+    desc: "Cupcake vanilla lembut."
+  }
+];
+
 
     let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
     let cart = [];
 
     window.onload = () => { updateUIAuth(); renderProducts(); };
+      let activeCategory = 'all';
+
+function setCategory(cat){
+  activeCategory = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('nav-active'));
+  event.target.classList.add('nav-active');
+  renderProducts();
+}
 
     function renderProducts() {
-        document.getElementById('product-list').innerHTML = PRODUCTS.map(p => `
-            <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow">
-                <img src="${p.img}" class="w-full h-32 object-cover">
-                <div class="p-4">
-                    <h3 class="font-bold text-xs mb-1">${p.name}</h3>
-                    <p class="text-orange-600 font-black text-sm mb-3">Rp ${p.price.toLocaleString()}</p>
-                    <button onclick="addToCart(${p.id})" class="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase">Tambah</button>
-                </div>
-            </div>
-        `).join('');
-    }
+  const list = document.getElementById('product-list');
+
+  let data = PRODUCTS;
+
+  // Filter kategori
+  if(activeCategory !== 'all'){
+    data = data.filter(p => p.category === activeCategory);
+  }
+
+  // Filter search
+  if(searchKeyword){
+    data = data.filter(p =>
+      p.name.toLowerCase().includes(searchKeyword) ||
+      p.desc.toLowerCase().includes(searchKeyword)
+    );
+  }
+
+  // Jika kosong
+  if(data.length === 0){
+    list.innerHTML = `
+      <div class="col-span-full text-center text-gray-400 text-xs py-10">
+        Produk tidak ditemukan
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = data.map(p => `
+    <div onclick="openProductDetail(${p.id})"
+      class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow cursor-pointer">
+      <img src="${p.img}" class="w-full h-32 object-cover">
+      <div class="p-4">
+        <h3 class="font-bold text-xs mb-1">${p.name}</h3>
+        <p class="text-orange-600 font-black text-sm">
+          Rp ${p.price.toLocaleString()}
+        </p>
+      </div>
+    </div>
+  `).join('');
+}
+
+
 
     function addToCart(id) {
         const p = PRODUCTS.find(x => x.id === id);
@@ -461,6 +556,55 @@
     function injectScript(url) { const s = document.createElement('script'); s.src = url; document.body.appendChild(s); }
     function showLoader(v, t) { document.getElementById('loader').classList.toggle('hidden', !v); document.getElementById('loader').classList.toggle('flex', v); document.getElementById('loader-text').innerText = t; }
     function showToast(m) { const t = document.createElement('div'); t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-2 rounded-full text-[10px] font-black z-[300]"; t.innerText = m; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
+
+let selectedProduct = null;
+
+function openProductDetail(id){
+  selectedProduct = PRODUCTS.find(p=>p.id===id);
+  document.getElementById('dp-img').src = selectedProduct.img;
+  document.getElementById('dp-name').innerText = selectedProduct.name;
+  document.getElementById('dp-desc').innerText = selectedProduct.desc;
+  document.getElementById('dp-price').innerText =
+    `Rp ${selectedProduct.price.toLocaleString()}`;
+  document.getElementById('modal-product').classList.remove('hidden');
+}
+
+function closeProductDetail(){
+  document.getElementById('modal-product').classList.add('hidden');
+}
+
+function addDetailToCart(){
+  addToCart(selectedProduct.id);
+  closeProductDetail();
+}
+
+let searchKeyword = "";
+
+function handleSearch(val){
+  searchKeyword = val.toLowerCase();
+  renderProducts();
+}
+
 </script>
+<div id="modal-product"
+ class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 modal-blur">
+  <div class="bg-white max-w-sm w-full rounded-[2.5rem] overflow-hidden">
+    <img id="dp-img" class="w-full h-48 object-cover">
+    <div class="p-6">
+      <h3 id="dp-name" class="font-black text-lg"></h3>
+      <p id="dp-desc" class="text-xs text-gray-500 my-3"></p>
+      <p id="dp-price" class="font-black text-orange-600 text-xl mb-4"></p>
+      <button onclick="addDetailToCart()"
+        class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black">
+        Tambah ke Keranjang
+      </button>
+      <button onclick="closeProductDetail()"
+        class="w-full mt-2 text-xs font-bold text-gray-400">
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
