@@ -137,6 +137,7 @@
                             <th class="p-4">Invoice</th>
                             <th class="p-4">Nama</th>
                             <th class="p-4">Total</th>
+                            <th class="p-4">Ongkir</th>
                             <th class="p-4">Status</th>
                             <th class="p-4">WA</th>
                         </tr>
@@ -494,22 +495,43 @@ function setCategory(cat){
     window.adminCb = (res) => {
         if(!res.data) return;
         document.getElementById('admin-orders-table').innerHTML = res.data.map(o => `
-            <tr class="hover:bg-gray-50">
-                <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
-                <td class="p-4 text-[10px] font-bold">${o.name}</td>
-                <td class="p-4">
-                    <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
-                    <p class="text-[9px] text-gray-400">${o.payment_type}</p>
-                </td>
-                <td class="p-4">
-                    <select onchange="updateStatus(${o.rowId}, this.value)" class="text-[10px] font-black p-1 bg-gray-100 rounded">
-                        <option value="Belum Bayar" ${o.status_bayar === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
-                        <option value="Lunas" ${o.status_bayar === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
-                    </select>
-                </td>
-                <td class="p-4"><button onclick="window.open('https://wa.me/${o.phone}')"><i class="fab fa-whatsapp text-green-500"></i></button></td>
-            </tr>
-        `).join('');
+    <tr class="hover:bg-gray-50">
+            <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
+
+  <td class="p-4 text-[10px] font-bold">${o.name}</td>
+
+  <td class="p-4">
+    <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
+    <p class="text-[9px] text-gray-400">${o.payment_type}</p>
+  </td>
+
+  <!-- ONGKIR -->
+  <td class="p-4">
+    <input 
+      type="number"
+      placeholder="0"
+      value="${o.ongkir || 0}"
+      onchange="updateOngkir(${o.rowId}, this.value)"
+      class="w-20 p-1 text-[10px] font-bold border rounded"
+    >
+  </td>
+
+  <td class="p-4">
+    <select onchange="updateStatus(${o.rowId}, this.value)"
+      class="text-[10px] font-black p-1 bg-gray-100 rounded">
+      <option value="Belum Bayar" ${o.status === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
+      <option value="Lunas" ${o.status === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
+    </select>
+  </td>
+
+  <td class="p-4">
+    <button onclick="window.open('https://wa.me/${o.phone}')">
+      <i class="fab fa-whatsapp text-green-500"></i>
+    </button>
+  </td>
+</tr>
+      `).join('');
+
     };
 
     async function updateStatus(rowId, status) {
@@ -517,6 +539,18 @@ function setCategory(cat){
         injectScript(`${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${status}&callback=updateCb`);
     }
     window.updateCb = (res) => { showLoader(false); if(res.success) fetchAdminOrders(); };
+function updateOngkir(rowId, ongkir) {
+  if(!confirm("Tambahkan ongkir Rp " + ongkir + " ?")) return;
+  showLoader(true, "Update Ongkir...");
+  injectScript(
+    `${SCRIPT_URL}?action=updateOngkir&rowId=${rowId}&ongkir=${ongkir}&callback=ongkirCb`
+  );
+}
+
+window.ongkirCb = (res) => {
+  showLoader(false);
+  if(res.success) fetchAdminOrders();
+};
 
     // --- Auth Logic ---
     function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
