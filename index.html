@@ -139,6 +139,7 @@
                             <th class="p-4">Total</th>
                             <th class="p-4">Ongkir</th>
                             <th class="p-4">Status</th>
+                            <th class="p-4">Tracking</th>
                             <th class="p-4">WA</th>
                         </tr>
                     </thead>
@@ -217,7 +218,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCdznwGXx6lTxoNVLB3OdVpY4MSSD4sY_3IQEGcULg3Yd6CepkpMQmOkf6jIR71SPWLw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1ql31RutEwajk-fAMNFhr4pmvNmGA8LQVUllNkFP9QqlM-dKlMPAMmIHleeJbGWK-CA/exec";
     const ADMIN_WA = "62895334016084";
 
     const PRODUCTS = [
@@ -466,7 +467,10 @@ function setCategory(cat){
     window.historyCb = (res) => {
         const list = document.getElementById('history-list');
         if(!res.data || res.data.length === 0) {
-            list.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center"><p class="text-gray-400 text-xs">Belum ada pesanan.</p></div>`;
+            list.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center"><p class="text-gray-400 text-xs">Belum ada pesanan.</p><p class="text-[10px] font-black text-blue-600 mt-2">
+📦 Status Pesanan: ${o.tracking}
+</p>
+</div>`;
             return;
         }
         list.innerHTML = res.data.map(o => `
@@ -523,6 +527,17 @@ function setCategory(cat){
       <option value="Lunas" ${o.status === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
     </select>
   </td>
+  
+  <td class="p-4">
+  <select 
+    onchange="updateTracking(${o.rowId}, this.value)"
+    class="text-[10px] font-black p-1 bg-blue-50 rounded">
+    <option ${o.tracking==='PO Masuk'?'selected':''}>PO Masuk</option>
+    <option ${o.tracking==='Proses Baking'?'selected':''}>Proses Baking</option>
+    <option ${o.tracking==='Proses Kirim'?'selected':''}>Proses Kirim</option>
+    <option ${o.tracking==='Hantaran Diterima'?'selected':''}>Hantaran Diterima</option>
+  </select>
+</td>
 
   <td class="p-4">
     <button 
@@ -645,6 +660,17 @@ function handleSearch(val){
   searchKeyword = val.toLowerCase();
   renderProducts();
 }
+function updateTracking(rowId, tracking) {
+  showLoader(true, "Update Tracking...");
+  injectScript(
+    `${SCRIPT_URL}?action=updateTracking&rowId=${rowId}&tracking=${encodeURIComponent(tracking)}&callback=trackingCb`
+  );
+}
+
+window.trackingCb = (res) => {
+  showLoader(false);
+  if(res.success) fetchAdminOrders();
+};
 
 </script>
 <div id="modal-product"
