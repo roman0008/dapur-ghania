@@ -508,16 +508,20 @@ function setCategory(cat){
   `).join("");
 };
 
+
     function fetchAdminOrders() {
         document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="5" class="p-10 text-center">Memuat...</td></tr>`;
         injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminCb`);
     }
 
     window.adminCb = (res) => {
-        if(!res.data) return;
-        document.getElementById('admin-orders-table').innerHTML = res.data.map(o => `
-    <tr class="hover:bg-gray-50">
-            <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
+  if(!res.data) return;
+
+  document.getElementById('admin-orders-table').innerHTML =
+    res.data.map(o => `
+<tr class="hover:bg-gray-50">
+
+  <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
 
   <td class="p-4 text-[10px] font-bold">${o.name}</td>
 
@@ -526,47 +530,51 @@ function setCategory(cat){
     <p class="text-[9px] text-gray-400">${o.payment_type}</p>
   </td>
 
-  <!-- ONGKIR -->
   <td class="p-4">
-    <input 
-      type="number"
-      placeholder="0"
+    <input type="number"
       value="${o.ongkir || 0}"
       onchange="updateOngkir(${o.rowId}, this.value)"
-      class="w-20 p-1 text-[10px] font-bold border rounded"
-    >
+      class="w-20 p-1 text-[10px] font-bold border rounded">
   </td>
 
   <td class="p-4">
     <select onchange="updateStatus(${o.rowId}, this.value)"
       class="text-[10px] font-black p-1 bg-gray-100 rounded">
-      <option value="Belum Bayar" ${o.status_bayar === 'Belum Bayar' ? 'selected' : ''}>❌ Belum</option>
-      <option value="Lunas" ${o.status_bayar === 'Lunas' ? 'selected' : ''}>✅ Lunas</option>
+      <option value="Belum Bayar" ${o.status_bayar==='Belum Bayar'?'selected':''}>❌ Belum</option>
+      <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>✅ Lunas</option>
     </select>
   </td>
-  
-  <td class="p-4">
-  <select 
-    onchange="updateTracking(${o.rowId}, this.value)"
-    class="text-[10px] font-black p-1 bg-blue-50 rounded">
-    <option ${o.tracking==='PO Masuk'?'selected':''}>PO Masuk</option>
-    <option ${o.tracking==='Proses Baking'?'selected':''}>Proses Baking</option>
-    <option ${o.tracking==='Proses Kirim'?'selected':''}>Proses Kirim</option>
-    <option ${o.tracking==='Hantaran Diterima'?'selected':''}>Hantaran Diterima</option>
-  </select>
-</td>
 
   <td class="p-4">
-    <button 
-  onclick="kirimInvoiceWA(${o.rowId})"
-  class="bg-green-600 text-white px-3 py-1 rounded text-[10px]">
-  Kirim WA
-</button>
+    <select onchange="updateTracking(${o.rowId}, this.value)"
+      class="text-[10px] font-black p-1 bg-blue-50 rounded">
+      <option ${o.tracking==='PO Masuk'?'selected':''}>PO Masuk</option>
+      <option ${o.tracking==='Proses Baking'?'selected':''}>Proses Baking</option>
+      <option ${o.tracking==='Proses Kirim'?'selected':''}>Proses Kirim</option>
+      <option ${o.tracking==='Hantaran Diterima'?'selected':''}>Hantaran Diterima</option>
+    </select>
   </td>
-</tr>
-      `).join('');
 
-    };
+  <td class="p-4">
+    <button
+  onclick="kirimInvoiceWA(this, ${o.rowId})"
+  class="wa-btn px-3 py-1 bg-green-600 text-white rounded
+         text-[11px] font-bold
+         transition-all duration-150
+         active:scale-95 active:bg-green-700
+         hover:bg-green-700
+         flex items-center gap-1">
+
+  <span class="wa-text">📲 Kirim WA</span>
+  <span class="wa-loader hidden animate-spin">⏳</span>
+</button>
+
+  </td>
+
+</tr>
+`).join('');
+};
+
 
     async function updateStatus(rowId, status) {
         showLoader(true, "Updating...");
@@ -587,30 +595,36 @@ window.ongkirCb = (res) => {
 };
 
 function kirimInvoiceWA(rowId) {
-  if (!confirm("Kirim invoice via WhatsApp?")) return;
+  if (!rowId) {
+    alert("Row ID tidak valid");
+    return;
+  }
 
-  const cb = "cbSendWA_" + Date.now();
+  const callbackName = "cbWA_" + Date.now();
 
-  window[cb] = function(res) {
+  window[callbackName] = function (res) {
+    console.log("WA Result:", res);
+
     if (res.success) {
-      alert("✅ Invoice berhasil dikirim via WhatsApp");
+      alert("✅ Invoice berhasil dikirim ke WhatsApp");
     } else {
-      alert("❌ Gagal: " + res.message);
+      alert("❌ Gagal kirim WA:\n" + res.message);
     }
-    delete window[cb];
+
+    delete window[callbackName];
+    script.remove();
   };
 
-  const s = document.createElement("script");
-  s.src =
+  const url =
     SCRIPT_URL +
     "?action=sendInvoiceWA" +
     "&rowId=" + rowId +
-    "&callback=" + cb;
+    "&callback=" + callbackName;
 
-  s.onerror = () => alert("❌ Gagal memanggil server");
-  document.body.appendChild(s);
+  const script = document.createElement("script");
+  script.src = url;
+  document.body.appendChild(script);
 }
-
     // --- Auth Logic ---
     function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
     function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
