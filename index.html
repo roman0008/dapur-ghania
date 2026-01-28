@@ -189,7 +189,7 @@
                 <label class="text-xs text-gray-500">Jam Pengiriman</label>
                 <input
                   type="time"
-                  id="checkout-time"
+                  id="f-jam"
                   class="w-full mt-1 p-2 border rounded-xl text-sm"
                 />
               </div>
@@ -223,7 +223,7 @@
                 Catatan / Request (opsional)
               </label>
               <textarea
-                id="checkout-note"
+                id="f-catatan"
                 rows="3"
                 placeholder="Contoh: tanpa kacang, tulisan coklat, kirim pagi"
                 class="w-full mt-1 p-2 border rounded-xl text-sm"
@@ -242,7 +242,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPX7eyrZVBQfGpDZJ9ikvRsKzFcShMs-pOfcf83bY2bzGJLDfmG5hFjHOhf-ZIZFDyPg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEITBgmWXoqxL2V2Kpz2KDKYkM17EVW2BL1aGxNB1za0XT74Xt5yfaK4QyKAZMgZrQMA/exec";
     const ADMIN_WA = "62895334016084";
 
     const PRODUCTS = [
@@ -409,77 +409,122 @@ function setCategory(cat){
 
     function closeCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
 
-    async function submitOrder() {
-        const paymentType = document.getElementById('f-bayar').value;
-        const total = parseInt(
-          document.getElementById('total-val').innerText.replace(/\D/g, '')
-        );
-        const date = document.getElementById('f-tgl').value;
-        const addr = document.getElementById('f-alamat').value;
-      
-        // ➕ TAMBAHAN
-        const time = document.getElementById('f-jam')?.value || "-";
-        const note = document.getElementById('f-catatan')?.value || "-";
-      
-        if (!date || !addr)
-          return alert("Harap isi Tanggal & Alamat!");
-      
-        showLoader(true, "Memproses Data...");
-
-        // Generate Invoice Items
-        const itemText = cart.map(i => `${i.name} (x${i.qty})`).join(", ");
+  
+        async function submitOrder() {
+          const paymentType = document.getElementById('f-bayar').value;
+          const total = parseInt(
+            document.getElementById('total-val').innerText.replace(/\D/g, '')
+          );
+          const date = document.getElementById('f-tgl').value;
+          const addr = document.getElementById('f-alamat').value;
         
-        let ordersToSubmit = [];
-        let waMsg = `*PESANAN BARU - DAPUR GHANIA*\n----------------------------\n`;
-        waMsg += `Nama: ${currentUser.name}\nMetode: *${paymentType}*\n\n*Item:* ${itemText}\nTotal: Rp ${total.toLocaleString()}\n----------------------------\n\n`;
-
-        if(paymentType === 'DP 50%') {
+          // ➕ TAMBAHAN (SUDAH BENAR)
+          const time = document.getElementById('f-jam')?.value || "-";
+          const note = document.getElementById('f-catatan')?.value || "-";
+        
+          if (!date || !addr)
+            return alert("Harap isi Tanggal & Alamat!");
+        
+          showLoader(true, "Memproses Data...");
+        
+          const itemText = cart.map(i => `${i.name} (x${i.qty})`).join(", ");
+        
+          let ordersToSubmit = [];
+        
+          // =====================
+          // PESAN WHATSAPP
+          // =====================
+          let waMsg =
+        `*PESANAN BARU - DAPUR GHANIA*
+        ----------------------------
+        Nama   : ${currentUser.name}
+        Metode : *${paymentType}*
+        
+        Item   : ${itemText}
+        Total  : Rp ${total.toLocaleString()}
+        
+        🗓️ Tanggal : ${date}
+        ⏰ Jam     : ${time}
+        📍 Alamat :
+        ${addr}
+        
+        📝 Catatan :
+        ${note}
+        ----------------------------`;
+        
+          // =====================
+          // DATA KE GOOGLE SHEET
+          // =====================
+          if (paymentType === 'DP 50%') {
             const dp = Math.floor(total / 2);
             const re = total - dp;
-
-            // Baris 1: DP
+        
             ordersToSubmit.push({
-                name: currentUser.name, phone: currentUser.phone, total: dp,
-                payment_type: "DP 50% (Termin 1)", address: addr, date: date,
-                items: `[INVOICE DP] ${itemText}`
+              name: currentUser.name,
+              phone: currentUser.phone,
+              total: dp,
+              payment_type: "DP 50% (Termin 1)",
+              address: addr,
+              date: date,
+              time: time,        // ✅ WAJIB
+              note: note,        // ✅ WAJIB
+              items: `[INVOICE DP] ${itemText}`
             });
-            // Baris 2: Pelunasan
+        
             ordersToSubmit.push({
-                name: currentUser.name, phone: currentUser.phone, total: re,
-                payment_type: "Pelunasan (Termin 2)", address: addr, date: date,
-                items: `[INVOICE PELUNASAN] ${itemText}`
+              name: currentUser.name,
+              phone: currentUser.phone,
+              total: re,
+              payment_type: "Pelunasan (Termin 2)",
+              address: addr,
+              date: date,
+              time: time,        // ✅ WAJIB
+              note: note,        // ✅ WAJIB
+              items: `[INVOICE PELUNASAN] ${itemText}`
             });
-
-            waMsg += `🧾 *INVOICE 1 (DP 50%): Rp ${dp.toLocaleString()}*\n_Harus bayar sekarang_\n\n`;
-            waMsg += `🧾 *INVOICE 2 (PELUNASAN): Rp ${re.toLocaleString()}*\n_Bayar saat barang tiba_\n\n`;
-        } else {
+        
+          } else {
             ordersToSubmit.push({
-                name: currentUser.name, phone: currentUser.phone, total: total,
-                payment_type: "Full Payment", address: addr, date: date,
-                items: itemText
+              name: currentUser.name,
+              phone: currentUser.phone,
+              total: total,
+              payment_type: "Full Payment",
+              address: addr,
+              date: date,
+              time: time,        // ✅ WAJIB
+              note: note,        // ✅ WAJIB
+              items: itemText
             });
-            waMsg += `🧾 *TAGIHAN LUNAS: Rp ${total.toLocaleString()}*\n\n`;
-        }
-
-        waMsg += `📍 Alamat: ${addr}\n🗓️ Kirim: ${date}`;
-
-        try {
-            // Loop kirim ke Google Sheets satu per satu
-            for(let data of ordersToSubmit) {
-                const fd = new URLSearchParams();
-                for(let k in data) fd.append(k, data[k]);
-                await fetch(SCRIPT_URL, { method: 'POST', body: fd, headers: {'Content-Type': 'application/x-www-form-urlencoded'} });
+          }
+        
+          try {
+            for (let data of ordersToSubmit) {
+              const fd = new URLSearchParams();
+              for (let k in data) fd.append(k, data[k]);
+        
+              await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: fd,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+              });
             }
-            
+        
             showLoader(false);
-            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`, '_blank');
-            alert("Pesanan berhasil! Sheet & Riwayat telah terinput 2 baris untuk DP.");
+            window.open(
+              `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMsg)}`,
+              '_blank'
+            );
+        
+            alert("Pesanan berhasil dikirim 👍");
             location.reload();
-        } catch(e) { 
-            showLoader(false); 
-            alert("Error koneksi. Silakan hubungi admin."); 
+        
+          } catch (e) {
+            showLoader(false);
+            alert("Error koneksi. Silakan hubungi admin.");
+          }
         }
-    }
+
+
 
     function showPage(pageId) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
