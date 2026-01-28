@@ -594,37 +594,42 @@ window.ongkirCb = (res) => {
   if(res.success) fetchAdminOrders();
 };
 
-function kirimInvoiceWA(rowId) {
-  if (!rowId) {
-    alert("Row ID tidak valid");
+function kirimInvoiceWA(btn, rowId) {
+  if (!rowId || rowId < 2) {
+    alert("❌ Row ID tidak valid");
     return;
   }
 
-  const callbackName = "cbWA_" + Date.now();
+  const text = btn.querySelector(".wa-text");
+  const loader = btn.querySelector(".wa-loader");
 
-  window[callbackName] = function (res) {
-    console.log("WA Result:", res);
+  btn.disabled = true;
+  text.textContent = "Mengirim...";
+  loader.classList.remove("hidden");
+
+  const cb = "cb_" + Date.now();
+  window[cb] = res => {
+    btn.disabled = false;
+    text.textContent = "📲 Kirim WA";
+    loader.classList.add("hidden");
 
     if (res.success) {
-      alert("✅ Invoice berhasil dikirim ke WhatsApp");
+      alert("✅ Invoice berhasil dikirim via WhatsApp");
     } else {
-      alert("❌ Gagal kirim WA:\n" + res.message);
+      alert("❌ Gagal kirim WA: " + (res.message || ""));
     }
 
-    delete window[callbackName];
-    script.remove();
+    delete window[cb];
   };
 
-  const url =
-    SCRIPT_URL +
-    "?action=sendInvoiceWA" +
-    "&rowId=" + rowId +
-    "&callback=" + callbackName;
-
   const script = document.createElement("script");
-  script.src = url;
+  script.src =
+    SCRIPT_URL +
+    `?action=sendInvoiceWA&rowId=${rowId}&callback=${cb}`;
+
   document.body.appendChild(script);
 }
+
     // --- Auth Logic ---
     function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
     function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
