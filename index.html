@@ -341,21 +341,17 @@
 };
 
     function updatePricePreview() {
-  const ori = Number(p-original.value || 0);
-  const disc = Number(p-discount.value || 0);
+  const ori = Number(document.getElementById("p-original").value || 0);
+  const disc = Number(document.getElementById("p-discount").value || 0);
 
   let final = ori;
   if (disc > 0 && disc <= 100) {
     final = Math.round(ori * (100 - disc) / 100);
   }
 
-  document.getElementById("p-preview-price")
-    .innerText = "Harga jual: Rp " + final.toLocaleString();
+  document.getElementById("p-preview-price").innerText =
+    "Harga jual: Rp " + final.toLocaleString();
 }
-
-["p-original","p-discount"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", updatePricePreview);
-});
 
 
 function setCategory(cat, el){
@@ -440,26 +436,38 @@ window.productCb = (res) => {
    SIMPAN / UPDATE PRODUK
 ========================= */
 function saveProduct() {
+  const name = document.getElementById("p-name").value.trim();
+  const original = Number(document.getElementById("p-original").value || 0);
+  const discount = Number(document.getElementById("p-discount").value || 0);
+
+  if (!name || original <= 0) {
+    alert("❗ Nama & harga wajib diisi");
+    return;
+  }
+
+  const finalPrice =
+    discount > 0 && discount <= 100
+      ? Math.round(original * (100 - discount) / 100)
+      : original;
+
   const id = editProductId || `P${Date.now()}`;
 
   const params = new URLSearchParams({
     action: editProductId ? "updateProduct" : "addProduct",
-    id: id,
-    name: document.getElementById("p-name").value.trim(),
+    id,
+    name,
     category: document.getElementById("p-category").value,
-    price: document.getElementById("p-price").value,
-    originalPrice: document.getElementById("p-original").value,
-    discount: document.getElementById("p-discount").value || 0,
+    price: finalPrice,
+    originalPrice: original,
+    discount,
     description: document.getElementById("p-desc").value,
     detail: document.getElementById("p-detail").value,
     image: document.getElementById("p-img").value,
-    active: document.getElementById("p-active")?.checked || true,
+    active: document.getElementById("p-active").checked,
     callback: "handleSaveProduct"
   });
 
-  const script = document.createElement("script");
-  script.src = SCRIPT_URL + "?" + params.toString();
-  document.body.appendChild(script);
+  injectScript(SCRIPT_URL + "?" + params.toString());
 }
 
 /* =========================
