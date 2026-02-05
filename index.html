@@ -112,16 +112,22 @@
         <option value="satuan">Kue satuan</option>
       </select>
 
-      <input id="p-price" type="number"
-        class="w-full p-3 rounded-xl border"
-        placeholder="Harga Normal">
-<input id="p-original" type="number"
- class="w-full p-3 rounded-xl border"
- placeholder="Harga Asli (sebelum diskon)">
+      <div class="grid grid-cols-2 gap-3">
+  <input id="p-original" type="number"
+    class="w-full p-3 rounded-xl border"
+    placeholder="Harga Normal">
 
-      <input id="p-discount" type="number"
-        class="w-full p-3 rounded-xl border"
-        placeholder="Diskon (%)">
+  <input id="p-discount" type="number"
+    class="w-full p-3 rounded-xl border"
+    placeholder="Diskon (%)">
+</div>
+
+<p id="p-preview-price"
+  class="text-xs font-bold text-orange-600">
+  Harga jual: Rp 0
+</p>
+
+      
 
       <input id="p-img"
         class="w-full p-3 rounded-xl border"
@@ -334,7 +340,23 @@
   fetchProducts();
 };
 
-    
+    function updatePricePreview() {
+  const ori = Number(p-original.value || 0);
+  const disc = Number(p-discount.value || 0);
+
+  let final = ori;
+  if (disc > 0 && disc <= 100) {
+    final = Math.round(ori * (100 - disc) / 100);
+  }
+
+  document.getElementById("p-preview-price")
+    .innerText = "Harga jual: Rp " + final.toLocaleString();
+}
+
+["p-original","p-discount"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", updatePricePreview);
+});
+
 
 function setCategory(cat, el){
   activeCategory = cat;
