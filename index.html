@@ -92,49 +92,74 @@
               </button>
         </nav>
     </header>
-    <main id="page-products" class="hidden max-w-4xl mx-auto px-4">
+    <!-- PAGE KELOLA PRODUK -->
+<main id="page-products" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
 
-  <div class="bg-white rounded-3xl p-6 mt-6 card-shadow">
-    <h2 class="font-black text-sm mb-4">📦 Kelola Produk</h2>
+  <h2 class="text-lg font-black mb-4 text-orange-600">
+    📦 Kelola Produk
+  </h2>
 
-    <!-- FORM PRODUK -->
-    <div class="grid grid-cols-2 gap-3 mb-3">
-      <input id="p-name" placeholder="Nama Produk"
-        class="p-3 border rounded-xl text-xs font-bold">
+  <div class="bg-white p-6 rounded-3xl card-shadow">
 
-      <select id="p-category"
-        class="p-3 border rounded-xl text-xs font-bold">
+    <div class="grid gap-3">
+
+      <input id="p-name" class="w-full p-3 rounded-xl border"
+        placeholder="Nama Produk">
+
+      <select id="p-category" class="w-full p-3 rounded-xl border">
         <option value="simple">Paket Simple</option>
         <option value="exclusive">Paket Exclusive</option>
-        <option value="satuan">Kue Satuan</option>
+        <option value="satuan">Kue satuan</option>
       </select>
 
-      <input id="p-price" type="number" placeholder="Harga Normal"
-        class="p-3 border rounded-xl text-xs font-bold">
+      <input id="p-price" type="number"
+        class="w-full p-3 rounded-xl border"
+        placeholder="Harga Normal">
+<input id="p-original" type="number"
+ class="w-full p-3 rounded-xl border"
+ placeholder="Harga Asli (sebelum diskon)">
 
-      <input id="p-discount" type="number" placeholder="Diskon (%)"
-        class="p-3 border rounded-xl text-xs font-bold">
+      <input id="p-discount" type="number"
+        class="w-full p-3 rounded-xl border"
+        placeholder="Diskon (%)">
+
+      <input id="p-img"
+        class="w-full p-3 rounded-xl border"
+        placeholder="URL Gambar">
+
+      <textarea id="p-desc"
+        class="w-full p-3 rounded-xl border"
+        placeholder="Deskripsi Singkat"></textarea>
+
+      <textarea id="p-detail"
+        class="w-full p-3 rounded-xl border"
+        placeholder="Detail Produk"></textarea>
+
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" id="p-active" checked>
+        Produk Aktif
+      </label>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveProduct()"
+          class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-black">
+          💾 Simpan Produk
+        </button>
+
+        <button onclick="resetProductForm()"
+          class="flex-1 bg-gray-100 py-3 rounded-xl font-black">
+          Reset
+        </button>
+      </div>
+
     </div>
 
-    <input id="p-img" placeholder="URL Gambar"
-      class="w-full p-3 border rounded-xl text-xs font-bold mb-3">
+    <!-- LIST ADMIN -->
+    <div id="admin-product-list" class="mt-6 space-y-2"></div>
 
-    <textarea id="p-desc" rows="2"
-      placeholder="Deskripsi Produk"
-      class="w-full p-3 border rounded-xl text-xs font-bold mb-4"></textarea>
-
-    <div class="flex gap-2">
-      <button onclick="saveProduct()"
-        class="flex-1 bg-orange-600 text-white py-3 rounded-xl text-xs font-black">
-        💾 Simpan Produk
-      </button>
-
-      <button onclick="resetProductForm()"
-        class="flex-1 bg-gray-200 py-3 rounded-xl text-xs font-black">
-        Reset
-      </button>
-    </div>
   </div>
+</main>
+
 
 </main>
 
@@ -293,7 +318,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzavqm4j3a6dxr1RUahIhl334bG2lD_k_BSoDaNTFMsgTs9EUHxeMgOd2_7Fv7L7247WQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbye27tkax-LNqEKFES3bjhEm4wO3e_lUV1WGCFJaAuCNCIYpvNPrgJLeSPsMdynlkP_xQ/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -350,7 +375,7 @@ window.productCb = (res) => {
   if(searchKeyword){
     data = data.filter(p =>
       p.name.toLowerCase().includes(searchKeyword) ||
-      p.desc.toLowerCase().includes(searchKeyword)
+      p.description.toLowerCase().includes(searchKeyword)
     );
   }
 
@@ -365,9 +390,9 @@ window.productCb = (res) => {
   }
 
   list.innerHTML = data.map(p => `
-    <div onclick="openProductDetail(${p.id})"
+    <div onclick="openProductDetail('${p.id}')"
       class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow cursor-pointer">
-      <img src="${p.img}" class="w-full h-32 object-cover">
+      <img src="${p.image}" class="w-full h-32 object-cover">
       <div class="p-4">
         <h3 class="font-bold text-xs mb-1">${p.name}</h3>
         <p class="text-orange-600 font-black text-sm">
@@ -393,36 +418,27 @@ window.productCb = (res) => {
    SIMPAN / UPDATE PRODUK
 ========================= */
 function saveProduct() {
-  const data = {
+  const id = editProductId || `P${Date.now()}`;
+
+  const params = new URLSearchParams({
     action: editProductId ? "updateProduct" : "addProduct",
-    id: editProductId || "",
+    id: id,
     name: document.getElementById("p-name").value.trim(),
     category: document.getElementById("p-category").value,
     price: document.getElementById("p-price").value,
+    originalPrice: document.getElementById("p-original").value,
     discount: document.getElementById("p-discount").value || 0,
-    img: document.getElementById("p-img").value.trim(),
-    desc: document.getElementById("p-desc").value.trim()
-  };
+    description: document.getElementById("p-desc").value,
+    detail: document.getElementById("p-detail").value,
+    image: document.getElementById("p-img").value,
+    active: document.getElementById("p-active")?.checked || true,
+    callback: "handleSaveProduct"
+  });
 
-  if (!data.name || !data.price || !data.img) {
-    alert("Nama, Harga & Gambar wajib diisi");
-    return;
-  }
-
-  injectScript(
-    `${SCRIPT_URL}?${new URLSearchParams(data).toString()}&callback=saveProductCb`
-  );
+  const script = document.createElement("script");
+  script.src = SCRIPT_URL + "?" + params.toString();
+  document.body.appendChild(script);
 }
-
-window.saveProductCb = function (res) {
-  if (!res.success) {
-    alert("Gagal menyimpan produk");
-    return;
-  }
-  resetProductForm();
-  fetchProducts();
-  alert("✅ Produk berhasil disimpan");
-};
 
 /* =========================
    HAPUS PRODUK
@@ -448,10 +464,10 @@ window.deleteProductCb = function (res) {
 ========================= */
 function resetProductForm() {
   editProductId = null;
-  ["p-name","p-price","p-discount","p-img","p-desc"].forEach(id=>{
-    document.getElementById(id).value = "";
-  });
+  ["p-name","p-price","p-original","p-discount","p-img","p-desc","p-detail"]
+    .forEach(id => document.getElementById(id).value = "");
   document.getElementById("p-category").value = "simple";
+  document.getElementById("p-active").checked = true;
 }
 
 function renderAdminProductList() {
@@ -460,7 +476,7 @@ function renderAdminProductList() {
 
   c.innerHTML = PRODUCTS.map(p => `
     <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
-      <img src="${p.img}" class="w-12 h-12 rounded-lg object-cover">
+      <img src="${p.image}" class="w-12 h-12 rounded-lg object-cover">
       <div class="flex-1">
         <p class="text-xs font-black">${p.name}</p>
         <p class="text-[10px]">
@@ -473,6 +489,17 @@ function renderAdminProductList() {
     </div>
   `).join("");
 }
+window.handleSaveProduct = function(res) {
+  if (!res || !res.success) {
+    alert("❌ Gagal menyimpan produk");
+    return;
+  }
+
+  alert("✅ Produk berhasil disimpan");
+  resetProductForm();
+  fetchProducts();
+};
+
 
 /* =========================
    EDIT PRODUK
@@ -486,8 +513,8 @@ function editProduct(id) {
   document.getElementById("p-category").value = p.category;
   document.getElementById("p-price").value = p.originalPrice || p.price;
   document.getElementById("p-discount").value = p.discount || 0;
-  document.getElementById("p-img").value = p.img;
-  document.getElementById("p-desc").value = p.desc || "";
+  document.getElementById("p-img").value = p.image;
+  document.getElementById("p-desc").value = p.description || "";
 
   showPage("products");
 }
@@ -673,14 +700,11 @@ function kirimInvoiceWA(btn, rowId) {
     }
     function handleUserAction() { if(confirm("Logout?")) { localStorage.clear(); location.reload(); } }
     function injectScript(url) {
-            const old = document.getElementById("jsonp");
-            if(old) old.remove();
-          
-            const s = document.createElement('script');
-            s.id = "jsonp";
-            s.src = url;
-            document.body.appendChild(s);
-          }
+  const s = document.createElement("script");
+  s.src = url + "&_=" + Date.now();
+  document.body.appendChild(s);
+}
+
 
     function showLoader(v, t) { document.getElementById('loader').classList.toggle('hidden', !v); document.getElementById('loader').classList.toggle('flex', v); document.getElementById('loader-text').innerText = t; }
     function showToast(m) { const t = document.createElement('div'); t.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-2 rounded-full text-[10px] font-black z-[300]"; t.innerText = m; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
@@ -689,9 +713,9 @@ let selectedProduct = null;
 
 function openProductDetail(id){
   selectedProduct = PRODUCTS.find(p=>p.id===id);
-  document.getElementById('dp-img').src = selectedProduct.img;
+  document.getElementById('dp-img').src = selectedProduct.image;
   document.getElementById('dp-name').innerText = selectedProduct.name;
-  document.getElementById('dp-desc').innerText = selectedProduct.desc;
+  document.getElementById('dp-desc').innerText = selectedProduct.description;
   document.getElementById('dp-price').innerText =
     `Rp ${selectedProduct.price.toLocaleString()}`;
   document.getElementById('modal-product').classList.remove('hidden');
@@ -724,26 +748,23 @@ window.trackingCb = (res) => {
 };
 
 function showPage(page) {
-  // sembunyikan semua halaman
-  document.querySelectorAll(".page-content, #page-products")
+  document.querySelectorAll(".page-content")
     .forEach(p => p.classList.add("hidden"));
 
-  // tampilkan halaman aktif
   const target = document.getElementById(`page-${page}`);
   if (target) target.classList.remove("hidden");
 
-  // reset nav style
   document.querySelectorAll("#main-nav button")
     .forEach(b => b.classList.remove("nav-active"));
 
   const nav = document.getElementById(`nav-${page}`);
   if (nav) nav.classList.add("nav-active");
 
-  // hook khusus
-  if (page === "history") fetchUserHistory?.();
   if (page === "admin") fetchAdminOrders?.();
 }
 
+
+ 
 function fetchUserHistory() {
   document.getElementById('history-list').innerHTML =
     `<p class="text-center text-xs py-10">Memuat riwayat...</p>`;
