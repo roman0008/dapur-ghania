@@ -791,11 +791,20 @@ function showPage(page) {
   if (nav) nav.classList.add("nav-active");
 
   if (page === "admin") fetchAdminOrders?.();
+  if (page === "history") fetchUserHistory(); // ✅ FIX UTAMA
 }
 
 
  
 function fetchUserHistory() {
+  if (!currentUser || !currentUser.phone) {
+    document.getElementById('history-list').innerHTML = `
+      <p class="text-center text-xs py-10 text-gray-400">
+        Silakan login untuk melihat riwayat
+      </p>`;
+    return;
+  }
+
   document.getElementById('history-list').innerHTML =
     `<p class="text-center text-xs py-10">Memuat riwayat...</p>`;
 
@@ -803,6 +812,7 @@ function fetchUserHistory() {
     `${SCRIPT_URL}?action=getOrders&phone=${currentUser.phone}&callback=historyCb`
   );
 }
+
 
 window.historyCb = (res) => {
   const list = document.getElementById("history-list");
