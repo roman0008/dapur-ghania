@@ -570,6 +570,19 @@ function editProduct(id) {
   showPage("products");
 }
 
+function lazyLoadImages() {
+  const imgs = document.querySelectorAll("img.lazy");
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.src = e.target.dataset.src;
+        obs.unobserve(e.target);
+      }
+    });
+  });
+
+  imgs.forEach(img => obs.observe(img));
+}
 
 /* =========================
    HOOK LOGIN ADMIN
