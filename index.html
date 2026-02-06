@@ -1,641 +1,205 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dapur Ghania - Paket Kue Hantaran & Hampers Exclusive</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .modal-blur { backdrop-filter: blur(12px); background: rgba(0,0,0,0.5); }
-        .card-shadow { box-shadow: 0 15px 35px -12px rgba(234, 88, 12, 0.15); }
-        .nav-active { color: #ea580c; border-bottom: 3px solid #ea580c; }
-        .page-content { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .cat-btn { padding:8px 14px; font-size:10px; font-weight:800; border-radius:9999px; background:#f3f4f6; white-space:nowrap; transition: all 0.2s; }
-        .cat-btn.nav-active { background: #ea580c; color: white; border-bottom: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dapur Ghania – Web Order Produksi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#FFFAF5] text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
-    <!-- Loader -->
-    <div id="loader" class="fixed inset-0 z-[999] hidden items-center justify-center modal-blur">
-        <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
-            <div class="animate-spin text-orange-600 text-3xl mb-4"><i class="fas fa-circle-notch"></i></div>
-            <p id="loader-text" class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Memproses...</p>
-        </div>
-    </div>
+<!-- HEADER -->
+<header class="bg-pink-600 text-white p-4 flex justify-between items-center sticky top-0 z-40">
+  <h1 class="font-bold text-lg">Dapur Ghania</h1>
+  <button onclick="openCart()" class="relative text-xl">🛒
+    <span id="cartBadge" class="absolute -top-2 -right-2 bg-white text-pink-600 text-xs px-2 rounded-full">0</span>
+  </button>
+</header>
 
-    <!-- Auth Modal -->
-    <div id="auth-screen" class="fixed inset-0 z-[200] hidden items-center justify-center p-6 modal-blur">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative">
-            <button onclick="closeAuth()" class="absolute top-6 right-6 text-gray-400"><i class="fas fa-times"></i></button>
-            <div class="text-center mb-8">
-                <h1 class="font-black text-orange-800 text-3xl tracking-tighter">DAPUR GHANIA</h1>
-                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Akses Akun Pelanggan</p>
-            </div>
-            <div class="flex bg-gray-100 p-1 rounded-2xl mb-6">
-                <button id="tab-login" onclick="switchAuth('login')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-orange-600">LOGIN</button>
-                <button id="tab-register" onclick="switchAuth('register')" class="flex-1 py-3 rounded-xl text-xs font-bold transition-all text-gray-500">DAFTAR</button>
-            </div>
-            <div id="auth-form" class="space-y-4">
-                <input type="tel" id="auth-phone" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nomor WhatsApp">
-                <div id="reg-name-wrapper" class="hidden">
-                    <input type="text" id="auth-name" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nama Lengkap">
-                </div>
-                <input type="password" id="auth-pin" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="PIN (6 Digit)">
-                <button onclick="handleAuth()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all mt-4">KONFIRMASI</button>
-            </div>
-        </div>
-    </div>
+<!-- MAIN -->
+<main class="p-4">
+  <h2 class="font-bold mb-3">Daftar Produk</h2>
+  <div id="productList" class="grid grid-cols-2 gap-3"></div>
+</main>
 
-    <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 p-4">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div onclick="showPage('home')" class="cursor-pointer">
-                <h1 class="font-black text-orange-800 tracking-tighter text-xl">DAPUR GHANIA</h1>
-                <p id="welcome-user" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pesan Katering Mudah</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <div id="user-nav-container">
-                    <button id="btn-login-trigger" onclick="openAuth()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
-                        <i class="fas fa-user-circle text-lg"></i>
-                        <span>Login</span>
-                    </button>
-                    <button id="btn-profile-trigger" onclick="handleUserAction()" class="hidden flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
-                        <i class="fas fa-user-check text-lg"></i>
-                        <span id="display-name">User</span>
-                    </button>
-                </div>
-                <button onclick="openCart()" class="relative p-2.5 bg-orange-600 rounded-xl shadow-lg">
-                    <i class="fas fa-shopping-basket text-lg text-white"></i>
-                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">0</span>
-                </button>
-            </div>
-        </div>
-        <nav id="main-nav" class="max-w-4xl mx-auto mt-4 flex gap-6 border-t pt-2 hidden">
-            <button onclick="showPage('home')" id="nav-home" class="text-[10px] font-black uppercase tracking-widest py-2 nav-active">Home</button>
-            <button onclick="showPage('history')" id="nav-history" class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">Riwayat</button>
-            <button onclick="showPage('products')" id="nav-products" class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-orange-600">Kelola Produk</button>
-            <button onclick="showPage('admin')" id="nav-admin" class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-red-500">Admin Panel</button>
-        </nav>
-    </header>
+<!-- CART MODAL -->
+<div id="cartModal" class="fixed inset-0 bg-black/50 hidden items-end z-50">
+  <div class="bg-white w-full rounded-t-xl p-4">
+    <h3 class="font-bold mb-2">Keranjang</h3>
+    <div id="cartItems" class="text-sm mb-3"></div>
+    <button onclick="checkout()" class="w-full bg-pink-600 text-white py-2 rounded">Checkout</button>
+    <button onclick="closeCart()" class="w-full mt-2 text-sm">Tutup</button>
+  </div>
+</div>
 
-    <!-- Page: Manage Products -->
-    <main id="page-products" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
-        <h2 class="text-lg font-black mb-4 text-orange-600">📦 Kelola Produk</h2>
-        <div class="bg-white p-6 rounded-3xl card-shadow">
-            <div class="grid gap-3">
-                <input id="p-name" class="w-full p-3 rounded-xl border text-sm" placeholder="Nama Produk">
-                <select id="p-category" class="w-full p-3 rounded-xl border text-sm">
-                    <option value="simple">Paket Simple</option>
-                    <option value="exclusive">Paket Exclusive</option>
-                    <option value="satuan">Kue Satuan</option>
-                </select>
-                <div class="grid grid-cols-2 gap-3">
-                    <input id="harga_asli" oninput="updateHargaJual()" type="number" class="w-full p-3 rounded-xl border text-sm" placeholder="Harga Normal">
-                    <input id="diskon" oninput="updateHargaJual()" type="number" class="w-full p-3 rounded-xl border text-sm" placeholder="Diskon (%)">
-                </div>
-                <p id="harga_jual_text" class="text-orange-600 text-xs font-bold">Harga jual: Rp 0</p>
-                <input id="p-img" class="w-full p-3 rounded-xl border text-sm" placeholder="URL Gambar Produk">
-                <textarea id="p-desc" class="w-full p-3 rounded-xl border text-sm" placeholder="Deskripsi Singkat"></textarea>
-                <textarea id="p-detail" class="w-full p-3 rounded-xl border text-sm" placeholder="Detail Produk"></textarea>
-                <label class="flex items-center gap-2 text-sm font-bold text-gray-500">
-                    <input type="checkbox" id="p-active" checked> Produk Aktif & Ditampilkan
-                </label>
-                <div class="flex gap-2 pt-2">
-                    <button onclick="saveProduct()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-black text-sm">💾 Simpan Produk</button>
-                    <button onclick="resetProductForm()" class="flex-1 bg-gray-100 py-3 rounded-xl font-black text-sm">Reset</button>
-                </div>
-            </div>
-            <div id="admin-product-list" class="mt-8 space-y-3"></div>
-        </div>
-    </main>
+<!-- DETAIL MODAL -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white w-80 rounded-xl p-4">
+    <h3 id="detailName" class="font-bold text-lg mb-1"></h3>
+    <p id="detailPrice" class="text-pink-600 font-semibold mb-3"></p>
+    <button onclick="addToCartFromDetail()" class="w-full bg-pink-600 text-white py-2 rounded">Tambah ke Keranjang</button>
+    <button onclick="closeDetail()" class="w-full mt-2 text-sm">Tutup</button>
+  </div>
+</div>
 
-    <!-- Page: Home -->
-    <main id="page-home" class="page-content max-w-4xl mx-auto p-4 pb-32">
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2.5rem] p-8 text-white mb-8 relative overflow-hidden shadow-xl">
-            <div class="relative z-10">
-                <h2 class="text-2xl font-black mb-1 uppercase tracking-tight">Aneka Kue & Hampers Exclusive</h2>
-                <p class="text-orange-100 text-sm opacity-90">Satu pesanan, beribu kenangan manis.</p>
-            </div>
-        </div>
-        <div class="mb-4">
-            <input id="search-input" oninput="handleSearch(this.value)" type="text" placeholder="Cari produk kue / paket..." class="w-full p-4 rounded-2xl border border-gray-100 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-orange-500">
-        </div>
-        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button onclick="setCategory('all', this)" class="cat-btn nav-active">Semua</button>
-            <button onclick="setCategory('simple', this)" class="cat-btn">Paket Simple</button>
-            <button onclick="setCategory('exclusive', this)" class="cat-btn">Paket Exclusive</button>
-            <button onclick="setCategory('satuan', this)" class="cat-btn">Kue Satuan</button>
-        </div>
-        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
-    </main>
-
-    <!-- Page: History -->
-    <main id="page-history" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="font-black text-xl">Riwayat Pesanan</h2>
-            <button onclick="fetchHistory()" class="text-orange-600 text-xs font-bold uppercase"><i class="fas fa-sync-alt mr-1"></i> Refresh</button>
-        </div>
-        <div id="history-list" class="space-y-4"></div>
-    </main>
-
-    <!-- Page: Admin Panel -->
-    <main id="page-admin" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="font-black text-xl text-red-600">Admin - Pesanan Masuk</h2>
-            <button onclick="fetchAdminOrders()" class="text-red-600 text-xs font-bold uppercase"><i class="fas fa-sync-alt mr-1"></i> Refresh</button>
-        </div>
-        <div id="admin-orders-list" class="space-y-4"></div>
-    </main>
-
-    <!-- Modal Product Detail -->
-    <div id="modal-product" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 modal-blur">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative">
-            <button onclick="closeProductDetail()" class="absolute top-4 right-4 bg-white/80 backdrop-blur w-10 h-10 rounded-full flex items-center justify-center shadow-lg text-gray-600 z-10"><i class="fas fa-times"></i></button>
-            <img id="dp-img" src="" class="w-full h-64 object-cover">
-            <div class="p-8">
-                <h3 id="dp-name" class="text-2xl font-black mb-2 text-orange-800"></h3>
-                <p id="dp-price" class="text-xl font-black text-orange-600 mb-4"></p>
-                <p id="dp-desc" class="text-gray-500 text-sm leading-relaxed mb-8"></p>
-                <button onclick="addToCart(); closeProductDetail();" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg">TAMBAH KE KERANJANG</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Keranjang (Cart) -->
-    <div id="modal-cart" class="fixed inset-0 z-[200] hidden items-end justify-center sm:items-center p-0 sm:p-4 modal-blur">
-        <div class="bg-white w-full max-w-lg rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b flex justify-between items-center bg-orange-50">
-                <h3 class="font-black text-orange-800">Keranjang Belanja</h3>
-                <button onclick="closeCart()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="cart-list" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-            <div id="cart-summary" class="p-8 bg-gray-50 border-t">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="text-gray-500 font-bold uppercase text-xs tracking-widest">Total Bayar</span>
-                    <span id="cart-total" class="text-2xl font-black text-orange-600">Rp 0</span>
-                </div>
-                <button onclick="checkout()" class="w-full bg-orange-600 text-white py-5 rounded-2xl font-black shadow-lg active:scale-95 transition-all">PESAN VIA WHATSAPP</button>
-            </div>
-        </div>
-    </div>
+<!-- AUTH MODAL -->
+<div id="authModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white p-4 rounded w-80">
+    <h3 class="font-bold mb-2">Login</h3>
+    <input id="authName" placeholder="Nama" class="border p-2 w-full mb-2" />
+    <input id="authPhone" placeholder="No WhatsApp" class="border p-2 w-full mb-2" />
+    <input id="authPin" placeholder="PIN (1234)" class="border p-2 w-full mb-3" />
+    <button onclick="submitAuth()" class="w-full bg-pink-600 text-white py-2 rounded">Masuk</button>
+  </div>
+</div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbye27tkax-LNqEKFES3bjhEm4wO3e_lUV1WGCFJaAuCNCIYpvNPrgJLeSPsMdynlkP_xQ/exec";
-    const ADMIN_WA = "62895334016084";
-    
-    let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
-    let cart = JSON.parse(localStorage.getItem('ghania_cart')) || [];
-    let PRODUCTS = [];
-    let searchKeyword = "";
-    let activeCategory = "all";
-    let editProductId = null;
+/********************
+ * KONFIGURASI
+ ********************/
+const SCRIPT_URL = "PASTE_SCRIPT_URL_ANDA";
+const ADMIN_WA = "62895334016084";
 
-    window.onload = () => {
-        updateUIAuth();
-        fetchProducts();
-        updateCartBadge();
-    };
+/********************
+ * STATE
+ ********************/
+let PRODUCTS = [];
+let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+let selectedProduct = null;
 
-    // --- Core Logic ---
-    function showPage(pageId) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-        const targetPage = document.getElementById(`page-${pageId}`);
-        if(targetPage) targetPage.classList.remove('hidden');
-        
-        document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('nav-active', 'text-orange-600'));
-        const activeNav = document.getElementById(`nav-${pageId}`);
-        if(activeNav) activeNav.classList.add('nav-active');
+/********************
+ * INIT
+ ********************/
+updateCartBadge();
+loadProducts();
 
-        if(pageId === 'history') fetchHistory();
-        if(pageId === 'admin') fetchAdminOrders();
-        window.scrollTo(0,0);
-    }
+/********************
+ * API JSONP
+ ********************/
+function jsonp(url) {
+  const s = document.createElement('script');
+  s.src = url;
+  document.body.appendChild(s);
+}
 
-    function injectScript(url) {
-        const s = document.createElement("script");
-        s.src = url + "&_=" + Date.now();
-        document.body.appendChild(s);
-        s.onload = () => s.remove();
-    }
+/********************
+ * LOAD PRODUCT
+ ********************/
+function loadProducts() {
+  jsonp(`${SCRIPT_URL}?action=getProducts&callback=productCb`);
+}
+function productCb(data) {
+  PRODUCTS = data || [];
+  renderProducts();
+}
+function renderProducts() {
+  const el = document.getElementById('productList');
+  el.innerHTML = PRODUCTS.map((p, i) => `
+    <div class="bg-white p-2 rounded shadow cursor-pointer" data-index="${i}" onclick="openDetailByIndex(${i})">
+      <div class="font-semibold text-sm">${p.name}</div>
+      <div class="text-xs">Rp ${p.price}</div>
+    </div>
+  `).join('');
+}
 
-    function showLoader(v, t = "Memproses...") {
-        const l = document.getElementById('loader');
-        l.classList.toggle('hidden', !v);
-        l.classList.toggle('flex', v);
-        document.getElementById('loader-text').innerText = t;
-    }
+/********************
+ * DETAIL
+ ********************/
+function openDetailByIndex(i) {
+  const p = PRODUCTS[i];
+  if (!p) return alert('Produk tidak ditemukan');
+  selectedProduct = p;
+  document.getElementById('detailName').innerText = p.name;
+  document.getElementById('detailPrice').innerText = 'Rp ' + p.price;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
 
-    // --- Auth ---
-    function openAuth() { document.getElementById('auth-screen').classList.replace('hidden', 'flex'); }
-    function closeAuth() { document.getElementById('auth-screen').classList.replace('flex', 'hidden'); }
-    
-    let authMode = 'login';
-    function switchAuth(m) {
-        authMode = m;
-        document.getElementById('reg-name-wrapper').classList.toggle('hidden', m === 'login');
-        document.getElementById('tab-login').className = m === 'login' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
-        document.getElementById('tab-register').className = m === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
-    }
+function closeDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+function closeDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
 
-    function handleAuth() {
-        const phone = document.getElementById('auth-phone').value;
-        const pin = document.getElementById('auth-pin').value;
-        const name = document.getElementById('auth-name').value;
-        if(!phone || !pin) return alert("Phone & PIN required");
-        
-        showLoader(true, "Verifikasi...");
-        injectScript(`${SCRIPT_URL}?action=${phone === ADMIN_WA ? 'loginAdmin' : authMode}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`);
-    }
+/********************
+ * CART
+ ********************/
+function addToCartFromDetail() {
+  if (!selectedProduct) {
+    alert('Produk belum dipilih');
+    return;
+  }
+  const found = cart.find(i => i.name === selectedProduct.name);
+  if (found) {
+    found.qty += 1;
+  } else {
+    cart.push({
+      name: selectedProduct.name,
+      price: selectedProduct.price,
+      qty: 1
+    });
+  }
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartBadge();
+  closeDetail();
+}
+function saveCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartBadge();
+}
+function updateCartBadge() {
+  document.getElementById('cartBadge').innerText = cart.reduce((t, i) => t + i.qty, 0);
+}
+function openCart() {
+  document.getElementById('cartItems').innerHTML = cart.map(i => `${i.name} x${i.qty}`).join('<br>');
+  document.getElementById('cartModal').classList.remove('hidden');
+}
+function closeCart() {
+  document.getElementById('cartModal').classList.add('hidden');
+}
 
-    window.authCallback = (res) => {
-        showLoader(false);
-        if(res.success) {
-            currentUser = { 
-                phone: document.getElementById('auth-phone').value, 
-                name: res.name || document.getElementById('auth-name').value 
-            };
-            localStorage.setItem('ghania_user', JSON.stringify(currentUser));
-            updateUIAuth();
-            closeAuth();
-            if(currentUser.phone === ADMIN_WA) showPage('products');
-        } else {
-            alert(res.message);
-        }
-    };
+/********************
+ * AUTH
+ ********************/
+function submitAuth() {
+  const n = authName.value;
+  const p = authPhone.value;
+  const pin = authPin.value;
+  jsonp(`${SCRIPT_URL}?action=login&name=${n}&phone=${p}&pin=${pin}&callback=authCb`);
+}
+function authCb(res) {
+  if (!res || res.error) return alert('Login gagal');
+  currentUser = res;
+  localStorage.setItem('user', JSON.stringify(res));
+  document.getElementById('authModal').classList.add('hidden');
+}
 
-    function updateUIAuth() {
-        if(currentUser) {
-            document.getElementById('btn-login-trigger').classList.add('hidden');
-            document.getElementById('btn-profile-trigger').classList.remove('hidden');
-            document.getElementById('main-nav').classList.remove('hidden');
-            document.getElementById('display-name').innerText = (currentUser.name || "User").split(' ')[0];
-            if(currentUser.phone === ADMIN_WA) {
-                document.getElementById('nav-admin').classList.remove('hidden');
-                document.getElementById('nav-products').classList.remove('hidden');
-            }
-        }
-    }
+/********************
+ * CHECKOUT
+ ********************/
+async function checkout() {
+  if (!currentUser) return document.getElementById('authModal').classList.remove('hidden');
+  if (cart.length === 0) return alert('Keranjang kosong');
 
-    function handleUserAction() {
-        if(confirm("Apakah Anda ingin keluar akun?")) {
-            localStorage.removeItem('ghania_user');
-            localStorage.removeItem('ghania_cart');
-            currentUser = null;
-            window.location.reload();
-        }
-    }
+  const fd = new FormData();
+  fd.append('name', currentUser.name);
+  fd.append('phone', currentUser.phone);
+  fd.append('items', JSON.stringify(cart));
+  fd.append('total', cart.reduce((t, i) => t + i.price * i.qty, 0));
+  fd.append('date', new Date().toISOString().slice(0,10));
+  fd.append('time', new Date().toLocaleTimeString('id-ID'));
+  fd.append('payment_type', 'Transfer');
+  fd.append('address', '-');
+  fd.append('note', '-');
 
-    // --- Products ---
-    function fetchProducts() {
-        showLoader(true, "Memuat Menu...");
-        injectScript(`${SCRIPT_URL}?action=getProducts&callback=productCb`);
-    }
+  await fetch(SCRIPT_URL, { method: 'POST', body: fd });
 
-    window.productCb = (res) => {
-        showLoader(false);
-        if(res.success) {
-            PRODUCTS = res.data;
-            renderProducts();
-            if(currentUser && currentUser.phone === ADMIN_WA) renderAdminProductList();
-        }
-    };
-
-    function handleSearch(val) {
-        searchKeyword = val.toLowerCase();
-        renderProducts();
-    }
-
-    function setCategory(cat, el) {
-        activeCategory = cat;
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('nav-active'));
-        if(el) el.classList.add('nav-active');
-        renderProducts();
-    }
-
-    function renderProducts() {
-        const list = document.getElementById('product-list');
-        let filtered = PRODUCTS.filter(p => p.active !== false);
-        
-        if(activeCategory !== 'all') filtered = filtered.filter(p => p.category === activeCategory);
-        if(searchKeyword) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchKeyword));
-
-        if(filtered.length === 0) {
-            list.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400 text-xs italic">Produk tidak tersedia</div>`;
-            return;
-        }
-
-        list.innerHTML = filtered.map(p => `
-            <div onclick="openProductDetail('${p.id}')" class="bg-white rounded-3xl overflow-hidden border border-gray-100 card-shadow transition-transform active:scale-95 cursor-pointer">
-                <img src="${p.image}" class="w-full h-36 object-cover">
-                <div class="p-4">
-                    <h3 class="font-bold text-[11px] mb-1 line-clamp-1">${p.name}</h3>
-                    <p class="text-orange-600 font-black text-sm">Rp ${Number(p.price).toLocaleString()}</p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // --- Manage Products ---
-    function updateHargaJual() {
-        const ori = Number(document.getElementById('harga_asli').value || 0);
-        const disc = Number(document.getElementById('diskon').value || 0);
-        const final = ori - (ori * disc / 100);
-        document.getElementById('harga_jual_text').innerText = `Harga jual: Rp ${Math.round(final).toLocaleString()}`;
-    }
-
-    function saveProduct() {
-        const data = {
-            action: editProductId ? "updateProduct" : "addProduct",
-            id: editProductId || "P" + Date.now(),
-            name: document.getElementById('p-name').value,
-            category: document.getElementById('p-category').value,
-            originalPrice: document.getElementById('harga_asli').value,
-            discount: document.getElementById('diskon').value,
-            price: Math.round(Number(document.getElementById('harga_asli').value) * (1 - Number(document.getElementById('diskon').value)/100)),
-            image: document.getElementById('p-img').value,
-            description: document.getElementById('p-desc').value,
-            detail: document.getElementById('p-detail').value,
-            active: document.getElementById('p-active').checked,
-            callback: "saveProductCb"
-        };
-
-        if(!data.name || !data.price) return alert("Nama & Harga wajib diisi!");
-        showLoader(true, "Menyimpan...");
-        const params = new URLSearchParams(data).toString();
-        injectScript(`${SCRIPT_URL}?${params}`);
-    }
-
-    window.saveProductCb = (res) => {
-        showLoader(false);
-        if(res.success) {
-            alert("Berhasil!");
-            resetProductForm();
-            fetchProducts();
-        }
-    };
-
-    function resetProductForm() {
-        editProductId = null;
-        document.querySelectorAll('#page-products input, #page-products textarea').forEach(i => i.value = "");
-        document.getElementById('p-active').checked = true;
-        updateHargaJual();
-    }
-
-    function renderAdminProductList() {
-        const list = document.getElementById('admin-product-list');
-        list.innerHTML = `<h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Daftar Produk (${PRODUCTS.length})</h3>` + 
-        PRODUCTS.map(p => `
-            <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                <img src="${p.image}" class="w-12 h-12 rounded-xl object-cover">
-                <div class="flex-1">
-                    <p class="text-xs font-black">${p.name}</p>
-                    <p class="text-[10px] text-orange-600 font-bold">Rp ${Number(p.price).toLocaleString()}</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="editProduct('${p.id}')" class="p-2 text-blue-500 text-xs"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteProduct('${p.id}')" class="p-2 text-red-500 text-xs"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function editProduct(id) {
-        const p = PRODUCTS.find(x => x.id === id);
-        if(!p) return;
-        editProductId = id;
-        document.getElementById('p-name').value = p.name;
-        document.getElementById('p-category').value = p.category;
-        document.getElementById('harga_asli').value = p.originalPrice || p.price;
-        document.getElementById('diskon').value = p.discount || 0;
-        document.getElementById('p-img').value = p.image;
-        document.getElementById('p-desc').value = p.description;
-        document.getElementById('p-detail').value = p.detail || "";
-        document.getElementById('p-active').checked = p.active !== false;
-        updateHargaJual();
-        window.scrollTo(0,0);
-    }
-
-    function deleteProduct(id) {
-        if(!confirm("Hapus produk ini?")) return;
-        showLoader(true, "Menghapus...");
-        injectScript(`${SCRIPT_URL}?action=deleteProduct&id=${id}&callback=saveProductCb`);
-    }
-
-    // --- Modal Detail ---
-    let selectedProduct = null;
-    function openProductDetail(id) {
-        selectedProduct = PRODUCTS.find(p => p.id === id);
-        if(!selectedProduct) return;
-        document.getElementById('dp-img').src = selectedProduct.image;
-        document.getElementById('dp-name').innerText = selectedProduct.name;
-        document.getElementById('dp-price').innerText = "Rp " + Number(selectedProduct.price).toLocaleString();
-        document.getElementById('dp-desc').innerText = selectedProduct.description || "Tidak ada deskripsi.";
-        document.getElementById('modal-product').classList.remove('hidden');
-    }
-
-    function closeProductDetail() { document.getElementById('modal-product').classList.add('hidden'); }
-
-    // --- Cart Logic ---
-    function openCart() {
-        renderCart();
-        document.getElementById('modal-cart').classList.replace('hidden', 'flex');
-    }
-
-    function closeCart() {
-        document.getElementById('modal-cart').classList.replace('flex', 'hidden');
-    }
-
-    function addToCart() {
-        if(!selectedProduct) return;
-        const existing = cart.find(item => item.id === selectedProduct.id);
-        if(existing) {
-            existing.qty += 1;
-        } else {
-            cart.push({...selectedProduct, qty: 1});
-        }
-        localStorage.setItem('ghania_cart', JSON.stringify(cart));
-        updateCartBadge();
-        showToast("Ditambah ke keranjang!");
-    }
-
-    function removeFromCart(id) {
-        cart = cart.filter(item => item.id !== id);
-        localStorage.setItem('ghania_cart', JSON.stringify(cart));
-        updateCartBadge();
-        renderCart();
-    }
-
-    function updateCartQty(id, delta) {
-        const item = cart.find(x => x.id === id);
-        if(item) {
-            item.qty += delta;
-            if(item.qty < 1) return removeFromCart(id);
-            localStorage.setItem('ghania_cart', JSON.stringify(cart));
-            renderCart();
-        }
-    }
-
-    function renderCart() {
-        const list = document.getElementById('cart-list');
-        let total = 0;
-        
-        if(cart.length === 0) {
-            list.innerHTML = `<div class="py-20 text-center"><i class="fas fa-shopping-basket text-4xl text-gray-100 mb-4 block"></i><p class="text-gray-400 text-sm font-bold">Keranjang masih kosong</p></div>`;
-            document.getElementById('cart-total').innerText = "Rp 0";
-            return;
-        }
-
-        list.innerHTML = cart.map(item => {
-            total += (item.price * item.qty);
-            return `
-                <div class="flex gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                    <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover">
-                    <div class="flex-1">
-                        <h4 class="text-xs font-black mb-1">${item.name}</h4>
-                        <p class="text-orange-600 font-black text-sm">Rp ${Number(item.price).toLocaleString()}</p>
-                        <div class="flex items-center gap-3 mt-2">
-                            <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 rounded-lg border bg-white text-xs"><i class="fas fa-minus"></i></button>
-                            <span class="text-xs font-black">${item.qty}</span>
-                            <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 rounded-lg border bg-white text-xs"><i class="fas fa-plus"></i></button>
-                        </div>
-                    </div>
-                    <button onclick="removeFromCart('${item.id}')" class="text-gray-300 hover:text-red-500 transition-colors"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            `;
-        }).join('');
-        document.getElementById('cart-total').innerText = "Rp " + total.toLocaleString();
-    }
-
-    function updateCartBadge() {
-        document.getElementById('cart-badge').innerText = cart.reduce((a, b) => a + b.qty, 0);
-    }
-
-    function checkout() {
-        if(!currentUser) return openAuth();
-        if(cart.length === 0) return alert("Keranjang kosong!");
-
-        let text = `*HALO DAPUR GHANIA*\nSaya ingin memesan paket berikut:\n\n`;
-        let total = 0;
-        cart.forEach((item, i) => {
-            text += `${i+1}. ${item.name} (${item.qty}x) - Rp ${(item.price * item.qty).toLocaleString()}\n`;
-            total += (item.price * item.qty);
-        });
-        text += `\n*TOTAL BAYAR: Rp ${total.toLocaleString()}*\n\nNama: ${currentUser.name}\nWhatsApp: ${currentUser.phone}`;
-        
-        showLoader(true, "Mencatat Pesanan...");
-        const params = {
-            action: "saveOrder",
-            phone: currentUser.phone,
-            name: currentUser.name,
-            items: JSON.stringify(cart),
-            total: total,
-            callback: "checkoutCb"
-        };
-        injectScript(`${SCRIPT_URL}?${new URLSearchParams(params).toString()}`);
-
-        const waUrl = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(text)}`;
-        window.open(waUrl, '_blank');
-    }
-
-    window.checkoutCb = (res) => {
-        showLoader(false);
-        if(res.success) {
-            cart = [];
-            localStorage.removeItem('ghania_cart');
-            updateCartBadge();
-            closeCart();
-            showPage('history');
-        }
-    };
-
-    // --- History & Admin ---
-    function fetchHistory() {
-        if(!currentUser) return document.getElementById('history-list').innerHTML = `<p class="text-center text-gray-400 py-10">Silakan login untuk melihat riwayat.</p>`;
-        showLoader(true, "Mengambil Riwayat...");
-        injectScript(`${SCRIPT_URL}?action=getHistory&phone=${currentUser.phone}&callback=historyCb`);
-    }
-
-    window.historyCb = (res) => {
-        showLoader(false);
-        const list = document.getElementById('history-list');
-        if(res.success && res.data && res.data.length > 0) {
-            list.innerHTML = res.data.map(o => {
-                let itemsList = "Data pesanan tidak terbaca";
-                try {
-                    const parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                    itemsList = parsedItems.map(i => `${i.name} (${i.qty}x)`).join(', ');
-                } catch(e) { console.error("Parse error items", e); }
-
-                return `
-                    <div class="bg-white p-5 rounded-3xl border border-gray-100 card-shadow">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">${o.date || 'Tanpa Tanggal'}</span>
-                            <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-[9px] font-black uppercase tracking-tighter">Berhasil</span>
-                        </div>
-                        <p class="text-sm font-bold mb-2">${itemsList}</p>
-                        <div class="flex justify-between items-center border-t pt-3">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase">Total Bayar</span>
-                            <p class="text-orange-600 font-black text-base">Rp ${Number(o.total || 0).toLocaleString()}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            list.innerHTML = `<div class="py-20 text-center"><i class="fas fa-history text-4xl text-gray-100 mb-4 block"></i><p class="text-gray-400 text-sm font-bold">Belum ada riwayat pesanan.</p></div>`;
-        }
-    }
-
-    function fetchAdminOrders() {
-        showLoader(true, "Mengambil Pesanan...");
-        injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminOrdersCb`);
-    }
-
-    window.adminOrdersCb = (res) => {
-        showLoader(false);
-        const list = document.getElementById('admin-orders-list');
-        if(res.success && res.data) {
-            list.innerHTML = res.data.map(o => {
-                let itemsList = "Data tidak terbaca";
-                try {
-                    const parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                    itemsList = parsedItems.map(i => `${i.name} x${i.qty}`).join(', ');
-                } catch(e) { }
-
-                return `
-                    <div class="bg-white p-5 rounded-3xl border border-red-50 card-shadow">
-                        <div class="flex justify-between items-center mb-3">
-                            <p class="text-xs font-black uppercase tracking-widest text-gray-400">${o.date || '-'}</p>
-                            <a href="https://wa.me/${o.phone}" target="_blank" class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-tighter"><i class="fab fa-whatsapp mr-1"></i> Hubungi</a>
-                        </div>
-                        <div class="mb-3">
-                            <p class="font-black text-sm text-gray-800">${o.name || 'Pelanggan'}</p>
-                            <p class="text-[10px] text-gray-400 font-bold tracking-wider">${o.phone || '-'}</p>
-                        </div>
-                        <p class="text-xs text-gray-600 mb-3 bg-gray-50 p-2 rounded-xl italic border border-dashed">"${itemsList}"</p>
-                        <div class="flex justify-between items-center border-t pt-3">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase">Nilai Pesanan</span>
-                            <p class="text-red-600 font-black text-base">Rp ${Number(o.total || 0).toLocaleString()}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            list.innerHTML = `<p class="text-center text-gray-400 py-10">Belum ada pesanan masuk.</p>`;
-        }
-    };
-
-    function showToast(m) {
-        const t = document.createElement('div');
-        t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full text-xs font-black z-[300] shadow-2xl animate-bounce";
-        t.innerText = m;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2500);
-    }
+  window.open(`https://wa.me/${ADMIN_WA}?text=Halo%20Dapur%20Ghania,%20saya%20sudah%20checkout`, '_blank');
+  cart = [];
+  saveCart();
+  closeCart();
+}
 </script>
 </body>
 </html>
