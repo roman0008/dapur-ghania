@@ -113,17 +113,17 @@
       </select>
 
       <div class="grid grid-cols-2 gap-3">
-  <input id="p-original" type="number"
+  <input id="harga_asli" oninput="updateHargaJual()" type="number"
     class="w-full p-3 rounded-xl border"
     placeholder="Harga Normal">
 
-  <input id="p-discount" type="number"
+  <input id="diskon"  oninput="updateHargaJual()" type="number"
     class="w-full p-3 rounded-xl border"
     placeholder="Diskon (%)">
 </div>
 
-<p id="p-preview-price"
-  class="text-xs font-bold text-orange-600">
+
+<p id="harga_jual_text" class="text-orange-600 text-xs mt-1">
   Harga jual: Rp 0
 </p>
 
@@ -435,70 +435,77 @@ window.productCb = (res) => {
 /* =========================
    SIMPAN / UPDATE PRODUK
 ========================= */
+
 function saveProduct() {
   const name = document.getElementById("p-name").value.trim();
-  const original = Number(document.getElementById("p-original").value || 0);
-  const discount = Number(document.getElementById("p-discount").value || 0);
+  const category = document.getElementById("p-category").value;
+  const originalPrice = Number(document.getElementById("harga_asli").value || 0);
+  const discount = Number(document.getElementById("diskon").value || 0);
+  const description = document.getElementById("p-desc").value.trim();
+  const detail = document.getElementById("p-detail").value.trim();
+  const image = document.getElementById("p-img").value.trim();
+  const active = document.getElementById("p-active").checked;
 
-  if (!name || original <= 0) {
+  if (!name || !originalPrice) {
     alert("❗ Nama & harga wajib diisi");
     return;
   }
 
-  const finalPrice =
-    discount > 0 && discount <= 100
-      ? Math.round(original * (100 - discount) / 100)
-      : original;
+  const price = Math.round(
+    originalPrice - (originalPrice * discount / 100)
+  );
 
-  const id = editProductId || `P${Date.now()}`;
+  showLoader(true, "Menyimpan produk...");
+
+  const callbackName = "saveProductCb_" + Date.now();
+  window[callbackName] = function (res) {
+    showLoader(false);
+
+    if (!res || !res.success) {
+      alert("❌ Gagal menyimpan produk");
+      return;
+    }
+
+    alert("✅ Produk berhasil disimpan");
+    resetProductForm();
+    fetchProducts();
+    delete window[callbackName];
+  };
 
   const params = new URLSearchParams({
     action: editProductId ? "updateProduct" : "addProduct",
-    id,
+    id: editProductId || "P" + Date.now(),
     name,
-    category: document.getElementById("p-category").value,
-    price: finalPrice,
-    originalPrice: original,
+    category,
+    price,
+    originalPrice,
     discount,
-    description: document.getElementById("p-desc").value,
-    detail: document.getElementById("p-detail").value,
-    image: document.getElementById("p-img").value,
-    active: document.getElementById("p-active").checked,
-    callback: "handleSaveProduct"
+    description,
+    detail,
+    image,
+    active,
+    callback: callbackName
   });
 
   injectScript(SCRIPT_URL + "?" + params.toString());
 }
 
 /* =========================
-   HAPUS PRODUK
-========================= */
-function deleteProduct(id) {
-  if (!confirm("Hapus produk ini?")) return;
-
-  injectScript(
-    `${SCRIPT_URL}?action=deleteProduct&id=${id}&callback=deleteProductCb`
-  );
-}
-
-window.deleteProductCb = function (res) {
-  if (!res.success) {
-    alert("Gagal hapus produk");
-    return;
-  }
-  fetchProducts();
-};
-
-/* =========================
    FORM & RENDER ADMIN
 ========================= */
 function resetProductForm() {
   editProductId = null;
-  ["p-name","p-price","p-original","p-discount","p-img","p-desc","p-detail"]
-    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("p-name").value = "";
   document.getElementById("p-category").value = "simple";
+  document.getElementById("harga_asli").value = "";
+  document.getElementById("diskon").value = "";
+  document.getElementById("p-desc").value = "";
+  document.getElementById("p-detail").value = "";
+  document.getElementById("p-img").value = "";
   document.getElementById("p-active").checked = true;
+  document.getElementById("harga_jual_text").innerText = "Harga jual: Rp 0";
 }
+
 
 function renderAdminProductList() {
   const c = document.getElementById("admin-product-list");
@@ -530,24 +537,39 @@ window.handleSaveProduct = function(res) {
   fetchProducts();
 };
 
+function updateHargaJual() {
+  const hargaAsli = Number(document.getElementById("harga_asli").value || 0);
+  const diskon = Number(document.getElementById("diskon").value || 0);
+
+  const hargaJual = hargaAsli - (hargaAsli * diskon / 100);
+
+  document.getElementById("harga_jual_text").innerText =
+    "Harga jual: Rp " + hargaJual.toLocaleString("id-ID");
+
+  return hargaJual;
+}
 
 /* =========================
    EDIT PRODUK
 ========================= */
 function editProduct(id) {
-  const p = PRODUCTS.find(x => x.id == id);
+  const p = PRODUCTS.find(x => x.id === id);
   if (!p) return;
 
   editProductId = id;
   document.getElementById("p-name").value = p.name;
   document.getElementById("p-category").value = p.category;
-  document.getElementById("p-price").value = p.originalPrice || p.price;
-  document.getElementById("p-discount").value = p.discount || 0;
-  document.getElementById("p-img").value = p.image;
+  document.getElementById("harga_asli").value = p.originalPrice || p.price;
+  document.getElementById("diskon").value = p.discount || 0;
   document.getElementById("p-desc").value = p.description || "";
+  document.getElementById("p-detail").value = p.detail || "";
+  document.getElementById("p-img").value = p.image || "";
+  document.getElementById("p-active").checked = !!p.active;
 
+  updateHargaJual();
   showPage("products");
 }
+
 
 /* =========================
    HOOK LOGIN ADMIN
