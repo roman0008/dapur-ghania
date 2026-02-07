@@ -1103,36 +1103,42 @@ function submitOrder() {
 
   showLoader(true, "Mengirim pesanan...");
 
-  const params = new URLSearchParams({
-    action: "createOrder",
-    phone: currentUser.phone,
-    name: currentUser.name,
-    items,
-    total,
-    payment_type: document.getElementById("f-bayar").value,
-    address: document.getElementById("f-alamat").value,
-    date: document.getElementById("f-tgl").value,
-    jam: document.getElementById("f-jam").value,
-    catatan: document.getElementById("f-catatan").value,
-    callback: "orderCb"
-  });
+  const formData = new FormData();
+  formData.append("name", currentUser.name);
+  formData.append("phone", currentUser.phone);
+  formData.append("items", items);
+  formData.append("total", total);
+  formData.append("payment_type", document.getElementById("f-bayar").value);
+  formData.append("address", document.getElementById("f-alamat").value);
+  formData.append("date", document.getElementById("f-tgl").value);
+  formData.append("time", document.getElementById("f-jam").value);
+  formData.append("note", document.getElementById("f-catatan").value);
 
-  injectScript(SCRIPT_URL + "?" + params.toString());
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: formData
+  })
+  .then(r => r.text())
+  .then(res => {
+    showLoader(false);
+
+    if (!res.includes("Success")) {
+      alert("❌ Gagal membuat pesanan");
+      return;
+    }
+
+    alert("✅ Pesanan berhasil dibuat");
+    localStorage.removeItem(CART_KEY);
+    updateCartBadge();
+    closeCheckout();
+    showPage("history");
+  })
+  .catch(() => {
+    showLoader(false);
+    alert("❌ Gagal koneksi server");
+  });
 }
 
-window.orderCb = function (res) {
-  showLoader(false);
-  if (!res.success) {
-    alert("❌ Gagal membuat pesanan");
-    return;
-  }
-
-  alert("✅ Pesanan berhasil dibuat");
-  localStorage.removeItem(CART_KEY);
-  updateCartBadge();
-  closeCheckout();
-  showPage("history");
-};
  
 
 
