@@ -383,42 +383,51 @@ window.productCb = (res) => {
 
   let data = PRODUCTS;
 
-  // Filter kategori
   if(activeCategory !== 'all'){
     data = data.filter(p => p.category === activeCategory);
   }
 
-  // Filter search
   if(searchKeyword){
     data = data.filter(p =>
       p.name.toLowerCase().includes(searchKeyword) ||
-      p.description.toLowerCase().includes(searchKeyword)
+      (p.description||"").toLowerCase().includes(searchKeyword)
     );
   }
 
-  // Jika kosong
   if(data.length === 0){
     list.innerHTML = `
       <div class="col-span-full text-center text-gray-400 text-xs py-10">
         Produk tidak ditemukan
-      </div>
-    `;
+      </div>`;
     return;
   }
 
-  list.innerHTML = data.map(p => `
-    <div onclick="openProductDetail('${p.id}')"
-      class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow cursor-pointer">
-      <img src="${p.image}" class="w-full h-32 object-cover">
-      <div class="p-4">
-        <h3 class="font-bold text-xs mb-1">${p.name}</h3>
-        <p class="text-orange-600 font-black text-sm">
-          Rp ${p.price.toLocaleString()}
-        </p>
+  list.innerHTML = data.map(p => {
+    const hasDiscount = p.discount && p.discount > 0;
+    return `
+    <div onclick=\"openProductDetail('${p.id}')\"
+      class=\"bg-white rounded-[2rem] overflow-hidden border border-gray-100 card-shadow cursor-pointer\">
+      <img src=\"${p.image}\" class=\"w-full h-32 object-cover\">
+      <div class=\"p-4\">
+        <h3 class=\"font-bold text-xs mb-1\">${p.name}</h3>
+
+        ${hasDiscount ? `
+          <span class=\"text-[10px] text-gray-400 line-through\">
+            Rp ${Number(p.originalPrice).toLocaleString('id-ID')}
+          </span>
+          <span class=\"ml-1 bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full\">
+            -${p.discount}%
+          </span>
+        ` : ``}
+
+        <div class=\"text-orange-600 font-black text-sm\">
+          Rp ${Number(p.price).toLocaleString('id-ID')}
+        </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
+
 
 
   /* =========================
@@ -777,11 +786,28 @@ let selectedProduct = null;
 
 function openProductDetail(id){
   selectedProduct = PRODUCTS.find(p=>p.id===id);
+
   document.getElementById('dp-img').src = selectedProduct.image;
   document.getElementById('dp-name').innerText = selectedProduct.name;
-  document.getElementById('dp-desc').innerText = selectedProduct.description;
-  document.getElementById('dp-price').innerText =
-    `Rp ${selectedProduct.price.toLocaleString()}`;
+  document.getElementById('dp-desc').innerText = selectedProduct.description || "";
+
+  const hasDiscount = selectedProduct.discount && selectedProduct.discount > 0;
+
+  document.getElementById('dp-price').innerHTML = hasDiscount
+    ? `
+      <span class=\"text-sm text-gray-400 line-through\">
+        Rp ${Number(selectedProduct.originalPrice).toLocaleString('id-ID')}
+      </span><br>
+      <span class=\"text-orange-600 font-black text-xl\">
+        Rp ${Number(selectedProduct.price).toLocaleString('id-ID')}
+      </span>
+    `
+    : `
+      <span class=\"text-orange-600 font-black text-xl\">
+        Rp ${Number(selectedProduct.price).toLocaleString('id-ID')}
+      </span>
+    `;
+
   document.getElementById('modal-product').classList.remove('hidden');
 }
 
