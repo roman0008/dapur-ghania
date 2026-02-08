@@ -218,6 +218,7 @@
                             <th class="p-4">Nama</th>
                             <th class="p-4">Total</th>
                             <th class="p-4">Ongkir</th>
+                            <th class="p-4">Pembayaran</th>
                             <th class="p-4">Status</th>
                             <th class="p-4">Tracking</th>
                             <th class="p-4">WA</th>
@@ -322,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBegUK5r_gSuRh2I6oFatpbGUkQHRMquECrsh49e63HM8pdMv3X6pq4rsivRgm0lzQSw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuulCz31twE3hvcDDZhPNqgvARMeSYKU6yqhW8bs2IbLytQid9Yu_98D2J_xZxvz0iTA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -643,6 +644,25 @@ updateUIAuth = function () {
       onchange="updateOngkir(${o.rowId}, this.value)"
       class="w-20 p-1 text-[10px] font-bold border rounded">
   </td>
+<td class="p-4 space-y-1">
+
+  <input type="number"
+    placeholder="DP"
+    value="${o.dp_dibayar || ''}"
+    onchange="updatePayment(${o.rowId}, 'dp', this.value)"
+    class="w-24 p-1 text-[10px] font-bold border rounded">
+
+  <input type="number"
+    placeholder="Pelunasan"
+    value="${o.pelunasan_dibayar || ''}"
+    onchange="updatePayment(${o.rowId}, 'pelunasan', this.value)"
+    class="w-24 p-1 text-[10px] font-bold border rounded">
+
+  <div class="text-[9px] text-gray-500">
+    Sisa: Rp ${Number(o.sisa_bayar || 0).toLocaleString("id-ID")}
+  </div>
+
+</td>
 
   <td class="p-4">
     <select onchange="updateStatus(${o.rowId}, this.value)"
@@ -1338,7 +1358,29 @@ function safeTime(timeVal) {
   // Kalau string normal "09:00"
   return timeVal.toString().slice(0,5);
 }
+// update pembayran pemesan
+function updatePayment(rowId, type, amount) {
+  if (!confirm("Simpan pembayaran ini?")) return;
 
+  showLoader(true, "Update pembayaran...");
+
+  injectScript(
+    `${SCRIPT_URL}?action=updatePayment`
+    + `&rowId=${rowId}`
+    + `&type=${type}`
+    + `&amount=${amount}`
+    + `&callback=paymentCb`
+  );
+}
+
+window.paymentCb = (res) => {
+  showLoader(false);
+  if (res.success) {
+    fetchAdminOrders();
+  } else {
+    alert("❌ Gagal update pembayaran");
+  }
+};
 
 
 
