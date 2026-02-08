@@ -322,7 +322,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbye27tkax-LNqEKFES3bjhEm4wO3e_lUV1WGCFJaAuCNCIYpvNPrgJLeSPsMdynlkP_xQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDvXlQQQZ_zdq0cIkjsv6mS9D4a2RTtWTX0x3f4rtg62WrN7XJM68Z7xybdI_Q3ICBEw/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -873,6 +873,35 @@ function fetchUserHistory() {
   );
 }
 
+function renderTermin(o) {
+  // Jika bukan sistem DP
+  if (!o.payment_type || !o.payment_type.toLowerCase().includes("dp")) {
+    return "";
+  }
+
+  const total = Number(o.total || 0);
+
+  // Ambil DP jika ada, kalau tidak hitung 50%
+  const dp = Number(o.dp || (total * 0.5));
+  const sisa = total - dp;
+
+  // Jika sudah lunas
+  if (o.status_bayar === "Lunas") {
+    return `
+      <div class="text-[10px] text-green-600 font-bold">
+        💰 Pembayaran LUNAS
+      </div>`;
+  }
+
+  return `
+    <div class="bg-orange-50 rounded-xl p-2 text-[10px] space-y-1">
+      <div>💳 DP dibayar: <b>Rp ${dp.toLocaleString("id-ID")}</b></div>
+      <div>⏳ Sisa pelunasan: <b class="text-red-600">
+        Rp ${sisa.toLocaleString("id-ID")}
+      </b></div>
+    </div>`;
+}
+
 
 window.historyCb = (res) => {
   const list = document.getElementById("history-list");
@@ -897,8 +926,13 @@ window.historyCb = (res) => {
       "Hantaran Diterima": "bg-green-100 text-green-700"
     }[o.tracking] || "bg-gray-100 text-gray-500";
 
+    // 🔽 AMBIL DETAIL PESANAN (AMAN)
+    const items =
+      o.items || o.pesanan || o.detail || "";
+
     return `
-      <div class="bg-white p-4 rounded-2xl border space-y-1">
+      <div class="bg-white p-4 rounded-2xl border space-y-2">
+
         <p class="font-black text-sm text-orange-600">
           ${o.invoice}
         </p>
@@ -908,8 +942,19 @@ window.historyCb = (res) => {
         </p>
 
         <p class="font-bold text-sm">
-          Rp ${Number(o.total).toLocaleString()}
-        </p>
+  Rp ${Number(o.total).toLocaleString("id-ID")}
+</p>
+
+${renderTermin(o)}
+
+
+        <!-- 🧁 DETAIL PESANAN -->
+        ${items ? `
+        <div class="text-xs bg-gray-50 rounded-xl p-2 text-gray-600">
+          <p class="font-bold mb-1">Pesanan:</p>
+          <p>${items}</p>
+        </div>
+        ` : ""}
 
         <div class="flex flex-wrap gap-2 mt-2">
           <span class="px-2 py-1 rounded-full text-[10px] font-black ${bayarColor} bg-gray-100">
@@ -1165,7 +1210,93 @@ function submitOrder() {
   });
 }
 
- 
+ /**
+ * REMINDER WA H-1 PELUNASAN
+ * Sheet: Orders
+ */
+
+function reminderPelunasanH1() {
+  const sheet = SpreadsheetApp.getActive()
+    .getSheetByName("Orders");
+  const data = sheet.getDataRange().getValues();
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  data.slice(1).forEach(row => {
+    const invoice = row[1];     // B
+    const wa = row[3];          // D
+    const tglAcara = row[4];    // E
+    const pembayaran = row[6]; // G
+    const total = Number(row[9]); // J
+    const status = row[10];    // K
+    const sisa = Number(row[11]); // L
+
+    if (!invoice || !wa || !tglAcara) return;
+    if (status === "Lunas" || sisa <= 0) return;
+
+    const eventDate = new Date(tglAcara);
+    eventDate.setHours(0,0,0,0);
+
+    const diff = Math.floor(
+      (eventDate - today) / (1000 * 60 * 60 * 24)
+    );
+
+    // H-1
+    if (diff !== 1) return;
+
+    const dp = Math.round(total * 0.5);
+
+    let pesan = `
+Assalamu’alaikum Kak 🌸
+
+Pengingat pesanan *${invoice}*
+📅 Acara: ${Utilities.formatDate(eventDate, "Asia/Jakarta", "dd MMM yyyy")}
+
+💳 Status Pembayaran:
+DP: Rp ${dp.toLocaleString("id-ID")}
+Sisa Pelunasan: Rp ${sisa.toLocaleString("id-ID")}
+
+Mohon pelunasan H-1 agar pesanan bisa kami proses & kirim tepat waktu 🙏
+
+Terima kasih
+_Dapur Ghania_
+`;
+
+    kirimWA(wa, pesan.trim());
+  });
+}
+
+/**
+ * KIRIM WA VIA FONNTE
+ */
+function kirimWA(no, pesan) {
+  const url = "https://api.fonnte.com/send";
+  const payload = {
+    target: formatPhone(no),
+    message: pesan
+  };
+
+  UrlFetchApp.fetch(url, {
+    method: "post",
+    payload: payload,
+    headers: {
+      Authorization: FONNTE_TOKEN
+    },
+    muteHttpExceptions: true
+  });
+}
+
+/**
+ * FORMAT NOMOR WA
+ */
+function formatPhone(num) {
+  let clean = num.toString().replace(/\D/g, '');
+  if (clean.startsWith('0')) clean = '62' + clean.slice(1);
+  if (clean.startsWith('8')) clean = '62' + clean;
+  return clean;
+}
+
 
 
 </script>
