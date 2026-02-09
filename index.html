@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjs1-vIrrRS_AJXL3IaXFXvBuVoDz847w_fnEwnweWzTjgfYT8XrbakNE0XkvEbB_drw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ7lukRV_K-h85IOF13gYE3t6SSXX3AS0zlfQuxROIFODyirnegqiPmqw1UrgzBsdNuA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -636,15 +636,8 @@ updateUIAuth = function () {
   <td class="p-4">
     <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
     <p class="text-[9px] text-gray-400">${o.payment_type}</p>
-  <div class="text-[9px]">
-  ${Number(o.sisa) <= 0
-    ? '<span class="text-green-600 font-bold">✅ LUNAS</span>'
-    : `<span class="text-red-600">Sisa: Rp ${Number(o.sisa).toLocaleString("id-ID")}</span>`
-  }
-</div>
-
   </td>
- 
+
   <td class="p-4">
     <input type="number"
       value="${o.ongkir || 0}"
@@ -909,8 +902,8 @@ function renderTermin(o) {
   const total = Number(o.total || 0);
 
   // Ambil DP jika ada, kalau tidak hitung 50%
- const dp = Number(o.dp_dibayar || 0);
-const sisa = Number(o.sisa_bayar || 0);
+  const dp = Number(o.dp || (total * 0.5));
+  const sisa = total - dp;
 
   // Jika sudah lunas
   if (o.status_bayar === "Lunas") {
@@ -968,8 +961,8 @@ window.historyCb = (res) => {
           ${o.payment_type}
         </p>
 
-        <p class="font-black">
-  Rp ${Number(o.total_order).toLocaleString("id-ID")}
+        <p class="font-bold text-sm">
+  Rp ${Number(o.total).toLocaleString("id-ID")}
 </p>
 
 ${renderTermin(o)}
@@ -1198,72 +1191,48 @@ function submitOrder() {
   const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
   if (cart.length === 0) return;
 
-  const paymentType = document.getElementById("f-bayar").value;
-  const nama = document.getElementById("f-nama").value;
-  const alamat = document.getElementById("f-alamat").value;
-  const tanggal = document.getElementById("f-tgl").value;
-  const jam = document.getElementById("f-jam").value;
-  const catatan = document.getElementById("f-catatan").value;
-
-  // 🔢 HITUNG TOTAL ORDER (100%)
-  const totalOrder = cart.reduce(
-    (a, b) => a + b.price * b.qty, 0
-  );
-
-  let dp = 0;
-  let pelunasan = 0;
-
-  if (paymentType === "DP 50%") {
-    dp = Math.round(totalOrder * 0.5);
-    pelunasan = totalOrder - dp;
-  } else {
-    // FULL PAYMENT
-    dp = totalOrder;
-    pelunasan = 0;
-  }
-
   const items = cart.map(i =>
-    `${i.name} x${i.qty} = Rp ${(i.qty * i.price).toLocaleString("id-ID")}`
+    `${i.name} x${i.qty} = Rp ${(i.qty * i.price).toLocaleString()}`
   ).join("\n");
+
+  const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
 
   showLoader(true, "Mengirim pesanan...");
 
-  const callbackName = "submitCb_" + Date.now();
-  window[callbackName] = function (res) {
+  const formData = new FormData();
+  formData.append("name", currentUser.name);
+  formData.append("phone", currentUser.phone);
+  formData.append("items", items);
+  formData.append("total", total);
+  formData.append("payment_type", document.getElementById("f-bayar").value);
+  formData.append("address", document.getElementById("f-alamat").value);
+  formData.append("date", document.getElementById("f-tgl").value);
+  formData.append("time", document.getElementById("f-jam").value);
+  formData.append("note", document.getElementById("f-catatan").value);
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: formData
+  })
+  .then(r => r.text())
+  .then(res => {
     showLoader(false);
 
-    if (res.success) {
-      alert("✅ Pesanan berhasil dibuat");
-      localStorage.removeItem(CART_KEY);
-      updateCartBadge();
-      closeCheckout();
-    } else {
-      alert("❌ Gagal menyimpan pesanan");
+    if (!res.includes("Success")) {
+      alert("❌ Gagal membuat pesanan");
+      return;
     }
 
-    delete window[callbackName];
-  };
-
-  const params = new URLSearchParams({
-    action: "submitOrder",
-    phone: currentUser.phone,
-    name: nama,
-    address: alamat,
-    date: tanggal,
-    time: jam,
-    payment_type: paymentType,
-
-    // 🔥 INI YANG PENTING
-    total_order: totalOrder, // ➜ KOLOM R
-    dp_bayar: dp,            // ➜ KOLOM J
-    pelunasan: pelunasan,    // ➜ KOLOM L
-
-    items: items,
-    note: catatan,
-    callback: callbackName
+    alert("✅ Pesanan berhasil dibuat");
+    localStorage.removeItem(CART_KEY);
+    updateCartBadge();
+    closeCheckout();
+    showPage("history");
+  })
+  .catch(() => {
+    showLoader(false);
+    alert("❌ Gagal koneksi server");
   });
-
-  injectScript(SCRIPT_URL + "?" + params.toString());
 }
 
  /**
