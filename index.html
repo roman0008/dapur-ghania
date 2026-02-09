@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ7lukRV_K-h85IOF13gYE3t6SSXX3AS0zlfQuxROIFODyirnegqiPmqw1UrgzBsdNuA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTLtyKmjTLyxQGKyhOtlJkelfEFn3hMclD-ZddeUocouRVlTJG4FpFYIEuX71W5ZSF6Q/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -636,8 +636,15 @@ updateUIAuth = function () {
   <td class="p-4">
     <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
     <p class="text-[9px] text-gray-400">${o.payment_type}</p>
-  </td>
+  <div class="text-[9px]">
+  ${Number(o.sisa) <= 0
+    ? '<span class="text-green-600 font-bold">✅ LUNAS</span>'
+    : `<span class="text-red-600">Sisa: Rp ${Number(o.sisa).toLocaleString("id-ID")}</span>`
+  }
+</div>
 
+  </td>
+ 
   <td class="p-4">
     <input type="number"
       value="${o.ongkir || 0}"
