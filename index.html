@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTo7C5AesDKpagmSMme9GyOo3t-BIulvgzhlTU1aSjiY11cw3bSxQ1dWRlxe-ofbDkSQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ7lukRV_K-h85IOF13gYE3t6SSXX3AS0zlfQuxROIFODyirnegqiPmqw1UrgzBsdNuA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -668,7 +668,7 @@ updateUIAuth = function () {
     <select onchange="updateStatus(${o.rowId}, this.value)"
       class="text-[10px] font-black p-1 bg-gray-100 rounded">
       <option value="Belum Bayar DP" ${o.status_bayar==='Belum Bayar'?'selected':''}>❌ Belum</option>
-      <option value="Sudah Bayar DP " ${o.status_bayar==='Belum Bayar'?'selected':''}>✅ Lunas dp</option>
+      <option value="Sudah Bayar DP " ${o.status_bayar==='Belum Bayar'?'selected':''}>✅ Lunas</option>
       <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>✅ Lunas</option>
     </select>
   </td>
@@ -895,15 +895,18 @@ function fetchUserHistory() {
 }
 
 function renderTermin(o) {
+  // Jika bukan sistem DP
   if (!o.payment_type || !o.payment_type.toLowerCase().includes("dp")) {
     return "";
   }
 
-  // ✅ AMBIL LANGSUNG DARI BACKEND (FINAL VALUE)
-  const dp   = Number(o.dp || 0);
-  const pel  = Number(o.pelunasan || 0);
-  const sisa = Number(o.sisa || 0);
+  const total = Number(o.total || 0);
 
+  // Ambil DP jika ada, kalau tidak hitung 50%
+  const dp = Number(o.dp || (total * 0.5));
+  const sisa = total - dp;
+
+  // Jika sudah lunas
   if (o.status_bayar === "Lunas") {
     return `
       <div class="text-[10px] text-green-600 font-bold">
@@ -913,19 +916,10 @@ function renderTermin(o) {
 
   return `
     <div class="bg-orange-50 rounded-xl p-2 text-[10px] space-y-1">
-      <div>💳 DP dibayar:
-        <b>Rp ${dp.toLocaleString("id-ID")}</b>
-      </div>
-
-      <div>💵 Pelunasan:
-        <b>Rp ${pel.toLocaleString("id-ID")}</b>
-      </div>
-
-      <div>⏳ Sisa:
-        <b class="text-red-600">
-          Rp ${sisa.toLocaleString("id-ID")}
-        </b>
-      </div>
+      <div>💳 DP dibayar: <b>Rp ${dp.toLocaleString("id-ID")}</b></div>
+      <div>⏳ Sisa pelunasan: <b class="text-red-600">
+        Rp ${sisa.toLocaleString("id-ID")}
+      </b></div>
     </div>`;
 }
 
@@ -1185,9 +1179,10 @@ function updateCheckoutDP() {
 }
 
 function updatePaymentUI() {
-  const type = document.getElementById("f-bayar").value;
+  const val = document.getElementById("f-bayar").value;
   document.getElementById("dp-info-container")
-    .classList.toggle("hidden", !type.includes("DP"));
+    .classList.toggle("hidden", val !== "DP 50%");
+  updateCheckoutDP();
 }
 
 /* =========================
