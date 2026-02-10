@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ7lukRV_K-h85IOF13gYE3t6SSXX3AS0zlfQuxROIFODyirnegqiPmqw1UrgzBsdNuA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXzKRwtpJGc5dmU8dU2PpwUb8g5HEbWX0UqALFTCOeiJ0KM9PKDWiZe3Nc2pfO-_MJoA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -667,7 +667,8 @@ updateUIAuth = function () {
   <td class="p-4">
     <select onchange="updateStatus(${o.rowId}, this.value)"
       class="text-[10px] font-black p-1 bg-gray-100 rounded">
-      <option value="Belum Bayar" ${o.status_bayar==='Belum Bayar'?'selected':''}>❌ Belum</option>
+      <option value="Belum Bayar DP" ${o.status_bayar==='Belum Bayar'?'selected':''}>❌ Belum</option>
+      <option value="Sudah Bayar DP " ${o.status_bayar==='Belum Bayar'?'selected':''}>✅ Lunas dp</option>
       <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>✅ Lunas</option>
     </select>
   </td>
@@ -894,18 +895,15 @@ function fetchUserHistory() {
 }
 
 function renderTermin(o) {
-  // Jika bukan sistem DP
   if (!o.payment_type || !o.payment_type.toLowerCase().includes("dp")) {
     return "";
   }
 
-  const total = Number(o.total || 0);
+  // ✅ AMBIL DARI BACKEND (GSHEET)
+  const dp   = Number(o.colDP || 0);
+  const pel  = Number(o.colPel || 0);
+  const sisa = Number(o.colSisa || 0);
 
-  // Ambil DP jika ada, kalau tidak hitung 50%
-  const dp = Number(o.dp || (total * 0.5));
-  const sisa = total - dp;
-
-  // Jika sudah lunas
   if (o.status_bayar === "Lunas") {
     return `
       <div class="text-[10px] text-green-600 font-bold">
@@ -915,12 +913,22 @@ function renderTermin(o) {
 
   return `
     <div class="bg-orange-50 rounded-xl p-2 text-[10px] space-y-1">
-      <div>💳 DP dibayar: <b>Rp ${dp.toLocaleString("id-ID")}</b></div>
-      <div>⏳ Sisa pelunasan: <b class="text-red-600">
-        Rp ${sisa.toLocaleString("id-ID")}
-      </b></div>
+      <div>💳 DP dibayar:
+        <b>Rp ${dp.toLocaleString("id-ID")}</b>
+      </div>
+
+      <div>💵 Pelunasan:
+        <b>Rp ${pel.toLocaleString("id-ID")}</b>
+      </div>
+
+      <div>⏳ Sisa:
+        <b class="text-red-600">
+          Rp ${sisa.toLocaleString("id-ID")}
+        </b>
+      </div>
     </div>`;
 }
+
 
 
 window.historyCb = (res) => {
