@@ -899,10 +899,10 @@ function renderTermin(o) {
     return "";
   }
 
-  // ✅ AMBIL DARI BACKEND (GSHEET)
-  const dp   = Number(o.colDP || 0);
-  const pel  = Number(o.colPel || 0);
-  const sisa = Number(o.colSisa || 0);
+  // ✅ AMBIL LANGSUNG DARI BACKEND (FINAL VALUE)
+  const dp   = Number(o.dp || 0);
+  const pel  = Number(o.pelunasan || 0);
+  const sisa = Number(o.sisa || 0);
 
   if (o.status_bayar === "Lunas") {
     return `
@@ -928,7 +928,6 @@ function renderTermin(o) {
       </div>
     </div>`;
 }
-
 
 
 window.historyCb = (res) => {
@@ -1186,10 +1185,9 @@ function updateCheckoutDP() {
 }
 
 function updatePaymentUI() {
-  const val = document.getElementById("f-bayar").value;
+  const type = document.getElementById("f-bayar").value;
   document.getElementById("dp-info-container")
-    .classList.toggle("hidden", val !== "DP 50%");
-  updateCheckoutDP();
+    .classList.toggle("hidden", !type.includes("DP"));
 }
 
 /* =========================
