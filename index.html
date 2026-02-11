@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyW9AZVBFST4u9WoGYC23SYRZ5WxtCCgoW-A3qsy7joptEWzrdzzPd5-coTDK4xazWj0A/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyG-xrHlrazQGOizEDGEGKL0kFhbO5ZL-zHS6qNGBCFTe09xMzF9mOMVWV1Jo78kQftYA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -644,25 +644,42 @@ updateUIAuth = function () {
       onchange="updateOngkir(${o.rowId}, this.value)"
       class="w-20 p-1 text-[10px] font-bold border rounded">
   </td>
-<td class="p-4 space-y-1">
+<td class="p-4 space-y-2 text-[10px]">
 
+  <!-- INFO TOTAL -->
+  <div class="bg-gray-50 p-2 rounded-lg space-y-1">
+    <div>Total Order:
+      <b>Rp ${Number(o.total_order || o.total || 0).toLocaleString("id-ID")}</b>
+    </div>
+
+    <div>Total Bayar:
+      <b class="text-green-600">
+        Rp ${Number(o.total_bayar || 0).toLocaleString("id-ID")}
+      </b>
+    </div>
+
+    <div class="${Number(o.sisa_bayar) > 0 ? 'text-red-600' : 'text-green-600'} font-bold">
+      Sisa:
+      Rp ${Number(o.sisa_bayar || 0).toLocaleString("id-ID")}
+    </div>
+  </div>
+
+  <!-- INPUT DP -->
   <input type="number"
-    placeholder="DP"
-    value="${o.dp_dibayar || ''}"
+    placeholder="Input DP"
+    value=""
     onchange="updatePayment(${o.rowId}, 'dp', this.value)"
     class="w-24 p-1 text-[10px] font-bold border rounded">
 
+  <!-- INPUT PELUNASAN -->
   <input type="number"
-    placeholder="Pelunasan"
-    value="${o.pelunasan_dibayar || ''}"
+    placeholder="Input Pelunasan"
+    value=""
     onchange="updatePayment(${o.rowId}, 'pelunasan', this.value)"
     class="w-24 p-1 text-[10px] font-bold border rounded">
 
-  <div class="text-[9px] text-gray-500">
-    Sisa: Rp ${Number(o.sisa_bayar || 0).toLocaleString("id-ID")}
-  </div>
-
 </td>
+
 
  <td class="p-4">
   <select onchange="updateStatus(${o.rowId}, this.value)"
