@@ -211,6 +211,16 @@
         </div>
         <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden card-shadow">
             <div class="overflow-x-auto">
+              <div class="flex justify-between items-center mb-3">
+
+              <input type="text"
+                id="admin-search"
+                placeholder="Cari Nomor Invoice..."
+                onkeyup="searchInvoice(this.value)"
+                class="border p-2 rounded text-xs w-64">
+            
+            </div>
+
                 <table class="w-full text-left text-xs">
                     <thead class="bg-gray-50 text-gray-400 uppercase font-black">
                         <tr>
@@ -226,6 +236,7 @@
                     </thead>
                     <tbody id="admin-orders-table" class="divide-y divide-gray-50"></tbody>
                 </table>
+                <div id="admin-pagination" class="flex justify-center gap-2 py-4 text-xs font-bold"></div>
             </div>
         </div>
     </main>
@@ -332,7 +343,10 @@
       let searchKeyword = "";
       let activeCategory = "all";
       let editProductId = null;
+      let currentPage = 1;
+      const rowsPerPage = 10;
       
+
 
     
     window.onload = () => {
@@ -626,7 +640,10 @@ updateUIAuth = function () {
   if(!res.data) return;
 
   document.getElementById('admin-orders-table').innerHTML =
-    res.data.map(o => `
+    res.data.slice(
+  (currentPage-1)*rowsPerPage,
+  currentPage*rowsPerPage
+).map(o => `
 <tr class="hover:bg-gray-50">
 
   <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
@@ -730,8 +747,10 @@ updateUIAuth = function () {
 
 </tr>
 `).join('');
+ renderPagination(res.data.length);
 };
 
+   
 
     async function updateStatus(rowId, status) {
         showLoader(true, "Updating...");
@@ -1450,6 +1469,40 @@ window.paymentCb = (res) => {
   }
 };
 
+function renderPagination(totalData) {
+
+  const totalPages = Math.ceil(totalData / rowsPerPage);
+  const container = document.getElementById("admin-pagination");
+
+  if(totalPages <= 1){
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  html += `<button onclick="changePage(${currentPage-1})"
+    ${currentPage===1?'disabled':''}
+    class="px-3 py-1 bg-gray-200 rounded">Prev</button>`;
+
+  for(let i=1;i<=totalPages;i++){
+    html += `<button onclick="changePage(${i})"
+      class="px-3 py-1 rounded ${i===currentPage?'bg-orange-600 text-white':'bg-gray-200'}">
+      ${i}
+    </button>`;
+  }
+
+  html += `<button onclick="changePage(${currentPage+1})"
+    ${currentPage===totalPages?'disabled':''}
+    class="px-3 py-1 bg-gray-200 rounded">Next</button>`;
+
+  container.innerHTML = html;
+}
+
+function changePage(page){
+  currentPage = page;
+  fetchAdminOrders();
+}
 
 
 </script>
