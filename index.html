@@ -323,7 +323,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ7lukRV_K-h85IOF13gYE3t6SSXX3AS0zlfQuxROIFODyirnegqiPmqw1UrgzBsdNuA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyW9AZVBFST4u9WoGYC23SYRZ5WxtCCgoW-A3qsy7joptEWzrdzzPd5-coTDK4xazWj0A/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -664,14 +664,26 @@ updateUIAuth = function () {
 
 </td>
 
-  <td class="p-4">
-    <select onchange="updateStatus(${o.rowId}, this.value)"
-      class="text-[10px] font-black p-1 bg-gray-100 rounded">
-      <option value="Belum Bayar DP" ${o.status_bayar==='Belum Bayar'?'selected':''}>❌ Belum</option>
-      <option value="Sudah Bayar DP " ${o.status_bayar==='Belum Bayar'?'selected':''}>✅ Lunas</option>
-      <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>✅ Lunas</option>
-    </select>
-  </td>
+ <td class="p-4">
+  <select onchange="updateStatus(${o.rowId}, this.value)"
+    class="text-[10px] font-black p-1 bg-gray-100 rounded">
+
+    <option value="Belum Bayar" ${o.status_bayar==='Belum Bayar'?'selected':''}>
+      ❌ Belum Bayar
+    </option>
+
+    <option value="DP" ${o.status_bayar==='DP'?'selected':''}>
+      💳 Sudah Bayar DP
+    </option>
+
+    <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>
+      ✅ Lunas
+    </option>
+
+  </select>
+</td>
+
+
 
   <td class="p-4">
     <select onchange="updateTracking(${o.rowId}, this.value)"
@@ -709,6 +721,7 @@ updateUIAuth = function () {
         injectScript(`${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${status}&callback=updateCb`);
     }
     window.updateCb = (res) => { showLoader(false); if(res.success) fetchAdminOrders(); };
+    
 function updateOngkir(rowId, ongkir) {
   if(!confirm("Tambahkan ongkir Rp " + ongkir + " ?")) return;
   showLoader(true, "Update Ongkir...");
@@ -756,6 +769,43 @@ function kirimInvoiceWA(btn, rowId) {
     `?action=sendInvoiceWA&rowId=${rowId}&callback=${cb}`;
 
   document.body.appendChild(script);
+}
+
+function updatePayment(rowId, type, amount) {
+
+  amount = Number(amount);
+
+  if (!amount || amount < 0) {
+    alert("Nominal tidak valid");
+    return;
+  }
+
+  if (!confirm("Simpan pembayaran Rp " + amount.toLocaleString("id-ID") + " ?"))
+    return;
+
+  showLoader(true, "Update pembayaran...");
+
+  const callbackName = "paymentCb_" + Date.now();
+
+  window[callbackName] = function(res) {
+    showLoader(false);
+
+    if (!res || !res.success) {
+      alert("❌ Gagal update pembayaran");
+      return;
+    }
+
+    fetchAdminOrders(); // reload tabel
+    delete window[callbackName];
+  };
+
+  injectScript(
+    `${SCRIPT_URL}?action=updatePayment`
+    + `&rowId=${rowId}`
+    + `&type=${type}`
+    + `&amount=${amount}`
+    + `&callback=${callbackName}`
+  );
 }
 
     // --- Auth Logic ---
