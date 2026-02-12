@@ -90,7 +90,13 @@
             class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-orange-600">
               Kelola Produk
               </button>
+           <button onclick="showPage('report')" id="nav-report"
+              class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-purple-600">
+              Report
+              </button>
         </nav>
+
+
     </header>
     <!-- PAGE KELOLA PRODUK -->
 <main id="page-products" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
@@ -165,6 +171,47 @@
 
   </div>
 </main>
+<main id="page-report" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+<div class="mb-4">
+  <select id="filter-bulan"
+          class="border p-2 rounded"
+          onchange="applyMonthFilter()">
+    <option value="">Semua Bulan</option>
+  </select>
+</div>
+
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="font-black text-xl text-purple-600">
+            Laporan Penjualan
+        </h2>
+        <button onclick="fetchReportData()"
+            class="p-2 bg-gray-100 rounded-lg text-xs font-bold uppercase">
+            Refresh
+        </button>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl card-shadow space-y-4">
+
+        <div class="grid grid-cols-2 gap-4 text-center">
+            <div class="bg-gray-50 p-4 rounded-xl">
+                <p class="text-xs text-gray-400 font-bold">Total Order</p>
+                <p id="r-total-order" class="text-xl font-black text-orange-600">Rp 0</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-xl">
+                <p class="text-xs text-gray-400 font-bold">Total Lunas</p>
+                <p id="r-total-lunas" class="text-xl font-black text-green-600">Rp 0</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-xl">
+            <p class="text-xs text-gray-400 font-bold mb-2">Jumlah Pesanan</p>
+            <p id="r-total-transaksi" class="text-lg font-black text-gray-800">0</p>
+        </div>
+
+    </div>
+
+</main>
 
 
 
@@ -209,9 +256,7 @@
             <h2 class="font-black text-xl text-red-600">Admin Dashboard</h2>
             <button onclick="fetchAdminOrders()" class="p-2 bg-gray-100 rounded-lg text-xs font-bold uppercase">Refresh</button>
         </div>
-        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden card-shadow">
-            <div class="overflow-x-auto">
-              <div class="flex justify-between items-center mb-3">
+        <div class="flex justify-between items-center mb-3">
 
               <input type="text"
                 id="admin-search"
@@ -220,6 +265,9 @@
                 class="border p-2 rounded text-xs w-64">
             
             </div>
+        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden card-shadow">
+            <div class="overflow-x-auto">
+              
 
                 <table class="w-full text-left text-xs">
                     <thead class="bg-gray-50 text-gray-400 uppercase font-black">
@@ -345,6 +393,8 @@
       let editProductId = null;
       let currentPage = 1;
       const rowsPerPage = 10;
+      let reportDataGlobal = [];
+
       
 
 
@@ -873,15 +923,33 @@ function updatePayment(rowId, type, amount) {
         } else alert(res.message);
     };
     function updateUIAuth() {
-        if(currentUser) {
-            document.getElementById('btn-login-trigger').classList.add('hidden');
-            document.getElementById('btn-profile-trigger').classList.remove('hidden');
-            document.getElementById('main-nav').classList.remove('hidden');
-            document.getElementById('display-name').innerText = currentUser.name.split(' ')[0];
-            if(currentUser.phone === ADMIN_WA) document.getElementById('nav-admin').classList.remove('hidden');
-            document.getElementById('f-nama').value = currentUser.name;
+
+    // Reset semua nav admin dulu
+    document.getElementById('nav-admin').classList.add('hidden');
+    document.getElementById('nav-products').classList.add('hidden');
+    document.getElementById('nav-report').classList.add('hidden');
+
+    if(currentUser) {
+
+        document.getElementById('btn-login-trigger').classList.add('hidden');
+        document.getElementById('btn-profile-trigger').classList.remove('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
+
+        document.getElementById('display-name').innerText =
+            currentUser.name.split(' ')[0];
+
+        document.getElementById('f-nama').value =
+            currentUser.name;
+
+        // ✅ HANYA ADMIN
+        if(currentUser.phone === ADMIN_WA) {
+            document.getElementById('nav-admin').classList.remove('hidden');
+            document.getElementById('nav-products').classList.remove('hidden');
+            document.getElementById('nav-report').classList.remove('hidden');
         }
     }
+}
+
     function handleUserAction() { if(confirm("Logout?")) { localStorage.clear(); location.reload(); } }
     function injectScript(url) {
   const s = document.createElement("script");
@@ -949,6 +1017,15 @@ window.trackingCb = (res) => {
 };
 
 function showPage(page) {
+
+  // 🔒 Proteksi admin dulu
+  if(page === "admin" || page === "products" || page === "report"){
+    if(!currentUser || currentUser.phone !== ADMIN_WA){
+      alert("Akses ditolak");
+      return;
+    }
+  }
+
   document.querySelectorAll(".page-content")
     .forEach(p => p.classList.add("hidden"));
 
@@ -961,9 +1038,11 @@ function showPage(page) {
   const nav = document.getElementById(`nav-${page}`);
   if (nav) nav.classList.add("nav-active");
 
-  if (page === "admin") fetchAdminOrders?.();
-  if (page === "history") fetchUserHistory(); // ✅ FIX UTAMA
+  if (page === "admin") fetchAdminOrders();
+  if (page === "history") fetchUserHistory();
+  if (page === "report") fetchReportData();
 }
+
 
 
  
@@ -1507,6 +1586,115 @@ function changePage(page){
   currentPage = page;
   fetchAdminOrders();
 }
+
+function fetchReportData() {
+  showLoader(true, "Memuat laporan...");
+  injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=reportCb`);
+}
+
+
+
+window.reportCb = (res) => {
+  showLoader(false);
+
+  if (!res.success || !res.data) {
+    alert("Gagal memuat data laporan");
+    return;
+  }
+
+  reportDataGlobal = res.data;
+
+  populateMonthFilter(reportDataGlobal);
+
+  // ✅ DEFAULT tampil semua dulu
+  calculateReport(reportDataGlobal);
+};
+
+function calculateReport(data) {
+
+  let totalOrder = 0;
+  let totalSudahBayar = 0;
+  let totalSisa = 0;
+  let totalTransaksi = data.length;
+
+  data.forEach(o => {
+
+    const order = Number(o.total_order || 0);   // R
+    const bayar = Number(o.total_bayar || 0);   // U
+    const sisa  = Number(o.total || 0);         // V
+
+    totalOrder += order;
+    totalSudahBayar += bayar;
+    totalSisa += sisa;
+
+  });
+
+  document.getElementById("r-total-order").innerText =
+    "Rp " + totalOrder.toLocaleString("id-ID");
+
+  document.getElementById("r-total-lunas").innerText =
+    "Rp " + totalSudahBayar.toLocaleString("id-ID");
+
+  document.getElementById("r-total-sisa").innerText =
+    "Rp " + totalSisa.toLocaleString("id-ID");
+
+  document.getElementById("r-total-transaksi").innerText =
+    totalTransaksi;
+}
+
+
+function populateMonthFilter(data) {
+
+  const select = document.getElementById("filter-bulan");
+
+  // reset
+  select.innerHTML = `<option value="">Semua Bulan</option>`;
+
+  const months = new Set();
+
+  data.forEach(o => {
+    if (!o.timestamp) return;
+
+    const d = new Date(o.timestamp);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    months.add(key);
+  });
+
+  Array.from(months).sort().forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    select.appendChild(opt);
+  });
+}
+
+function applyMonthFilter() {
+
+  const val = document.getElementById("filter-bulan").value;
+
+  // kalau kosong = tampil semua
+  if (!val) {
+    calculateReport(reportDataGlobal);
+    return;
+  }
+
+  const [year, month] = val.split("-");
+
+  const filtered = reportDataGlobal.filter(o => {
+
+    if (!o.timestamp) return false;
+
+    const d = new Date(o.timestamp);
+
+    return (
+      d.getFullYear() == year &&
+      (d.getMonth()+1) == month
+    );
+  });
+
+  calculateReport(filtered);
+}
+
 
 
 </script>
