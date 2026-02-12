@@ -662,25 +662,7 @@ function lazyLoadImages() {
 /* =========================
    HOOK LOGIN ADMIN
 ========================= */
-const oldUpdateUIAuth = updateUIAuth;
-updateUIAuth = function () {
-  oldUpdateUIAuth();
 
-  if (currentUser && currentUser.phone === ADMIN_WA) {
-    document.getElementById("nav-products").classList.remove("hidden");
-
-    if (!document.getElementById("admin-product-list")) {
-      const el = document.createElement("div");
-      el.id = "admin-product-list";
-      el.className = "space-y-2 mt-6";
-      document
-        .querySelector("#page-products .card-shadow")
-        .appendChild(el);
-    }
-
-    fetchProducts();
-  }
-};
 
 
     function fetchAdminOrders() {
