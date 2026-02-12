@@ -382,7 +382,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyG-xrHlrazQGOizEDGEGKL0kFhbO5ZL-zHS6qNGBCFTe09xMzF9mOMVWV1Jo78kQftYA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL3g2X_ZkWVAbIZsNd4n3aFbPijkD9T_wcGVK391tX06jN5w2aMEaL-spB0uWDmxR9yA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -546,19 +546,21 @@ function saveProduct() {
   };
 
   const params = new URLSearchParams({
-    action: editProductId ? "updateProduct" : "addProduct",
-    id: editProductId || "P" + Date.now(),
-    name,
-    category,
-    price,
-    originalPrice,
-    discount,
-    description,
-    detail,
-    image,
-    active,
-    callback: callbackName
-  });
+  action: editProductId ? "updateProduct" : "addProduct",
+  id: editProductId || "P" + Date.now(),
+  name,
+  category,
+  price,
+  originalPrice,
+  discount,
+  description,
+  detail,
+  image,
+  active,
+  phone: currentUser.phone,
+  callback: callbackName
+});
+
 
   injectScript(SCRIPT_URL + "?" + params.toString());
 }
@@ -808,7 +810,13 @@ updateUIAuth = function () {
 
     async function updateStatus(rowId, status) {
         showLoader(true, "Updating...");
-        injectScript(`${SCRIPT_URL}?action=updateStatus&rowId=${rowId}&status=${status}&callback=updateCb`);
+        injectScript(
+  `${SCRIPT_URL}?action=updateStatus`
+  + `&rowId=${rowId}`
+  + `&status=${encodeURIComponent(status)}`
+  + `&phone=${currentUser.phone}`
+  + `&callback=updateCb`
+);
     }
     window.updateCb = (res) => { showLoader(false); if(res.success) fetchAdminOrders(); };
     
@@ -816,8 +824,13 @@ function updateOngkir(rowId, ongkir) {
   if(!confirm("Tambahkan ongkir Rp " + ongkir + " ?")) return;
   showLoader(true, "Update Ongkir...");
   injectScript(
-    `${SCRIPT_URL}?action=updateOngkir&rowId=${rowId}&ongkir=${ongkir}&callback=ongkirCb`
-  );
+  `${SCRIPT_URL}?action=updateOngkir`
+  + `&rowId=${rowId}`
+  + `&ongkir=${ongkir}`
+  + `&phone=${currentUser.phone}`
+  + `&callback=ongkirCb`
+);
+
 }
 
 window.ongkirCb = (res) => {
@@ -855,8 +868,12 @@ function kirimInvoiceWA(btn, rowId) {
 
   const script = document.createElement("script");
   script.src =
-    SCRIPT_URL +
-    `?action=sendInvoiceWA&rowId=${rowId}&callback=${cb}`;
+  SCRIPT_URL +
+  `?action=sendInvoiceWA`
+  + `&rowId=${rowId}`
+  + `&phone=${currentUser.phone}`
+  + `&callback=${cb}`;
+
 
   document.body.appendChild(script);
 }
@@ -890,12 +907,14 @@ function updatePayment(rowId, type, amount) {
   };
 
   injectScript(
-    `${SCRIPT_URL}?action=updatePayment`
-    + `&rowId=${rowId}`
-    + `&type=${type}`
-    + `&amount=${amount}`
-    + `&callback=${callbackName}`
-  );
+  `${SCRIPT_URL}?action=updatePayment`
+  + `&rowId=${rowId}`
+  + `&type=${type}`
+  + `&amount=${amount}`
+  + `&phone=${currentUser.phone}`
+  + `&callback=${callbackName}`
+);
+
 }
 
     // --- Auth Logic ---
@@ -1007,8 +1026,13 @@ function handleSearch(val){
 function updateTracking(rowId, tracking) {
   showLoader(true, "Update Tracking...");
   injectScript(
-    `${SCRIPT_URL}?action=updateTracking&rowId=${rowId}&tracking=${encodeURIComponent(tracking)}&callback=trackingCb`
-  );
+  `${SCRIPT_URL}?action=updateTracking`
+  + `&rowId=${rowId}`
+  + `&tracking=${encodeURIComponent(tracking)}`
+  + `&phone=${currentUser.phone}`
+  + `&callback=trackingCb`
+);
+
 }
 
 window.trackingCb = (res) => {
