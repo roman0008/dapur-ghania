@@ -382,7 +382,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjOykXt8ydfGcetVVCOqMszmd7yqK1rEWXleRYtZ4iH2AYZqmbksENNZVrPSzKgtjZPQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqhDcCI6vAVstemvXDaFDrDwgChbt4gnyuoCg22lDrRACd1XJMeGeEv5UKmTmtzoG1hw/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -666,7 +666,7 @@ function lazyLoadImages() {
 
 
     function fetchAdminOrders() {
-        document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="5" class="p-10 text-center">Memuat...</td></tr>`;
+        document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="8" class="p-10 text-center">Memuat...</td></tr>`;
         injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminCb`);
     }
 
@@ -685,7 +685,10 @@ function lazyLoadImages() {
   <td class="p-4 text-[10px] font-bold">${o.name}</td>
 
   <td class="p-4">
-    <p class="font-black">Rp ${parseInt(o.total).toLocaleString()}</p>
+    <p class="font-black">
+    Rp ${Number(o.total_order || 0).toLocaleString("id-ID")}
+    </p>
+
     <p class="text-[9px] text-gray-400">${o.payment_type}</p>
   </td>
 
@@ -700,9 +703,9 @@ function lazyLoadImages() {
   <div class="bg-gray-50 p-2 rounded-lg space-y-1">
     
     ${(() => {
-      const totalOrder = Number(o.total_order || o.total || 0);
+      const totalOrder = Number(o.total_order || 0);
       const totalBayar = Number(o.total_bayar || 0);
-      const sisa = totalOrder - totalBayar;
+      const sisa = Number(o.sisa || 0);
 
       return `
         <div>Total Order:
@@ -862,9 +865,20 @@ function kirimInvoiceWA(btn, rowId) {
 
 function updatePayment(rowId, type, amount) {
 
+  if (!currentUser) {
+    alert("Belum login");
+    return;
+  }
+
+  // SAMAKAN validasi dengan showPage
+  if (currentUser.phone !== ADMIN_WA) {
+    alert("Akses ditolak");
+    return;
+  }
+
   amount = Number(amount);
 
-  if (!amount || amount < 0) {
+  if (isNaN(amount) || amount <= 0) {
     alert("Nominal tidak valid");
     return;
   }
@@ -884,19 +898,18 @@ function updatePayment(rowId, type, amount) {
       return;
     }
 
-    fetchAdminOrders(); // reload tabel
+    fetchAdminOrders();
     delete window[callbackName];
   };
 
   injectScript(
-  `${SCRIPT_URL}?action=updatePayment`
-  + `&rowId=${rowId}`
-  + `&type=${type}`
-  + `&amount=${amount}`
-  + `&phone=${currentUser.phone}`
-  + `&callback=${callbackName}`
-);
-
+    `${SCRIPT_URL}?action=updatePayment`
+    + `&rowId=${rowId}`
+    + `&type=${type}`
+    + `&amount=${amount}`
+    + `&phone=${currentUser.phone}`
+    + `&callback=${callbackName}`
+  );
 }
 
     // --- Auth Logic ---
@@ -910,19 +923,46 @@ function updatePayment(rowId, type, amount) {
         document.getElementById('tab-register').className = m === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
     }
     async function handleAuth() {
-        const phone = document.getElementById('auth-phone').value, pin = document.getElementById('auth-pin').value, name = document.getElementById('auth-name').value;
-        if(!phone || !pin) return;
-        showLoader(true, "Authenticating...");
-        injectScript(`${SCRIPT_URL}?action=${phone===ADMIN_WA?'loginAdmin':authMode}&phone=${phone}&pin=${pin}&name=${encodeURIComponent(name)}&callback=authCallback`);
-    }
+
+  let phone = normalizePhone(document.getElementById('auth-phone').value);
+  const pin = document.getElementById('auth-pin').value;
+  const name = document.getElementById('auth-name').value;
+
+  if(!phone || !pin) return;
+
+  showLoader(true, "Authenticating...");
+
+  injectScript(
+    `${SCRIPT_URL}?action=${phone===ADMIN_WA?'loginAdmin':authMode}`
+    + `&phone=${phone}`
+    + `&pin=${pin}`
+    + `&name=${encodeURIComponent(name)}`
+    + `&callback=authCallback`
+  );
+}
+
     window.authCallback = (res) => {
         showLoader(false);
         if(res.success) {
-            currentUser = { phone: document.getElementById('auth-phone').value, name: res.name || document.getElementById('auth-name').value };
+            currentUser = {
+  phone: normalizePhone(document.getElementById('auth-phone').value.trim()),
+  name: (res.name || document.getElementById('auth-name').value).trim()
+};
+
+
             localStorage.setItem('ghania_user', JSON.stringify(currentUser));
             updateUIAuth(); closeAuth();
         } else alert(res.message);
     };
+    
+    function normalizePhone(p){
+  p = p.replace(/\D/g,'');
+  if(p.startsWith("08")){
+    p = "62" + p.substring(1);
+  }
+  return p;
+}
+
     function updateUIAuth() {
 
     // Reset semua nav admin dulu
