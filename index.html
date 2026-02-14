@@ -382,7 +382,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8U7jqVNHWQUdd7xYJle8D1PTxnFboQxhVeu9qzUnMLGJWTEECbL2mgR09Vi8bnrCOsA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7HS7dFMWHEFXIpq1_l0fI671FCjuSmO2gkeW2OQNK2c6g4k1_uGPlnRkmCMI_c79cZg/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -933,57 +933,7 @@ function updatePayment(rowId, type, amount) {
         document.getElementById('tab-login').className = m === 'login' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
         document.getElementById('tab-register').className = m === 'register' ? "flex-1 py-3 rounded-xl text-xs font-bold bg-white shadow-sm text-orange-600" : "flex-1 py-3 rounded-xl text-xs font-bold text-gray-500";
     }
-    async function handleAuth() {
-
-  let phone = normalizePhone(
-    document.getElementById('auth-phone').value
-  );
-
-  const pin = document.getElementById('auth-pin').value;
-  const name = document.getElementById('auth-name').value;
-
-  if (!phone || !pin) {
-    alert("Nomor & PIN wajib diisi");
-    return;
-  }
-
-  showLoader(true, "Authenticating...");
-
-  injectScript(
-    `${SCRIPT_URL}?action=${authMode}`
-    + `&phone=${phone}`
-    + `&pin=${pin}`
-    + `&name=${encodeURIComponent(name)}`
-    + `&callback=authCallback`
-  );
-}
-
-
-
-   window.authCallback = (res) => {
-
-  showLoader(false);
-
-  if (!res || !res.success) {
-    alert(res.message || "Login gagal");
-    return;
-  }
-
-  currentUser = {
-    phone: normalizePhone(res.phone),
-    name: res.name,
-    role: res.role   // 🔥 INI YANG PENTING
-  };
-
-  localStorage.setItem(
-    'ghania_user',
-    JSON.stringify(currentUser)
-  );
-
-  updateUIAuth();
-  closeAuth();
-};
-
+   
 
 
  function updateUIAuth(){
