@@ -190,26 +190,85 @@
         </button>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl card-shadow space-y-4">
+    <div class="bg-white p-6 rounded-3xl card-shadow space-y-6">
 
-        <div class="grid grid-cols-2 gap-4 text-center">
-            <div class="bg-gray-50 p-4 rounded-xl">
-                <p class="text-xs text-gray-400 font-bold">Total Order</p>
-                <p id="r-total-order" class="text-xl font-black text-orange-600">Rp 0</p>
-            </div>
+  <!-- TOTAL ORDER -->
+  <div class="bg-purple-50 p-4 rounded-xl text-center">
+    <p class="text-xs font-bold text-gray-500">Total Jumlah Pesanan</p>
+    <p id="r-total-row" class="text-2xl font-black text-purple-600">0</p>
+  </div>
 
-            <div class="bg-gray-50 p-4 rounded-xl">
-                <p class="text-xs text-gray-400 font-bold">Total Lunas</p>
-                <p id="r-total-lunas" class="text-xl font-black text-green-600">Rp 0</p>
-            </div>
-        </div>
+  <!-- STATUS BAYAR -->
+  <div>
+    <p class="text-xs font-bold text-gray-500 mb-2">Status Pembayaran</p>
+    <div class="grid grid-cols-3 gap-3 text-center">
 
-        <div class="bg-gray-50 p-4 rounded-xl">
-            <p class="text-xs text-gray-400 font-bold mb-2">Jumlah Pesanan</p>
-            <p id="r-total-transaksi" class="text-lg font-black text-gray-800">0</p>
-        </div>
+      <div class="bg-green-50 p-3 rounded-xl">
+        <p class="text-[10px]">Lunas</p>
+        <p id="r-lunas-count" class="font-black text-green-600">0</p>
+      </div>
+
+      <div class="bg-yellow-50 p-3 rounded-xl">
+        <p class="text-[10px]">DP</p>
+        <p id="r-dp-count" class="font-black text-yellow-600">0</p>
+      </div>
+
+      <div class="bg-red-50 p-3 rounded-xl">
+        <p class="text-[10px]">Belum Bayar</p>
+        <p id="r-belum-count" class="font-black text-red-600">0</p>
+      </div>
 
     </div>
+  </div>
+
+  <!-- STATUS TRACKING -->
+  <div>
+    <p class="text-xs font-bold text-gray-500 mb-2">Status Produksi</p>
+    <div class="grid grid-cols-3 gap-3 text-center">
+
+      <div class="bg-gray-100 p-3 rounded-xl">
+        <p class="text-[10px]">PO Masuk</p>
+        <p id="r-po-count" class="font-black text-gray-600">0</p>
+      </div>
+
+      <div class="bg-blue-50 p-3 rounded-xl">
+        <p class="text-[10px]">Proses Baking</p>
+        <p id="r-baking-count" class="font-black text-blue-600">0</p>
+      </div>
+
+      <div class="bg-green-50 p-3 rounded-xl">
+        <p class="text-[10px]">Hantaran Diterima</p>
+        <p id="r-diterima-count" class="font-black text-green-600">0</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOTAL SISA -->
+  <div class="bg-red-50 p-4 rounded-xl text-center">
+    <p class="text-xs font-bold text-gray-500">Total Sisa Belum Dibayar</p>
+    <p id="r-total-sisa" class="text-xl font-black text-red-600">Rp 0</p>
+  </div>
+
+</div>
+<!-- TOTAL NOMINAL -->
+<div>
+  <p class="text-xs font-bold text-gray-500 mb-2">Total Nominal</p>
+  <div class="grid grid-cols-2 gap-3 text-center">
+
+    <div class="bg-indigo-50 p-4 rounded-xl">
+      <p class="text-[11px]">Total Orders</p>
+      <p id="r-total-order" class="font-black text-indigo-600">Rp 0</p>
+    </div>
+
+    <div class="bg-green-50 p-4 rounded-xl">
+      <p class="text-[11px]">Total Bayar</p>
+      <p id="r-total-bayar" class="font-black text-green-600">Rp 0</p>
+    </div>
+
+  </div>
+</div>
+
 
 </main>
 
@@ -1641,112 +1700,69 @@ function changePage(page){
 }
 
 function fetchReportData() {
-  showLoader(true, "Memuat laporan...");
   injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=reportCb`);
 }
 
+window.reportCb = function(res) {
 
-
-window.reportCb = (res) => {
-  showLoader(false);
-
-  if (!res.success || !res.data) {
-    alert("Gagal memuat data laporan");
-    return;
-  }
+  if (!res.success || !res.data) return;
 
   reportDataGlobal = res.data;
 
-  populateMonthFilter(reportDataGlobal);
+  let totalRow = reportDataGlobal.length;
 
-  // ✅ DEFAULT tampil semua dulu
-  calculateReport(reportDataGlobal);
-};
+  let lunas = 0;
+  let dp = 0;
+  let belum = 0;
 
-function calculateReport(data) {
+  let po = 0;
+  let baking = 0;
+  let diterima = 0;
 
-  let totalOrder = 0;
-  let totalSudahBayar = 0;
   let totalSisa = 0;
-  let totalTransaksi = data.length;
 
-  data.forEach(o => {
+  let totalOrder = 0;   // 🔥 BARU
+  let totalBayar = 0;   // 🔥 BARU
 
-    const order = Number(o.total_order || 0);   // R
-    const bayar = Number(o.total_bayar || 0);   // U
-    const sisa  = Number(o.total || 0);         // V
+  reportDataGlobal.forEach(o => {
 
-    totalOrder += order;
-    totalSudahBayar += bayar;
-    totalSisa += sisa;
+    // === STATUS BAYAR
+    if (o.status_bayar === "Lunas") lunas++;
+    else if (o.status_bayar === "DP") dp++;
+    else belum++;
 
+    // === TRACKING
+    if (o.tracking === "PO Masuk") po++;
+    if (o.tracking === "Proses Baking") baking++;
+    if (o.tracking === "Hantaran Diterima") diterima++;
+
+    // === NOMINAL
+    totalSisa += Number(o.sisa || 0);
+    totalOrder += Number(o.total_order || 0);   // 🔥 KOLOM R
+    totalBayar += Number(o.total_bayar || 0);   // 🔥 KOLOM U
   });
 
-  document.getElementById("r-total-order").innerText =
-    "Rp " + totalOrder.toLocaleString("id-ID");
+  // === SET UI
 
-  document.getElementById("r-total-lunas").innerText =
-    "Rp " + totalSudahBayar.toLocaleString("id-ID");
+  document.getElementById("r-total-row").innerText = totalRow;
+
+  document.getElementById("r-lunas-count").innerText = lunas;
+  document.getElementById("r-dp-count").innerText = dp;
+  document.getElementById("r-belum-count").innerText = belum;
+
+  document.getElementById("r-po-count").innerText = po;
+  document.getElementById("r-baking-count").innerText = baking;
+  document.getElementById("r-diterima-count").innerText = diterima;
 
   document.getElementById("r-total-sisa").innerText =
     "Rp " + totalSisa.toLocaleString("id-ID");
 
-  document.getElementById("r-total-transaksi").innerText =
-    totalTransaksi;
-}
+  document.getElementById("r-total-order").innerText =
+    "Rp " + totalOrder.toLocaleString("id-ID");
 
-
-function populateMonthFilter(data) {
-
-  const select = document.getElementById("filter-bulan");
-
-  // reset
-  select.innerHTML = `<option value="">Semua Bulan</option>`;
-
-  const months = new Set();
-
-  data.forEach(o => {
-    if (!o.timestamp) return;
-
-    const d = new Date(o.timestamp);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-    months.add(key);
-  });
-
-  Array.from(months).sort().forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m;
-    opt.textContent = m;
-    select.appendChild(opt);
-  });
-}
-
-function applyMonthFilter() {
-
-  const val = document.getElementById("filter-bulan").value;
-
-  // kalau kosong = tampil semua
-  if (!val) {
-    calculateReport(reportDataGlobal);
-    return;
-  }
-
-  const [year, month] = val.split("-");
-
-  const filtered = reportDataGlobal.filter(o => {
-
-    if (!o.timestamp) return false;
-
-    const d = new Date(o.timestamp);
-
-    return (
-      d.getFullYear() == year &&
-      (d.getMonth()+1) == month
-    );
-  });
-
-  calculateReport(filtered);
-}
+  document.getElementById("r-total-bayar").innerText =
+    "Rp " + totalBayar.toLocaleString("id-ID");
+};
 
 let adminIdleTimer;
 const ADMIN_TIMEOUT = 1 * 60 * 1000; // 1 menit
