@@ -1110,33 +1110,40 @@ function fetchUserHistory() {
 }
 
 function renderTermin(o) {
-  // Jika bukan sistem DP
+
   if (!o.payment_type || !o.payment_type.toLowerCase().includes("dp")) {
     return "";
   }
 
-  const total = Number(o.total || 0);
+  const total = Number(o.total_order || 0);
+  const totalBayar = Number(o.total_bayar || 0);
+  const sisa = Number(o.sisa || 0);
 
-  // Ambil DP jika ada, kalau tidak hitung 50%
-  const dp = Number(o.dp || (total * 0.5));
-  const sisa = total - dp;
-
-  // Jika sudah lunas
   if (o.status_bayar === "Lunas") {
     return `
       <div class="text-[10px] text-green-600 font-bold">
         💰 Pembayaran LUNAS
-      </div>`;
+      </div>
+    `;
   }
 
   return `
     <div class="bg-orange-50 rounded-xl p-2 text-[10px] space-y-1">
-      <div>💳 DP dibayar: <b>Rp ${dp.toLocaleString("id-ID")}</b></div>
-      <div>⏳ Sisa pelunasan: <b class="text-red-600">
-        Rp ${sisa.toLocaleString("id-ID")}
-      </b></div>
-    </div>`;
+      <div>💳 Total dibayar:
+        <b class="text-green-600">
+          Rp ${totalBayar.toLocaleString("id-ID")}
+        </b>
+      </div>
+
+      <div>⏳ Sisa pelunasan:
+        <b class="text-red-600">
+          Rp ${sisa.toLocaleString("id-ID")}
+        </b>
+      </div>
+    </div>
+  `;
 }
+
 
 
 window.historyCb = (res) => {
@@ -1178,7 +1185,7 @@ window.historyCb = (res) => {
         </p>
 
         <p class="font-bold text-sm">
-  Rp ${Number(o.total).toLocaleString("id-ID")}
+  Rp ${Number(o.total_order).toLocaleString("id-ID")}
 </p>
 
 ${renderTermin(o)}
