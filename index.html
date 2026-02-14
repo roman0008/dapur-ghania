@@ -382,7 +382,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqhDcCI6vAVstemvXDaFDrDwgChbt4gnyuoCg22lDrRACd1XJMeGeEv5UKmTmtzoG1hw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwThw49joWUlinRsNnVJF5gVNLIW5Lmb9hBRsqWmnotc7ejUX1dBd0JC70nlm766K3h8g/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -400,6 +400,20 @@
 
     
     window.onload = () => {
+  updateUIAuth();
+  fetchProducts();
+};
+window.onload = () => {
+
+  try{
+    currentUser = JSON.parse(
+      localStorage.getItem("ghania_user")
+    );
+  }catch(e){
+    localStorage.removeItem("ghania_user");
+    currentUser = null;
+  }
+
   updateUIAuth();
   fetchProducts();
 };
@@ -871,7 +885,7 @@ function updatePayment(rowId, type, amount) {
   }
 
   // SAMAKAN validasi dengan showPage
-  if (currentUser.phone !== ADMIN_WA) {
+  if (currentUser.role !== "ADMIN") {
     alert("Akses ditolak");
     return;
   }
@@ -924,16 +938,22 @@ function updatePayment(rowId, type, amount) {
     }
     async function handleAuth() {
 
-  let phone = normalizePhone(document.getElementById('auth-phone').value);
+  let phone = normalizePhone(
+    document.getElementById('auth-phone').value
+  );
+
   const pin = document.getElementById('auth-pin').value;
   const name = document.getElementById('auth-name').value;
 
-  if(!phone || !pin) return;
+  if (!phone || !pin) {
+    alert("Nomor & PIN wajib diisi");
+    return;
+  }
 
   showLoader(true, "Authenticating...");
 
   injectScript(
-    `${SCRIPT_URL}?action=${phone===ADMIN_WA?'loginAdmin':authMode}`
+    `${SCRIPT_URL}?action=${authMode}`
     + `&phone=${phone}`
     + `&pin=${pin}`
     + `&name=${encodeURIComponent(name)}`
@@ -941,62 +961,148 @@ function updatePayment(rowId, type, amount) {
   );
 }
 
-    window.authCallback = (res) => {
-        showLoader(false);
-        if(res.success) {
-            currentUser = {
-  phone: normalizePhone(document.getElementById('auth-phone').value.trim()),
-  name: (res.name || document.getElementById('auth-name').value).trim()
+
+
+   window.authCallback = (res) => {
+
+  showLoader(false);
+
+  if (!res || !res.success) {
+    alert(res.message || "Login gagal");
+    return;
+  }
+
+  currentUser = {
+    phone: normalizePhone(res.phone),
+    name: res.name,
+    role: res.role   // 🔥 INI YANG PENTING
+  };
+
+  localStorage.setItem(
+    'ghania_user',
+    JSON.stringify(currentUser)
+  );
+
+  updateUIAuth();
+  closeAuth();
 };
 
 
-            localStorage.setItem('ghania_user', JSON.stringify(currentUser));
-            updateUIAuth(); closeAuth();
-        } else alert(res.message);
-    };
-    
-    function normalizePhone(p){
-  p = p.replace(/\D/g,'');
-  if(p.startsWith("08")){
-    p = "62" + p.substring(1);
+
+ function updateUIAuth(){
+
+  const loginBtn   = document.getElementById("btn-login-trigger");
+  const profileBtn = document.getElementById("btn-profile-trigger");
+
+  document.getElementById("nav-admin").classList.add("hidden");
+  document.getElementById("nav-products").classList.add("hidden");
+  document.getElementById("nav-report").classList.add("hidden");
+
+  if (!currentUser) {
+    loginBtn.classList.remove("hidden");
+    profileBtn.classList.add("hidden");
+    return;
   }
-  return p;
+
+  loginBtn.classList.add("hidden");
+  profileBtn.classList.remove("hidden");
+
+  document.getElementById("display-name").innerText =
+    currentUser.name.split(" ")[0];
+
+  document.getElementById("main-nav").classList.remove("hidden");
+
+  if (currentUser.role === "ADMIN") {
+    document.getElementById("nav-admin").classList.remove("hidden");
+    document.getElementById("nav-products").classList.remove("hidden");
+    document.getElementById("nav-report").classList.remove("hidden");
+  }
 }
 
-    function updateUIAuth() {
 
-    // Reset semua nav admin dulu
-    document.getElementById('nav-admin').classList.add('hidden');
-    document.getElementById('nav-products').classList.add('hidden');
-    document.getElementById('nav-report').classList.add('hidden');
+/* =========================
+   AUTH SYSTEM STABLE
+========================= */
 
-    if(currentUser) {
+function normalizePhone(phone) {
+  if (!phone) return "";
+  phone = phone.replace(/\D/g, "");
 
-        document.getElementById('btn-login-trigger').classList.add('hidden');
-        document.getElementById('btn-profile-trigger').classList.remove('hidden');
-        document.getElementById('main-nav').classList.remove('hidden');
+  if (phone.startsWith("0")) {
+    phone = "62" + phone.substring(1);
+  }
 
-        document.getElementById('display-name').innerText =
-            currentUser.name.split(' ')[0];
+  if (!phone.startsWith("62")) {
+    phone = "62" + phone;
+  }
 
-        document.getElementById('f-nama').value =
-            currentUser.name;
-
-        // ✅ HANYA ADMIN
-        if(currentUser.phone === ADMIN_WA) {
-            document.getElementById('nav-admin').classList.remove('hidden');
-            document.getElementById('nav-products').classList.remove('hidden');
-            document.getElementById('nav-report').classList.remove('hidden');
-        }
-    }
+  return phone;
 }
+
+async function handleAuth() {
+
+  const phone = normalizePhone(
+    document.getElementById("auth-phone").value
+  );
+
+  const pin  = document.getElementById("auth-pin").value;
+  const name = document.getElementById("auth-name").value;
+
+  if (!phone || !pin) {
+    alert("Nomor & PIN wajib diisi");
+    return;
+  }
+
+  showLoader(true, "Memproses...");
+
+  injectScript(
+    `${SCRIPT_URL}?action=${authMode}`
+    + `&phone=${phone}`
+    + `&pin=${pin}`
+    + `&name=${encodeURIComponent(name)}`
+    + `&callback=authCb`
+  );
+}
+
+window.authCb = function(res){
+
+  showLoader(false);
+
+  if (!res || !res.success) {
+    alert(res?.message || "Login gagal");
+    return;
+  }
+
+  currentUser = {
+    phone: normalizePhone(res.phone),
+    name: res.name || "User",
+    role: res.role || "USER"
+  };
+
+  localStorage.setItem(
+    "ghania_user",
+    JSON.stringify(currentUser)
+  );
+
+  updateUIAuth();
+  closeAuth();
+};
+
+
 
     function handleUserAction() { if(confirm("Logout?")) { localStorage.clear(); location.reload(); } }
-    function injectScript(url) {
+    function injectScript(url){
+
+  const old = document.getElementById("jsonp-script");
+  if (old) old.remove();
+
   const s = document.createElement("script");
   s.src = url + "&_=" + Date.now();
+  s.id  = "jsonp-script";
+
   document.body.appendChild(s);
 }
+
 
 
     function showLoader(v, t) { document.getElementById('loader').classList.toggle('hidden', !v); document.getElementById('loader').classList.toggle('flex', v); document.getElementById('loader-text').innerText = t; }
@@ -1066,7 +1172,8 @@ function showPage(page) {
 
   // 🔒 Proteksi admin dulu
   if(page === "admin" || page === "products" || page === "report"){
-    if(!currentUser || currentUser.phone !== ADMIN_WA){
+    if(!currentUser || currentUser.role !== "ADMIN")
+{
       alert("Akses ditolak");
       return;
     }
