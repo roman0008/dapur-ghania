@@ -1741,7 +1741,31 @@ function applyMonthFilter() {
   calculateReport(filtered);
 }
 
+let adminIdleTimer;
+const ADMIN_TIMEOUT = 5 * 60 * 1000; // 5 menit
 
+function resetAdminTimer() {
+    clearTimeout(adminIdleTimer);
+
+    adminIdleTimer = setTimeout(() => {
+        alert("Sesi admin berakhir karena tidak aktif 5 menit.");
+        adminLogout();
+    }, ADMIN_TIMEOUT);
+}
+
+function adminLogout() {
+    localStorage.removeItem("adminPhone");
+    localStorage.removeItem("adminRole");
+    location.reload(); // kembali ke login
+}
+
+// Event aktivitas user
+["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
+    document.addEventListener(event, resetAdminTimer);
+});
+
+// Mulai timer saat halaman admin load
+resetAdminTimer();
 
 </script>
 <div id="modal-product"
