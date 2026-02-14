@@ -382,7 +382,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwThw49joWUlinRsNnVJF5gVNLIW5Lmb9hBRsqWmnotc7ejUX1dBd0JC70nlm766K3h8g/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8U7jqVNHWQUdd7xYJle8D1PTxnFboQxhVeu9qzUnMLGJWTEECbL2mgR09Vi8bnrCOsA/exec";
     const ADMIN_WA = "62895334016084";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -399,10 +399,7 @@
 
 
     
-    window.onload = () => {
-  updateUIAuth();
-  fetchProducts();
-};
+ 
 window.onload = () => {
 
   try{
@@ -1024,6 +1021,10 @@ function updatePayment(rowId, type, amount) {
    AUTH SYSTEM STABLE
 ========================= */
 
+/* =========================
+   AUTH FINAL FIX
+========================= */
+
 function normalizePhone(phone) {
   if (!phone) return "";
   phone = phone.replace(/\D/g, "");
@@ -1039,7 +1040,7 @@ function normalizePhone(phone) {
   return phone;
 }
 
-async function handleAuth() {
+function handleAuth() {
 
   const phone = normalizePhone(
     document.getElementById("auth-phone").value
@@ -1053,18 +1054,18 @@ async function handleAuth() {
     return;
   }
 
-  showLoader(true, "Memproses...");
+  showLoader(true, "Login...");
 
   injectScript(
     `${SCRIPT_URL}?action=${authMode}`
     + `&phone=${phone}`
     + `&pin=${pin}`
     + `&name=${encodeURIComponent(name)}`
-    + `&callback=authCb`
+    + `&callback=authLoginCb`
   );
 }
 
-window.authCb = function(res){
+window.authLoginCb = function(res){
 
   showLoader(false);
 
@@ -1084,9 +1085,12 @@ window.authCb = function(res){
     JSON.stringify(currentUser)
   );
 
+  console.log("LOGIN SUCCESS:", currentUser);
+
   updateUIAuth();
   closeAuth();
 };
+
 
 
 
