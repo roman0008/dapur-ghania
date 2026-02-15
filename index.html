@@ -1448,27 +1448,6 @@ function closeCheckout() {
 /* =========================
    DP CALCULATION
 ========================= */
-function updateCheckoutDP() {
-  const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
-  const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
-
-  const dp = Math.round(total * 0.5);
-  document.getElementById("dp-amount-label").innerText =
-    dp.toLocaleString("id-ID");
-  document.getElementById("re-amount-label").innerText =
-    (total - dp).toLocaleString("id-ID");
-}
-
-function updatePaymentUI() {
-  const val = document.getElementById("f-bayar").value;
-  document.getElementById("dp-info-container")
-    .classList.toggle("hidden", val !== "DP 50%");
-  updateCheckoutDP();
-}
-
-/* =========================
-   SUBMIT ORDER
-========================= */
 function submitOrder() {
   const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
   if (cart.length === 0) return;
@@ -1479,6 +1458,21 @@ function submitOrder() {
 
   const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
 
+  const paymentType = document.getElementById("f-bayar").value;
+
+  // ===============================
+  // KOREKSI LOGIKA FULL PAYMENT
+  // ===============================
+
+  let totalBayar = 0;
+  let sisa = total;
+
+  if (paymentType === "Full Payment") {
+    totalBayar = total;  // dianggap bayar full
+    sisa = 0;
+  } 
+  // jika DP 50% biarkan sistem Anda yang sudah jalan
+
   showLoader(true, "Mengirim pesanan...");
 
   const formData = new FormData();
@@ -1486,7 +1480,12 @@ function submitOrder() {
   formData.append("phone", currentUser.phone);
   formData.append("items", items);
   formData.append("total", total);
-  formData.append("payment_type", document.getElementById("f-bayar").value);
+  formData.append("payment_type", paymentType);
+
+  // TAMBAHAN INI SAJA
+  formData.append("total_bayar", totalBayar);
+  formData.append("sisa", sisa);
+
   formData.append("address", document.getElementById("f-alamat").value);
   formData.append("date", document.getElementById("f-tgl").value);
   formData.append("time", document.getElementById("f-jam").value);
@@ -1516,6 +1515,7 @@ function submitOrder() {
     alert("❌ Gagal koneksi server");
   });
 }
+
 
  /**
  * REMINDER WA H-1 PELUNASAN
