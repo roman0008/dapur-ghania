@@ -1054,8 +1054,10 @@ function updatePayment(rowId, type, amount) {
     function injectScript(url) {
   const s = document.createElement("script");
   s.src = url + "&_=" + Date.now();
+  s.onload = () => s.remove();
   document.body.appendChild(s);
 }
+
 
 
     function showLoader(v, t) { document.getElementById('loader').classList.toggle('hidden', !v); document.getElementById('loader').classList.toggle('flex', v); document.getElementById('loader-text').innerText = t; }
@@ -1474,6 +1476,8 @@ function submitOrder() {
   // jika DP 50% biarkan sistem Anda yang sudah jalan
 
   showLoader(true, "Mengirim pesanan...");
+  const btn = event.target;
+  btn.disabled = true;
 
   const formData = new FormData();
   formData.append("name", currentUser.name);
