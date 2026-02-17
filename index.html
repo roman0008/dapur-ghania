@@ -1834,7 +1834,8 @@ resetAdminTimer();
   <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl 
               flex flex-col max-h-[90vh]">
 
-    <div class="p-6 border-b flex justify-between items-center bg-orange-50">
+    <!-- HEADER -->
+    <div class="p-6 border-b flex justify-between items-center bg-orange-50 shrink-0">
       <h2 class="font-black text-orange-800 text-sm uppercase">
         Detail & Edit Pesanan
       </h2>
@@ -1843,7 +1844,8 @@ resetAdminTimer();
       </button>
     </div>
 
-    <div class="p-6 space-y-4 text-xs">
+    <!-- BODY (SCROLLABLE) -->
+    <div class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
 
       <div>
         <label class="font-bold">Invoice</label>
@@ -1860,42 +1862,43 @@ resetAdminTimer();
         <input type="number" id="ad-ongkir"
           class="w-full p-2 border rounded mt-1">
       </div>
+
       <!-- INFO PEMBAYARAN -->
-<div class="bg-gray-50 p-4 rounded-2xl space-y-2 text-xs">
+      <div class="bg-gray-50 p-4 rounded-2xl space-y-2 text-xs">
 
-  <div class="flex justify-between">
-    <span class="font-bold text-gray-500">Total Order</span>
-    <span id="ad-info-total" class="font-black text-gray-800">Rp 0</span>
-  </div>
+        <div class="flex justify-between">
+          <span class="font-bold text-gray-500">Total Order</span>
+          <span id="ad-info-total" class="font-black text-gray-800">Rp 0</span>
+        </div>
 
-  <div class="flex justify-between">
-    <span class="font-bold text-green-600">Sudah Dibayar</span>
-    <span id="ad-info-paid" class="font-black text-green-600">Rp 0</span>
-  </div>
+        <div class="flex justify-between">
+          <span class="font-bold text-green-600">Sudah Dibayar</span>
+          <span id="ad-info-paid" class="font-black text-green-600">Rp 0</span>
+        </div>
 
-  <div class="flex justify-between">
-    <span class="font-bold text-red-600">Sisa Bayar</span>
-    <span id="ad-info-sisa" class="font-black text-red-600">Rp 0</span>
-  </div>
+        <div class="flex justify-between">
+          <span class="font-bold text-red-600">Sisa Bayar</span>
+          <span id="ad-info-sisa" class="font-black text-red-600">Rp 0</span>
+        </div>
 
-</div>
+      </div>
 
       <div>
         <label class="font-bold">Input DP</label>
         <input type="number"
-       id="ad-dp"
-       class="w-full p-2 border rounded mt-1"
-       placeholder="Input DP"
-       oninput="previewPaymentChange()">
+          id="ad-dp"
+          class="w-full p-2 border rounded mt-1"
+          placeholder="Input DP"
+          oninput="previewPaymentChange()">
       </div>
 
       <div>
         <label class="font-bold">Input Pelunasan</label>
         <input type="number"
-       id="ad-pelunasan"
-       class="w-full p-2 border rounded mt-1"
-       placeholder="Input Pelunasan"
-       oninput="previewPaymentChange()">
+          id="ad-pelunasan"
+          class="w-full p-2 border rounded mt-1"
+          placeholder="Input Pelunasan"
+          oninput="previewPaymentChange()">
       </div>
 
       <div>
@@ -1919,14 +1922,19 @@ resetAdminTimer();
         </select>
       </div>
 
+    </div>
+
+    <!-- FOOTER (TOMBOL TETAP TERLIHAT) -->
+    <div class="p-4 border-t bg-white shrink-0">
       <button onclick="saveAdminDetail()"
         class="w-full bg-orange-600 text-white py-3 rounded-xl font-black">
         💾 Simpan Perubahan
       </button>
-
     </div>
+
   </div>
 </div>
+
 
 </body>
 </html>
