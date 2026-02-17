@@ -1499,21 +1499,26 @@ function submitOrder() {
     method: "POST",
     body: formData
   })
-  .then(r => r.text())
-  .then(res => {
-    showLoader(false);
+ .then(r => r.text())
+.then(res => {
 
-    if (!res.includes("Success")) {
-      alert("❌ Gagal membuat pesanan");
-      return;
-    }
+  res = res.trim();   // 🔥 WAJIB
 
-    alert("✅ Pesanan berhasil dibuat");
-    localStorage.removeItem(CART_KEY);
-    updateCartBadge();
-    closeCheckout();
-    showPage("history");
-  })
+  showLoader(false);
+
+  if (res !== "Success") {
+    console.log("Response server:", res); // untuk debug
+    alert("❌ Gagal membuat pesanan");
+    return;
+  }
+
+  alert("✅ Pesanan berhasil dibuat");
+  localStorage.removeItem(CART_KEY);
+  updateCartBadge();
+  closeCheckout();
+  showPage("history");
+})
+
   .catch(() => {
     showLoader(false);
     alert("❌ Gagal koneksi server");
