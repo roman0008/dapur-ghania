@@ -555,9 +555,60 @@ window.productCb = (res) => {
 
 
   /* =========================
-   KELOLA PRODUK (ADMIN)
-   SINKRON DENGAN BACKEND
+   pop up detail admin panel
 ========================= */
+let currentAdminOrder = null;
+
+function openAdminDetail(order){
+  currentAdminOrder = order;
+
+  document.getElementById("ad-invoice").innerText = order.invoice;
+  document.getElementById("ad-total").innerText =
+    "Rp " + Number(order.total_order).toLocaleString("id-ID");
+
+  document.getElementById("ad-ongkir").value = order.ongkir || 0;
+  document.getElementById("ad-status").value = order.status_bayar;
+  document.getElementById("ad-tracking").value = order.tracking;
+
+  document.getElementById("ad-dp").value = "";
+  document.getElementById("ad-pelunasan").value = "";
+
+  document.getElementById("modal-admin-detail")
+    .classList.remove("hidden");
+}
+
+function closeAdminDetail(){
+  document.getElementById("modal-admin-detail")
+    .classList.add("hidden");
+}
+
+function saveAdminDetail(){
+
+  const rowId = currentAdminOrder.rowId;
+
+  const ongkir = document.getElementById("ad-ongkir").value;
+  const dp = document.getElementById("ad-dp").value;
+  const pelunasan = document.getElementById("ad-pelunasan").value;
+  const status = document.getElementById("ad-status").value;
+  const tracking = document.getElementById("ad-tracking").value;
+
+  if(ongkir){
+    updateOngkir(rowId, ongkir);
+  }
+
+  if(dp){
+    updatePayment(rowId, 'dp', dp);
+  }
+
+  if(pelunasan){
+    updatePayment(rowId, 'pelunasan', pelunasan);
+  }
+
+  updateStatus(rowId, status);
+  updateTracking(rowId, tracking);
+
+  closeAdminDetail();
+}
 
 
 /* =========================
@@ -729,14 +780,16 @@ function lazyLoadImages() {
         injectScript(`${SCRIPT_URL}?action=getAllOrders&callback=adminCb`);
     }
 
-    window.adminCb = (res) => {
+    
+window.adminCb = (res) => {
   if(!res.data) return;
 
   document.getElementById('admin-orders-table').innerHTML =
     res.data.slice(
-  (currentPage-1)*rowsPerPage,
-  currentPage*rowsPerPage
-).map(o => `
+      (currentPage-1)*rowsPerPage,
+      currentPage*rowsPerPage
+    ).map(o => `
+
 <tr class="hover:bg-gray-50">
 
   <td class="p-4 font-bold text-orange-600">${o.invoice}</td>
@@ -745,109 +798,34 @@ function lazyLoadImages() {
 
   <td class="p-4">
     <p class="font-black">
-    Rp ${Number(o.total_order || 0).toLocaleString("id-ID")}
+      Rp ${Number(o.total_order || 0).toLocaleString("id-ID")}
     </p>
+  </td>
 
-    <p class="text-[9px] text-gray-400">${o.payment_type}</p>
+  <td class="p-4 text-[10px]">
+    Rp ${Number(o.ongkir || 0).toLocaleString("id-ID")}
+  </td>
+
+  <td class="p-4 text-[10px]">
+    ${o.status_bayar}
+  </td>
+
+  <td class="p-4 text-[10px]">
+    ${o.tracking}
   </td>
 
   <td class="p-4">
-    <input type="number"
-      value="${o.ongkir || 0}"
-      onchange="updateOngkir(${o.rowId}, this.value)"
-      class="w-20 p-1 text-[10px] font-bold border rounded">
-  </td>
-<td class="p-4 space-y-2 text-[10px]">
-
-  <div class="bg-gray-50 p-2 rounded-lg space-y-1">
-    
-    ${(() => {
-      const totalOrder = Number(o.total_order || 0);
-      const totalBayar = Number(o.total_bayar || 0);
-      const sisa = Number(o.sisa || 0);
-
-      return `
-        <div>Total Order:
-          <b>Rp ${totalOrder.toLocaleString("id-ID")}</b>
-        </div>
-
-        <div>Total Bayar:
-          <b class="text-green-600">
-            Rp ${totalBayar.toLocaleString("id-ID")}
-          </b>
-        </div>
-
-        <div class="${sisa > 0 ? 'text-red-600' : 'text-green-600'} font-bold">
-          Sisa:
-          Rp ${sisa.toLocaleString("id-ID")}
-        </div>
-      `;
-    })()}
-
-  </div>
-
-  <input type="number"
-    placeholder="Input DP"
-    onchange="updatePayment(${o.rowId}, 'dp', this.value)"
-    class="w-24 p-1 text-[10px] font-bold border rounded">
-
-  <input type="number"
-    placeholder="Input Pelunasan"
-    onchange="updatePayment(${o.rowId}, 'pelunasan', this.value)"
-    class="w-24 p-1 text-[10px] font-bold border rounded">
-
-</td>
-
- <td class="p-4">
-  <select onchange="updateStatus(${o.rowId}, this.value)"
-    class="text-[10px] font-black p-1 bg-gray-100 rounded">
-
-    <option value="Belum Bayar" ${o.status_bayar==='Belum Bayar'?'selected':''}>
-      ❌ Belum Bayar
-    </option>
-
-    <option value="DP" ${o.status_bayar==='DP'?'selected':''}>
-      💳 Sudah Bayar DP
-    </option>
-
-    <option value="Lunas" ${o.status_bayar==='Lunas'?'selected':''}>
-      ✅ Lunas
-    </option>
-
-  </select>
-</td>
-
-
-
-  <td class="p-4">
-    <select onchange="updateTracking(${o.rowId}, this.value)"
-      class="text-[10px] font-black p-1 bg-blue-50 rounded">
-      <option ${o.tracking==='PO Masuk'?'selected':''}>PO Masuk</option>
-      <option ${o.tracking==='Proses Baking'?'selected':''}>Proses Baking</option>
-      <option ${o.tracking==='Proses Kirim'?'selected':''}>Proses Kirim</option>
-      <option ${o.tracking==='Hantaran Diterima'?'selected':''}>Hantaran Diterima</option>
-    </select>
-  </td>
-
-  <td class="p-4">
-    <button
-  onclick="kirimInvoiceWA(this, ${o.rowId})"
-  class="wa-btn px-3 py-1 bg-green-600 text-white rounded
-         text-[11px] font-bold
-         transition-all duration-150
-         active:scale-95 active:bg-green-700
-         hover:bg-green-700
-         flex items-center gap-1">
-
-  <span class="wa-text">📲 Kirim WA</span>
-  <span class="wa-loader hidden animate-spin">⏳</span>
-</button>
-
+    <button onclick='openAdminDetail(${JSON.stringify(o)})'
+      class="px-3 py-1 bg-orange-600 text-white rounded text-[10px] font-bold">
+      Detail
+    </button>
   </td>
 
 </tr>
+
 `).join('');
- renderPagination(res.data.length);
+
+  renderPagination(res.data.length);
 };
 
    
@@ -1816,6 +1794,81 @@ resetAdminTimer();
         class="w-full mt-2 text-xs font-bold text-gray-400">
         Tutup
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DETAIL MODAL -->
+<div id="modal-admin-detail"
+  class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 modal-blur">
+
+  <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+
+    <div class="p-6 border-b flex justify-between items-center bg-orange-50">
+      <h2 class="font-black text-orange-800 text-sm uppercase">
+        Detail & Edit Pesanan
+      </h2>
+      <button onclick="closeAdminDetail()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4 text-xs">
+
+      <div>
+        <label class="font-bold">Invoice</label>
+        <div id="ad-invoice" class="text-orange-600 font-black"></div>
+      </div>
+
+      <div>
+        <label class="font-bold">Total Order</label>
+        <div id="ad-total"></div>
+      </div>
+
+      <div>
+        <label class="font-bold">Ongkir</label>
+        <input type="number" id="ad-ongkir"
+          class="w-full p-2 border rounded mt-1">
+      </div>
+
+      <div>
+        <label class="font-bold">Input DP</label>
+        <input type="number" id="ad-dp"
+          class="w-full p-2 border rounded mt-1">
+      </div>
+
+      <div>
+        <label class="font-bold">Input Pelunasan</label>
+        <input type="number" id="ad-pelunasan"
+          class="w-full p-2 border rounded mt-1">
+      </div>
+
+      <div>
+        <label class="font-bold">Status Bayar</label>
+        <select id="ad-status"
+          class="w-full p-2 border rounded mt-1">
+          <option value="Belum Bayar">Belum Bayar</option>
+          <option value="DP">DP</option>
+          <option value="Lunas">Lunas</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-bold">Tracking</label>
+        <select id="ad-tracking"
+          class="w-full p-2 border rounded mt-1">
+          <option>PO Masuk</option>
+          <option>Proses Baking</option>
+          <option>Proses Kirim</option>
+          <option>Hantaran Diterima</option>
+        </select>
+      </div>
+
+      <button onclick="saveAdminDetail()"
+        class="w-full bg-orange-600 text-white py-3 rounded-xl font-black">
+        💾 Simpan Perubahan
+      </button>
+
     </div>
   </div>
 </div>
