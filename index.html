@@ -564,37 +564,23 @@ function closeAdminDetail() {
 let currentAdminOrder = null;
 
 function openAdminDetail(order){
+
   currentAdminOrder = order;
 
-  const totalOrder =
-    Number(order.total_order || 0) +
-    Number(order.ongkir || 0);
-
-  const totalBayar = Number(order.total_bayar || 0);
-  const sisa = totalOrder - totalBayar;
-
-  document.getElementById("ad-invoice").innerText = order.invoice;
+  document.getElementById("ad-total").value = order.total_order || 0;
 
   document.getElementById("ad-info-total").innerText =
-    "Rp " + totalOrder.toLocaleString("id-ID");
+    "Rp " + Number(order.total_order || 0).toLocaleString("id-ID");
 
   document.getElementById("ad-info-paid").innerText =
-    "Rp " + totalBayar.toLocaleString("id-ID");
+    "Rp " + Number(order.total_bayar || 0).toLocaleString("id-ID");
 
   document.getElementById("ad-info-sisa").innerText =
-    "Rp " + sisa.toLocaleString("id-ID");
-
-  document.getElementById("ad-ongkir").value = order.ongkir || 0;
-  document.getElementById("ad-status").value = order.status_bayar;
-  document.getElementById("ad-tracking").value = order.tracking;
-
-  document.getElementById("ad-dp").value = "";
-  document.getElementById("ad-pelunasan").value = "";
+    "Rp " + Number(order.sisa || 0).toLocaleString("id-ID");
 
   document.getElementById("modal-admin-detail")
     .classList.remove("hidden");
 }
-
 
 /* =========================
   Update Otomatis Saat Admin Isi Nominal
