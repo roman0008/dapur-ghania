@@ -777,24 +777,29 @@ function lazyLoadImages() {
 
 /* ================= SAVE ================= */
 function saveAdminDetail() {
-  const total = parseInt(document.getElementById("ad-total").value) || 0;
-  const dp = parseInt(document.getElementById("ad-dp").value) || 0;
-  const pelunasan = parseInt(document.getElementById("ad-pelunasan").value) || 0;
+  const total = Number(document.getElementById("ad-total").value) || 0;
+  let dp = Number(document.getElementById("ad-dp").value) || 0;
+  let pelunasan = Number(document.getElementById("ad-pelunasan").value) || 0;
 
-  const sudahBayar = dp + pelunasan;
+  let sudahBayar = dp + pelunasan;
 
+  // Kalau lebih dari total, otomatis batasi
   if (sudahBayar > total) {
-    alert("Pembayaran melebihi total order!");
-    return;
+    pelunasan = total - dp;
+    sudahBayar = total;
   }
 
-  // Simpan ke object sementara (nanti kirim ke backend)
-  currentAdminOrder.nama = document.getElementById("ad-nama").value;
+  const sisa = total - sudahBayar;
+
+  // Update object
   currentAdminOrder.total = total;
   currentAdminOrder.dp = dp;
   currentAdminOrder.pelunasan = pelunasan;
+  currentAdminOrder.sudahBayar = sudahBayar;
+  currentAdminOrder.sisa = sisa;
+  currentAdminOrder.status = sisa === 0 ? "Lunas" : "DP";
 
-  alert("Perubahan disimpan (contoh frontend)");
+  alert("Perubahan berhasil disimpan!");
 
   closeAdminDetail();
 }
