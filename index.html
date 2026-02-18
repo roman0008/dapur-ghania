@@ -775,7 +775,29 @@ function lazyLoadImages() {
    HOOK LOGIN ADMIN
 ========================= */
 
+/* ================= SAVE ================= */
+function saveAdminDetail() {
+  const total = parseInt(document.getElementById("ad-total").value) || 0;
+  const dp = parseInt(document.getElementById("ad-dp").value) || 0;
+  const pelunasan = parseInt(document.getElementById("ad-pelunasan").value) || 0;
 
+  const sudahBayar = dp + pelunasan;
+
+  if (sudahBayar > total) {
+    alert("Pembayaran melebihi total order!");
+    return;
+  }
+
+  // Simpan ke object sementara (nanti kirim ke backend)
+  currentAdminOrder.nama = document.getElementById("ad-nama").value;
+  currentAdminOrder.total = total;
+  currentAdminOrder.dp = dp;
+  currentAdminOrder.pelunasan = pelunasan;
+
+  alert("Perubahan disimpan (contoh frontend)");
+
+  closeAdminDetail();
+}
 
     function fetchAdminOrders() {
         document.getElementById('admin-orders-table').innerHTML = `<tr><td colspan="8" class="p-10 text-center">Memuat...</td></tr>`;
