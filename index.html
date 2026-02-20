@@ -411,11 +411,30 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black uppercase text-gray-400">Alamat Lengkap</label>
-                    <textarea id="f-alamat" rows="2" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm"></textarea>
-                </div>
+                
+            </div>
+                <!-- Metode Pengiriman -->
+<div class="space-y-1">
+    <label class="text-[10px] font-black uppercase text-gray-400">
+        Metode Pengiriman
+    </label>
+
+    <select id="f-pengiriman"
+        onchange="togglePengiriman()"
+        class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm outline-none">
+
+        <option value="Kirim">🚚 Dikirim ke Alamat</option>
+        <option value="Ambil Sendiri">🏪 Ambil Sendiri</option>
+
+    </select>
+</div>
+               <div id="alamat-wrapper" class="space-y-1">
+    <label class="text-[10px] font-black uppercase text-gray-400">
+        Alamat Lengkap
+    </label>
+    <textarea id="f-alamat" rows="2"
+        class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm"></textarea>
+</div>
                 <!-- Catatan / Request -->
             <div class="mt-3">
               <label class="text-xs text-gray-500">
@@ -552,7 +571,16 @@ window.productCb = (res) => {
   }).join('');
 }
 
+function togglePengiriman(){
+  const metode = document.getElementById("f-pengiriman").value;
+  const alamatWrapper = document.getElementById("alamat-wrapper");
 
+  if(metode === "Ambil Sendiri"){
+    alamatWrapper.classList.add("hidden");
+  } else {
+    alamatWrapper.classList.remove("hidden");
+  }
+}
 
   /* =========================
    KELOLA PRODUK (ADMIN)
@@ -1461,7 +1489,13 @@ function submitOrder() {
   const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
 
   const paymentType = document.getElementById("f-bayar").value;
+const metodePengiriman = document.getElementById("f-pengiriman").value;
+const alamat = document.getElementById("f-alamat").value.trim();
 
+if(metodePengiriman === "Kirim" && !alamat){
+  alert("Alamat wajib diisi untuk pengiriman.");
+  return;
+}
   // ===============================
   // KOREKSI LOGIKA FULL PAYMENT
   // ===============================
