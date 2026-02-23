@@ -1647,41 +1647,20 @@ function formatPhone(num) {
   return clean;
 }
 
-function safeDate(dateStr) {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr; // fallback string
-  return d.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
+function safeDate(date){
+  if(!date) return "-";
+
+  // kalau sudah string yyyy-MM-dd dari backend
+  if(typeof date === "string"){
+    return date;
+  }
+
+  return String(date);
 }
 
-function safeTime(timeVal) {
-  if (!timeVal || timeVal === "-") return "-";
-
-  // Kalau datang sebagai Date object (1899 problem)
-  if (timeVal instanceof Date) {
-    return timeVal.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  }
-
-  // Kalau datang sebagai string ISO (1899-12-30T09:00...)
-  if (typeof timeVal === "string" && timeVal.includes("1899")) {
-    const d = new Date(timeVal);
-    if (!isNaN(d)) {
-      return d.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-  }
-
-  // Kalau string normal "09:00"
-  return timeVal.toString().slice(0,5);
+function safeTime(time){
+  if(!time) return "-";
+  return String(time);
 }
 // update pembayran pemesan
 function updatePayment(rowId, type, amount) {
