@@ -1236,6 +1236,17 @@ function renderTermin(o) {
 
 
 window.historyCb = (res) => {
+
+  // 🔥 TAMBAHAN PENTING
+  if (typeof res === "string") {
+    try {
+      res = JSON.parse(res);
+    } catch (e) {
+      console.error("Gagal parse JSON:", e);
+      return;
+    }
+  }
+
   const list = document.getElementById("history-list");
 
   if (!res.success || !res.data || res.data.length === 0) {
