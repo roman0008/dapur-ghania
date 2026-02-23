@@ -460,7 +460,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqvShPT_ltPZR-MiJ2YVHCErQdstFypIx2HBlUoJX2gTtDfa6INZOxOeA9lTGX78nOUA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwelQ5z_f_i7aKmwSIXfLXhbnc6-Jv-Ng6BCHACkSGhZMSr4wM3BVKyhOfjE7taluOQhg/exec";
     const ADMIN_WA = "6285888822270";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -1299,8 +1299,8 @@ ${renderTermin(o)}
         </div>
 
         <div class="text-[11px] text-gray-500 mt-2 space-y-1">
-  <div>📅 <b>Tanggal Kirim</b>: ${safeDate(o.date)}</div>
-  <div>⏰ <b>Jam Kirim</b>: ${safeTime(o.time)}</div>
+  <div>📅 <b>Tanggal Kirim</b>: ${o.date}</div>
+<div>⏰ <b>Jam Kirim</b>: ${o.time}</div>
 </div>
 
 
