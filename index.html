@@ -958,10 +958,10 @@ function updatePayment(rowId, type, amount) {
     return;
   }
 
-  if (currentUser.phone !== ADMIN_WA) {
-    alert("Akses ditolak");
-    return;
-  }
+  if (!currentUser || currentUser.phone !== ADMIN_WA) {
+  alert("Login sebagai admin terlebih dahulu");
+  return;
+}
 
   // 🔥 CLEAN ANGKA
   const raw = amount.toString();
