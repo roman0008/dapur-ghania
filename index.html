@@ -460,7 +460,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAY7eX8TS9xQvgUzecFzfsVOFY29Fs7Bx2a6gcUifADk_y-U-_kZUfcGOTjusJIY84fQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzY2vXEj2gGbi8LLhTbIsdMwEQZ1IIHhyre1PBvG6jBIrOr_TdEzTe627-9SY9mXKZDmg/exec";
     const ADMIN_WA = "6285888822270";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -618,20 +618,19 @@ function saveProduct() {
   showLoader(true, "Menyimpan produk...");
 
   const callbackName = "saveProductCb_" + Date.now();
-  window[callbackName] = function(res) {
-  showLoader(false);
+  window[callbackName] = function (res) {
+    showLoader(false);
 
-  if (!res || !res.success) {
-    alert("❌ Gagal update pembayaran");
-    return;
-  }
+    if (!res || !res.success) {
+      alert("❌ Gagal menyimpan produk");
+      return;
+    }
 
-  // 🔥 RESET INPUT
-  document.querySelectorAll("input[type='number']").forEach(i => i.value = "");
-
-  fetchAdminOrders();
-  delete window[callbackName];
-};
+    alert("✅ Produk berhasil disimpan");
+    resetProductForm();
+    fetchProducts();
+    delete window[callbackName];
+  };
 
   const params = new URLSearchParams({
   action: editProductId ? "updateProduct" : "addProduct",
@@ -950,18 +949,23 @@ function kirimInvoiceWA(btn, rowId) {
 
   document.body.appendChild(script);
 }
-console.log("SEND PAYMENT:", rowId, type, amount);
+
 function updatePayment(rowId, type, amount) {
 
-  if (!currentUser || currentUser.phone !== ADMIN_WA) {
-    alert("Login sebagai admin terlebih dahulu");
+  if (!currentUser) {
+    alert("Belum login");
     return;
   }
 
-  // bersihkan angka
-  amount = Number(String(amount).replace(/[^\d]/g, ""));
+  // SAMAKAN validasi dengan showPage
+  if (currentUser.phone !== ADMIN_WA) {
+    alert("Akses ditolak");
+    return;
+  }
 
-  if (!amount || amount <= 0) {
+  amount = Number(amount);
+
+  if (isNaN(amount) || amount <= 0) {
     alert("Nominal tidak valid");
     return;
   }
@@ -985,17 +989,14 @@ function updatePayment(rowId, type, amount) {
     delete window[callbackName];
   };
 
-  // 🔥 PAKAI URLSearchParams (AMAN 100%)
-  const params = new URLSearchParams({
-    action: "updatePayment",
-    rowId: rowId,
-    type: type,
-    amount: amount,
-    phone: currentUser.phone,
-    callback: callbackName
-  });
-
-  injectScript(SCRIPT_URL + "?" + params.toString());
+  injectScript(
+    `${SCRIPT_URL}?action=updatePayment`
+    + `&rowId=${rowId}`
+    + `&type=${type}`
+    + `&amount=${amount}`
+    + `&phone=${currentUser.phone}`
+    + `&callback=${callbackName}`
+  );
 }
 
     // --- Auth Logic ---
@@ -1235,17 +1236,6 @@ function renderTermin(o) {
 
 
 window.historyCb = (res) => {
-
-  // 🔥 TAMBAHAN PENTING
-  if (typeof res === "string") {
-    try {
-      res = JSON.parse(res);
-    } catch (e) {
-      console.error("Gagal parse JSON:", e);
-      return;
-    }
-  }
-
   const list = document.getElementById("history-list");
 
   if (!res.success || !res.data || res.data.length === 0) {
@@ -1309,8 +1299,8 @@ ${renderTermin(o)}
         </div>
 
         <div class="text-[11px] text-gray-500 mt-2 space-y-1">
-  <div>📅 <b>Tanggal Kirim</b>: ${o.date}</div>
-<div>⏰ <b>Jam Kirim</b>: ${o.time}</div>
+  <div>📅 <b>Tanggal Kirim</b>: ${safeDate(o.date)}</div>
+  <div>⏰ <b>Jam Kirim</b>: ${safeTime(o.time)}</div>
 </div>
 
 
@@ -1657,67 +1647,55 @@ function formatPhone(num) {
   return clean;
 }
 
-function safeDate(date){
-  if(!date) return "-";
-
-  // kalau sudah string yyyy-MM-dd dari backend
-  if(typeof date === "string"){
-    return date;
-  }
-
-  return String(date);
+function safeDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr; // fallback string
+  return d.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
 }
 
-function safeTime(time){
-  if(!time) return "-";
-  return String(time);
+function safeTime(timeVal) {
+  if (!timeVal || timeVal === "-") return "-";
+
+  // Kalau datang sebagai Date object (1899 problem)
+  if (timeVal instanceof Date) {
+    return timeVal.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  // Kalau datang sebagai string ISO (1899-12-30T09:00...)
+  if (typeof timeVal === "string" && timeVal.includes("1899")) {
+    const d = new Date(timeVal);
+    if (!isNaN(d)) {
+      return d.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+  }
+
+  // Kalau string normal "09:00"
+  return timeVal.toString().slice(0,5);
 }
 // update pembayran pemesan
 function updatePayment(rowId, type, amount) {
-
-  if (!currentUser || currentUser.phone !== ADMIN_WA) {
-    alert("Login sebagai admin terlebih dahulu");
-    return;
-  }
-
-  // bersihkan angka
-  amount = Number(String(amount).replace(/[^\d]/g, ""));
-
-  if (!amount || amount <= 0) {
-    alert("Nominal tidak valid");
-    return;
-  }
-
-  if (!confirm("Simpan pembayaran Rp " + amount.toLocaleString("id-ID") + " ?"))
-    return;
+  if (!confirm("Simpan pembayaran ini?")) return;
 
   showLoader(true, "Update pembayaran...");
 
-  const callbackName = "paymentCb_" + Date.now();
-
-  window[callbackName] = function(res) {
-    showLoader(false);
-
-    if (!res || !res.success) {
-      alert("❌ Gagal update pembayaran");
-      return;
-    }
-
-    fetchAdminOrders();
-    delete window[callbackName];
-  };
-
-  // 🔥 PAKAI URLSearchParams (AMAN 100%)
-  const params = new URLSearchParams({
-    action: "updatePayment",
-    rowId: rowId,
-    type: type,
-    amount: amount,
-    phone: currentUser.phone,
-    callback: callbackName
-  });
-
-  injectScript(SCRIPT_URL + "?" + params.toString());
+  injectScript(
+    `${SCRIPT_URL}?action=updatePayment`
+    + `&rowId=${rowId}`
+    + `&type=${type}`
+    + `&amount=${amount}`
+    + `&callback=paymentCb`
+  );
 }
 
 window.paymentCb = (res) => {
