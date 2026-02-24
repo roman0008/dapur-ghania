@@ -950,25 +950,18 @@ function kirimInvoiceWA(btn, rowId) {
 
   document.body.appendChild(script);
 }
-
+console.log("SEND PAYMENT:", rowId, type, amount);
 function updatePayment(rowId, type, amount) {
 
-  if (!currentUser) {
-    alert("Belum login");
+  if (!currentUser || currentUser.phone !== ADMIN_WA) {
+    alert("Login sebagai admin terlebih dahulu");
     return;
   }
 
-  if (!currentUser || currentUser.phone !== ADMIN_WA) {
-  alert("Login sebagai admin terlebih dahulu");
-  return;
-}
+  // bersihkan angka
+  amount = Number(String(amount).replace(/[^\d]/g, ""));
 
-  // 🔥 CLEAN ANGKA
-  const raw = amount.toString();
-  const clean = raw.replace(/[^\d]/g, "");
-  amount = Number(clean);
-
-  if (isNaN(amount) || amount <= 0) {
+  if (!amount || amount <= 0) {
     alert("Nominal tidak valid");
     return;
   }
@@ -981,28 +974,28 @@ function updatePayment(rowId, type, amount) {
   const callbackName = "paymentCb_" + Date.now();
 
   window[callbackName] = function(res) {
-  showLoader(false);
+    showLoader(false);
 
-  if (!res || !res.success) {
-    alert("❌ Gagal update pembayaran");
-    return;
-  }
+    if (!res || !res.success) {
+      alert("❌ Gagal update pembayaran");
+      return;
+    }
 
-  // 🔥 RESET INPUT
-  document.querySelectorAll("input[type='number']").forEach(i => i.value = "");
+    fetchAdminOrders();
+    delete window[callbackName];
+  };
 
-  fetchAdminOrders();
-  delete window[callbackName];
-};
+  // 🔥 PAKAI URLSearchParams (AMAN 100%)
+  const params = new URLSearchParams({
+    action: "updatePayment",
+    rowId: rowId,
+    type: type,
+    amount: amount,
+    phone: currentUser.phone,
+    callback: callbackName
+  });
 
-  injectScript(
-    `${SCRIPT_URL}?action=updatePayment`
-    + `&rowId=${rowId}`
-    + `&type=${type}`
-    + `&amount=${amount}`
-    + `&phone=${currentUser.phone}`
-    + `&callback=${callbackName}`
-  );
+  injectScript(SCRIPT_URL + "?" + params.toString());
 }
 
     // --- Auth Logic ---
