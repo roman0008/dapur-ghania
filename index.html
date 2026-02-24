@@ -957,13 +957,15 @@ function updatePayment(rowId, type, amount) {
     return;
   }
 
-  // SAMAKAN validasi dengan showPage
   if (currentUser.phone !== ADMIN_WA) {
     alert("Akses ditolak");
     return;
   }
 
-  amount = Number(amount);
+  // 🔥 CLEAN ANGKA
+  const raw = amount.toString();
+  const clean = raw.replace(/[^\d]/g, "");
+  amount = Number(clean);
 
   if (isNaN(amount) || amount <= 0) {
     alert("Nominal tidak valid");
