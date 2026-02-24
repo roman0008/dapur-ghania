@@ -618,19 +618,20 @@ function saveProduct() {
   showLoader(true, "Menyimpan produk...");
 
   const callbackName = "saveProductCb_" + Date.now();
-  window[callbackName] = function (res) {
-    showLoader(false);
+  window[callbackName] = function(res) {
+  showLoader(false);
 
-    if (!res || !res.success) {
-      alert("❌ Gagal menyimpan produk");
-      return;
-    }
+  if (!res || !res.success) {
+    alert("❌ Gagal update pembayaran");
+    return;
+  }
 
-    alert("✅ Produk berhasil disimpan");
-    resetProductForm();
-    fetchProducts();
-    delete window[callbackName];
-  };
+  // 🔥 RESET INPUT
+  document.querySelectorAll("input[type='number']").forEach(i => i.value = "");
+
+  fetchAdminOrders();
+  delete window[callbackName];
+};
 
   const params = new URLSearchParams({
   action: editProductId ? "updateProduct" : "addProduct",
@@ -980,16 +981,19 @@ function updatePayment(rowId, type, amount) {
   const callbackName = "paymentCb_" + Date.now();
 
   window[callbackName] = function(res) {
-    showLoader(false);
+  showLoader(false);
 
-    if (!res || !res.success) {
-      alert("❌ Gagal update pembayaran");
-      return;
-    }
+  if (!res || !res.success) {
+    alert("❌ Gagal update pembayaran");
+    return;
+  }
 
-    fetchAdminOrders();
-    delete window[callbackName];
-  };
+  // 🔥 RESET INPUT
+  document.querySelectorAll("input[type='number']").forEach(i => i.value = "");
+
+  fetchAdminOrders();
+  delete window[callbackName];
+};
 
   injectScript(
     `${SCRIPT_URL}?action=updatePayment`
