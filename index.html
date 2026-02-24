@@ -1674,17 +1674,50 @@ function safeTime(time){
 }
 // update pembayran pemesan
 function updatePayment(rowId, type, amount) {
-  if (!confirm("Simpan pembayaran ini?")) return;
+
+  if (!currentUser || currentUser.phone !== ADMIN_WA) {
+    alert("Login sebagai admin terlebih dahulu");
+    return;
+  }
+
+  // bersihkan angka
+  amount = Number(String(amount).replace(/[^\d]/g, ""));
+
+  if (!amount || amount <= 0) {
+    alert("Nominal tidak valid");
+    return;
+  }
+
+  if (!confirm("Simpan pembayaran Rp " + amount.toLocaleString("id-ID") + " ?"))
+    return;
 
   showLoader(true, "Update pembayaran...");
 
-  injectScript(
-    `${SCRIPT_URL}?action=updatePayment`
-    + `&rowId=${rowId}`
-    + `&type=${type}`
-    + `&amount=${amount}`
-    + `&callback=paymentCb`
-  );
+  const callbackName = "paymentCb_" + Date.now();
+
+  window[callbackName] = function(res) {
+    showLoader(false);
+
+    if (!res || !res.success) {
+      alert("❌ Gagal update pembayaran");
+      return;
+    }
+
+    fetchAdminOrders();
+    delete window[callbackName];
+  };
+
+  // 🔥 PAKAI URLSearchParams (AMAN 100%)
+  const params = new URLSearchParams({
+    action: "updatePayment",
+    rowId: rowId,
+    type: type,
+    amount: amount,
+    phone: currentUser.phone,
+    callback: callbackName
+  });
+
+  injectScript(SCRIPT_URL + "?" + params.toString());
 }
 
 window.paymentCb = (res) => {
