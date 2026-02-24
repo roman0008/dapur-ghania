@@ -958,12 +958,14 @@ function updatePayment(rowId, type, amount) {
   }
 
   // SAMAKAN validasi dengan showPage
-  if (currentUser.phone !== ADMIN_WA) {
+  if (normalizePhone(currentUser.phone) !== ADMIN_WA) {
     alert("Akses ditolak");
     return;
   }
 
-  amount = Number(amount);
+  amount = Number(
+  amount.toString().replace(/\./g, "")
+);
 
   if (isNaN(amount) || amount <= 0) {
     alert("Nominal tidak valid");
@@ -981,7 +983,7 @@ function updatePayment(rowId, type, amount) {
     showLoader(false);
 
     if (!res || !res.success) {
-      alert("❌ Gagal update pembayaran");
+     alert("❌ " + (res.message || "Gagal update pembayaran"));
       return;
     }
 
@@ -1683,27 +1685,69 @@ function safeTime(timeVal) {
   // Kalau string normal "09:00"
   return timeVal.toString().slice(0,5);
 }
-// update pembayran pemesan
+
 function updatePayment(rowId, type, amount) {
-  if (!confirm("Simpan pembayaran ini?")) return;
+
+  if (!currentUser) {
+    alert("Belum login");
+    return;
+  }
+
+  if (normalizePhone(currentUser.phone) !== ADMIN_WA) {
+    alert("Akses ditolak");
+    return;
+  }
+
+  amount = Number(
+    amount.toString().replace(/\./g, "")
+  );
+
+  if (isNaN(amount) || amount <= 0) {
+    alert("Nominal tidak valid");
+    return;
+  }
+
+  if (!confirm("Simpan pembayaran Rp " + amount.toLocaleString("id-ID") + " ?"))
+    return;
 
   showLoader(true, "Update pembayaran...");
+
+  const callbackName = "paymentCb_" + Date.now();
+
+  window[callbackName] = function(res) {
+    showLoader(false);
+
+    if (!res || !res.success) {
+      alert("❌ " + (res.message || "Gagal update pembayaran"));
+      return;
+    }
+
+    fetchAdminOrders();
+    setTimeout(() => {
+      document.activeElement.blur();
+    }, 300);
+
+    delete window[callbackName];
+  };
 
   injectScript(
     `${SCRIPT_URL}?action=updatePayment`
     + `&rowId=${rowId}`
     + `&type=${type}`
     + `&amount=${amount}`
-    + `&callback=paymentCb`
+    + `&phone=${currentUser.phone}`
+    + `&callback=${callbackName}`
   );
 }
-
 window.paymentCb = (res) => {
   showLoader(false);
   if (res.success) {
     fetchAdminOrders();
+setTimeout(() => {
+  document.activeElement.blur();
+}, 300);
   } else {
-    alert("❌ Gagal update pembayaran");
+    alert("❌ " + (res.message || "Gagal update pembayaran"));
   }
 };
 
