@@ -1312,8 +1312,11 @@ ${renderTermin(o)}
     `;
   }).join("");
 };
-
-
+/* =========================
+   GLOBAL VARIABLE (TARUH DI SINI)
+========================= */
+const AUTO_DISCOUNT_MIN = 1500000;
+const AUTO_DISCOUNT_VALUE = 50000;
 /* =========================
    CART SYSTEM (FULL)
    DAPUR GHANIA
@@ -1380,41 +1383,75 @@ function closeCart() {
   document.getElementById("modal-cart").classList.add("hidden");
 }
 
+function calculateCartTotal() {
+  let subtotal = 0;
+
+  cart.forEach(item => {
+    subtotal += Number(item.price) * Number(item.qty);
+  });
+
+  let discount = 0;
+
+  if (subtotal >= AUTO_DISCOUNT_MIN) {
+    discount = AUTO_DISCOUNT_VALUE;
+  }
+
+  const finalTotal = subtotal - discount;
+
+  return {
+    subtotal,
+    discount,
+    finalTotal
+  };
+}
 /* =========================
    RENDER CART
 ========================= */
 function renderCart() {
   const list = document.getElementById("cart-items");
-  let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+  const totalEl = document.getElementById("total-val");
 
-  if (cart.length === 0) {
+  if (!list || !totalEl) return;
+
+  let cart = [];
+
+  try {
+    cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+  } catch (err) {
+    console.error("Cart parse error:", err);
+    cart = [];
+  }
+
+  if (!Array.isArray(cart) || cart.length === 0) {
     list.innerHTML = `
       <div class="text-center text-xs text-gray-400 py-10">
         Keranjang masih kosong
       </div>`;
-    document.getElementById("total-val").innerText = "Rp 0";
+    totalEl.innerText = "Rp 0";
     return;
   }
 
   let total = 0;
 
   list.innerHTML = cart.map((item, i) => {
-    const subtotal = item.price * item.qty;
+    const price = Number(item.price) || 0;
+    const qty = Number(item.qty) || 0;
+    const subtotal = price * qty;
     total += subtotal;
 
     return `
       <div class="bg-white p-4 rounded-2xl shadow-sm flex gap-3">
-        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover">
+        <img src="${item.image || ''}" class="w-16 h-16 rounded-xl object-cover">
         <div class="flex-1">
-          <p class="font-black text-xs">${item.name}</p>
+          <p class="font-black text-xs">${item.name || ''}</p>
           <p class="text-orange-600 font-black text-sm">
-            Rp ${item.price.toLocaleString()}
+            Rp ${price.toLocaleString("id-ID")}
           </p>
 
           <div class="flex items-center gap-2 mt-2">
             <button onclick="updateQty(${i}, -1)"
               class="w-7 h-7 bg-gray-100 rounded-full font-black">−</button>
-            <span class="text-sm font-bold">${item.qty}</span>
+            <span class="text-sm font-bold">${qty}</span>
             <button onclick="updateQty(${i}, 1)"
               class="w-7 h-7 bg-gray-100 rounded-full font-black">+</button>
           </div>
@@ -1425,8 +1462,7 @@ function renderCart() {
     `;
   }).join("");
 
-  document.getElementById("total-val").innerText =
-    "Rp " + total.toLocaleString("id-ID");
+  totalEl.innerText = "Rp " + total.toLocaleString("id-ID");
 }
 
 /* =========================
@@ -1482,8 +1518,6 @@ function closeCheckout() {
 ========================= */
     
 function submitOrder() {
-const AUTO_DISCOUNT_MIN = 1500000;
-const AUTO_DISCOUNT_VALUE = 50000;
   const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
   if (cart.length === 0) return;
  
