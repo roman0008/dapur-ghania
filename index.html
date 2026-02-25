@@ -1480,10 +1480,13 @@ function closeCheckout() {
 /* =========================
    DP CALCULATION
 ========================= */
+    
 function submitOrder() {
+const AUTO_DISCOUNT_MIN = 1500000;
+const AUTO_DISCOUNT_VALUE = 50000;
   const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
   if (cart.length === 0) return;
-
+ 
   const items = cart.map(i =>
     `${i.name} x${i.qty} = Rp ${(i.qty * i.price).toLocaleString()}`
   ).join("\n");
@@ -1851,17 +1854,7 @@ window.reportCb = function(res) {
     "Rp " + totalBayar.toLocaleString("id-ID");
 };
 
-let adminIdleTimer;
-const ADMIN_TIMEOUT = 1 * 60 * 1000; // 1 menit
 
-function resetAdminTimer() {
-    clearTimeout(adminIdleTimer);
-
-    adminIdleTimer = setTimeout(() => {
-        alert("Sesi admin berakhir karena tidak aktif 5 menit.");
-        adminLogout();
-    }, ADMIN_TIMEOUT);
-}
 
 function adminLogout() {
     localStorage.removeItem("adminPhone");
