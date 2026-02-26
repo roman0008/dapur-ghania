@@ -460,7 +460,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQrL46R_pIQ2SpzYsCn_Tcv4egOCkh-acUtqntgEb1n9W6zQ2ylxtZ9j-zIhV6xauNjA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznm_nGOR3dxGZuv90PzjlgMFN0iTVg835re0_12kCTUCOM3ZcGs86_C_Lc84Dx7Dckyg/exec";
     const ADMIN_WA = "6285888822270";
     
       let currentUser = JSON.parse(localStorage.getItem('ghania_user')) || null;
@@ -1617,62 +1617,7 @@ if(metodePengiriman === "Kirim" && !alamat){
 }
 
 
- /**
- * REMINDER WA H-1 PELUNASAN
- * Sheet: Orders
- */
-
-function reminderPelunasanH1() {
-  const sheet = SpreadsheetApp.getActive()
-    .getSheetByName("Orders");
-  const data = sheet.getDataRange().getValues();
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  data.slice(1).forEach(row => {
-    const invoice = row[1];     // B
-    const wa = row[3];          // D
-    const tglAcara = row[4];    // E
-    const pembayaran = row[6]; // G
-    const total = Number(row[9]); // J
-    const status = row[10];    // K
-    const sisa = Number(row[11]); // L
-
-    if (!invoice || !wa || !tglAcara) return;
-    if (status === "Lunas" || sisa <= 0) return;
-
-    const eventDate = new Date(tglAcara);
-    eventDate.setHours(0,0,0,0);
-
-    const diff = Math.floor(
-      (eventDate - today) / (1000 * 60 * 60 * 24)
-    );
-
-    // H-1
-    if (diff !== 1) return;
-
-    const dp = Math.round(total * 0.5);
-
-    let pesan = `
-Assalamu’alaikum Kak 🌸
-
-Pengingat pesanan *${invoice}*
-📅 Acara: ${Utilities.formatDate(eventDate, "Asia/Jakarta", "dd MMM yyyy")}
-
-💳 Status Pembayaran:
-DP: Rp ${dp.toLocaleString("id-ID")}
-Sisa Pelunasan: Rp ${sisa.toLocaleString("id-ID")}
-
-Mohon pelunasan H-1 agar pesanan bisa kami proses & kirim tepat waktu 🙏
-
-Terima kasih
-_Dapur Ghania_
-`;
-
-    kirimWA(wa, pesan.trim());
-  });
-}
+ 
 
 /**
  * KIRIM WA VIA FONNTE
