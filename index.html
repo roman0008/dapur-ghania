@@ -1821,17 +1821,7 @@ function updatePayment(rowId, type, amount) {
     + `&callback=${callbackName}`
   );
 }
-window.paymentCb = (res) => {
-  showLoader(false);
-  if (res.success) {
-    fetchAdminOrders();
-setTimeout(() => {
-  document.activeElement.blur();
-}, 300);
-  } else {
-    alert("❌ " + (res.message || "Gagal update pembayaran"));
-  }
-};
+
 
 function renderPagination(totalData) {
 
