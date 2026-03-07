@@ -497,18 +497,25 @@ function renderSlider(){
 
   const wrap = document.getElementById("promo-wrapper");
 
-  if(!BANNERS.length){
-    wrap.innerHTML = "";
+  if(!wrap) return;
+
+  if(!BANNERS || BANNERS.length === 0){
+    wrap.innerHTML = `
+      <div class="min-w-full flex items-center justify-center text-gray-400 text-xs">
+        Promo akan tampil di sini
+      </div>`;
     return;
   }
 
   wrap.innerHTML = BANNERS.map(b => `
     <a href="${b.link || '#'}"
-      class="min-w-full">
+      class="min-w-full block">
       <img src="${b.image}"
         class="w-full h-40 object-cover">
     </a>
   `).join("");
+
+  sliderIndex = 0;
 
   startSlider();
 }
@@ -633,11 +640,47 @@ function togglePengiriman(){
    KELOLA PRODUK (ADMIN)
    SINKRON DENGAN BACKEND
 ========================= */
-let BANNERS = [];
-let sliderIndex = 0;
+let sliderTimer = null;
+
+function startSlider(){
+
+  if(sliderTimer){
+    clearInterval(sliderTimer);
+  }
+
+  sliderTimer = setInterval(()=>{
+
+    sliderIndex++;
+
+    if(sliderIndex >= BANNERS.length){
+      sliderIndex = 0;
+    }
+
+    const wrap = document.getElementById("promo-wrapper");
+
+    if(!wrap) return;
+
+    wrap.style.transform =
+      `translateX(-${sliderIndex*100}%)`;
+
+  },4000);
+
+}
 
 function fetchBanners(){
   injectScript(`${SCRIPT_URL}?action=getBanners&callback=bannerCb`);
+}
+
+window.bannerCb = (res)=>{
+
+  if(!res || !res.success){
+    console.log("Banner gagal load");
+    return;
+  }
+
+  BANNERS = res.data || [];
+
+  renderSlider();
 }
 
 window.bannerCb = (res)=>{
