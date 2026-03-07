@@ -282,6 +282,17 @@
                 <p class="text-orange-100 text-sm opacity-90">Dari Dapur dengan Cinta, Spesial untuk Moment Istimewa.</p>
             </div>
         </div>
+        <!-- PROMO SLIDER -->
+<div class="mb-6">
+  <div id="promo-slider"
+    class="relative overflow-hidden rounded-[2.5rem] h-40 bg-gray-100">
+    
+    <div id="promo-wrapper"
+      class="flex transition-transform duration-500">
+    </div>
+
+  </div>
+</div>
         <!-- Search Produk -->
 <div class="mb-4">
   <input 
@@ -480,8 +491,44 @@
     window.onload = () => {
   updateUIAuth();
   fetchProducts();
+        fetchBanners();
 };
+function renderSlider(){
 
+  const wrap = document.getElementById("promo-wrapper");
+
+  if(!BANNERS.length){
+    wrap.innerHTML = "";
+    return;
+  }
+
+  wrap.innerHTML = BANNERS.map(b => `
+    <a href="${b.link || '#'}"
+      class="min-w-full">
+      <img src="${b.image}"
+        class="w-full h-40 object-cover">
+    </a>
+  `).join("");
+
+  startSlider();
+}
+
+    function startSlider(){
+
+  setInterval(()=>{
+    sliderIndex++;
+
+    if(sliderIndex >= BANNERS.length){
+      sliderIndex = 0;
+    }
+
+    const wrap = document.getElementById("promo-wrapper");
+
+    wrap.style.transform =
+      `translateX(-${sliderIndex*100}%)`;
+
+  },4000);
+}
     function updatePricePreview() {
   const ori = Number(document.getElementById("p-original").value || 0);
   const disc = Number(document.getElementById("p-discount").value || 0);
@@ -586,7 +633,18 @@ function togglePengiriman(){
    KELOLA PRODUK (ADMIN)
    SINKRON DENGAN BACKEND
 ========================= */
+let BANNERS = [];
+let sliderIndex = 0;
 
+function fetchBanners(){
+  injectScript(`${SCRIPT_URL}?action=getBanners&callback=bannerCb`);
+}
+
+window.bannerCb = (res)=>{
+  if(!res.success) return;
+  BANNERS = res.data;
+  renderSlider();
+};
 
 /* =========================
    AMBIL PRODUK DARI GSHEET
