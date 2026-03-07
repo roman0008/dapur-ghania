@@ -483,7 +483,9 @@
       let currentPage = 1;
       const rowsPerPage = 10;
       let reportDataGlobal = [];
-
+      let BANNERS = [];
+        let sliderIndex = 0;
+        let sliderTimer = null;
       
 
 
@@ -520,22 +522,6 @@ function renderSlider(){
   startSlider();
 }
 
-    function startSlider(){
-
-  setInterval(()=>{
-    sliderIndex++;
-
-    if(sliderIndex >= BANNERS.length){
-      sliderIndex = 0;
-    }
-
-    const wrap = document.getElementById("promo-wrapper");
-
-    wrap.style.transform =
-      `translateX(-${sliderIndex*100}%)`;
-
-  },4000);
-}
     function updatePricePreview() {
   const ori = Number(document.getElementById("p-original").value || 0);
   const disc = Number(document.getElementById("p-discount").value || 0);
@@ -683,11 +669,6 @@ window.bannerCb = (res)=>{
   renderSlider();
 }
 
-window.bannerCb = (res)=>{
-  if(!res.success) return;
-  BANNERS = res.data;
-  renderSlider();
-};
 
 /* =========================
    AMBIL PRODUK DARI GSHEET
