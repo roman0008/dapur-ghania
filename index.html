@@ -84,8 +84,17 @@
         <nav id="main-nav" class="max-w-4xl mx-auto mt-4 flex gap-6 border-t pt-2 hidden">
             <button onclick="showPage('home')" id="nav-home" class="text-[10px] font-black uppercase tracking-widest py-2 nav-active">Home</button>
             <button onclick="showPage('history')" id="nav-history" class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">Riwayat</button>
+            <button onclick="showPage('about')" id="nav-about"
+                class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">
+                Tentang
+                </button>
+                
+                <button onclick="showPage('contact')" id="nav-contact"
+                class="text-[10px] font-black uppercase tracking-widest py-2 text-gray-400">
+                Contact
+                </button>
             <button onclick="showPage('admin')" id="nav-admin" class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-red-500">Admin Panel</button>
-        <!-- ➕ NAV BARU -->
+            <!-- ➕ NAV BARU -->
             <button onclick="showPage('products')" id="nav-products"
             class="hidden text-[10px] font-black uppercase tracking-widest py-2 text-orange-600">
               Kelola Produk
@@ -467,7 +476,109 @@
             </div>
         </div>
     </div>
+<main id="page-about" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
 
+<div class="bg-white p-8 rounded-[2.5rem] card-shadow">
+
+<h2 class="text-xl font-black text-orange-600 mb-4">
+Tentang Dapur Ghania
+</h2>
+
+<p class="text-gray-600 text-sm leading-relaxed">
+Dapur Ghania adalah usaha rumahan di Tangerang yang menghadirkan
+berbagai kue hantaran, snack box, dan hampers eksklusif untuk
+moment spesial seperti pernikahan, lamaran, ulang tahun, dan acara keluarga.
+</p>
+
+<p class="text-gray-600 text-sm mt-3 leading-relaxed">
+Setiap produk dibuat fresh dari dapur kami dengan bahan berkualitas
+dan tampilan elegan sehingga cocok untuk hadiah maupun hantaran.
+</p>
+
+<div class="grid grid-cols-3 gap-4 mt-6 text-center">
+
+<div class="bg-orange-50 p-4 rounded-xl">
+<i class="fas fa-birthday-cake text-orange-600 text-xl"></i>
+<p class="text-xs font-bold mt-2">Kue Hantaran</p>
+</div>
+
+<div class="bg-orange-50 p-4 rounded-xl">
+<i class="fas fa-gift text-orange-600 text-xl"></i>
+<p class="text-xs font-bold mt-2">Hampers</p>
+</div>
+
+<div class="bg-orange-50 p-4 rounded-xl">
+<i class="fas fa-cookie text-orange-600 text-xl"></i>
+<p class="text-xs font-bold mt-2">Snack Box</p>
+</div>
+
+</div>
+
+</div>
+
+</main>
+    <main id="page-contact" class="page-content hidden max-w-4xl mx-auto p-4 pb-32">
+
+<div class="bg-white p-8 rounded-[2.5rem] card-shadow">
+
+<h2 class="text-xl font-black text-orange-600 mb-6">
+Hubungi Kami
+</h2>
+
+<div class="space-y-4 text-sm">
+
+<div class="flex items-center gap-3">
+<i class="fab fa-whatsapp text-green-600 text-lg"></i>
+<a href="https://wa.me/6285888822270"
+class="font-bold text-orange-600">
+0858-8882-2270
+</a>
+</div>
+
+<div class="flex items-center gap-3">
+<i class="fas fa-map-marker-alt text-red-500"></i>
+<p>Kp. Karet, Tangerang</p>
+</div>
+
+<div class="flex items-center gap-3">
+<i class="fab fa-instagram text-pink-500"></i>
+<p>@dapurghania</p>
+</div>
+
+</div>
+
+<div class="mt-6">
+
+<a href="https://wa.me/6285888822270"
+class="block text-center bg-green-500 text-white py-3 rounded-xl font-bold shadow-lg">
+Chat WhatsApp Sekarang
+</a>
+
+</div>
+
+</div>
+
+</main>
+
+<footer class="bg-white border-t mt-10">
+
+<div class="max-w-4xl mx-auto p-6 text-center text-xs text-gray-400">
+
+<p class="font-bold text-orange-600">
+DAPUR GHANIA
+</p>
+
+<p class="mt-1">
+Kue Hantaran • Snack Box • Hampers
+</p>
+
+<p class="mt-2">
+© 2026 Dapur Ghania Tangerang
+</p>
+
+</div>
+
+</footer>
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzd0mWpj68hDk9k031GAXiFP708po78xH84VjRGC8KauvGBAYQykb1bsS7N81xxY6pTNA/exec";
     const ADMIN_WA = "6285888822270";
