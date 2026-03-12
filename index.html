@@ -1268,6 +1268,10 @@ function updatePayment(rowId, type, amount) {
             document.getElementById('nav-admin').classList.remove('hidden');
             document.getElementById('nav-products').classList.remove('hidden');
             document.getElementById('nav-report').classList.remove('hidden');
+            // sembunyikan menu user
+            document.getElementById('nav-history').classList.add('hidden');
+            document.getElementById('nav-about').classList.add('hidden');
+            document.getElementById('nav-contact').classList.add('hidden');
         }
     }
 }
